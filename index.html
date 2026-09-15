@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusSphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260915_19">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
+  <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
+  <link rel="apple-touch-icon" href="CampusSphere-logo.png?v=20260915_hq1">
+</head>
+
+<body>
+  <!-- CampusSphere Ambient Animated Background (Shared Layout) -->
+  <div class="campus-ambient-bg" aria-hidden="true">
+    <div class="ambient-blob blob-blue"></div>
+    <div class="ambient-blob blob-indigo"></div>
+    <div class="ambient-blob blob-cyan"></div>
+    <div class="ambient-blob blob-emerald"></div>
+    <div class="ambient-blob blob-violet"></div>
+    <div class="ambient-grid-overlay"></div>
+    <div class="ambient-shapes">
+      <span class="ambient-ring ring-1"></span>
+      <span class="ambient-ring ring-2"></span>
+      <span class="ambient-ring ring-3"></span>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
+       PUBLIC COLLEGE HOMEPAGE
+       ========================================================= -->
+  <main id="publicHome" class="public-home">
+    <header class="institution-header">
+      <!-- Ambient Animated Glassmorphic Backdrop Layers -->
+      <div class="header-ambient-layers" aria-hidden="true">
+        <div class="header-ambient-gradient"></div>
+        <div class="header-blob header-blob-1"></div>
+        <div class="header-blob header-blob-2"></div>
+        <div class="header-blob header-blob-3"></div>
+        <div class="header-shimmer"></div>
+      </div>
+
+      <div class="institution-header-inner">
+        <a class="institution-brand" href="#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
+          <span class="institution-logo-wrap">
+            <img src="CampusSphere-logo.png?v=20260915_hq1" alt="Bharatesh BCA and CampusSphere logo" class="institution-logo">
+          </span>
+          <span class="institution-copy">
+            <strong class="institution-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</strong>
+            <span class="institution-portal-identity">CampusSphere — Your Academic Portal</span>
+          </span>
+        </a>
+        <div class="institution-actions">
+          <button type="button" class="home-auth-btn home-login-btn" data-open-login>Login</button>
+          <button type="button" class="home-auth-btn home-signup-btn" data-open-signup>Sign Up</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="public-nav" aria-label="Primary navigation">
+      <div class="public-nav-inner">
+        <a class="public-nav-link active" href="#publicHome">Home</a>
+        <a class="public-nav-link" href="courses.html">Courses</a>
+        <a class="public-nav-link" href="#students-faculty-count">Faculty</a>
+        <a class="public-nav-link" href="#students-faculty-count">Students</a>
+        <a class="public-nav-link" href="#why-campussphere">Features</a>
+        <a class="public-nav-link" href="about.html">About</a>
+        <a class="public-nav-link" href="#public-footer">Contact</a>
+        <button class="public-menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+
+    <section class="home-hero" aria-labelledby="homeHeroTitle">
+      <div class="hero-ambient-glow glow-1" aria-hidden="true"></div>
+      <div class="hero-ambient-glow glow-2" aria-hidden="true"></div>
+      <div class="home-hero-inner">
+        <div class="home-hero-copy reveal-item">
+          <span class="home-eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>WELCOME TO</span>
+          <h1 id="homeHeroTitle">Campus<span>Sphere</span></h1>
+          <p class="home-hero-subtitle">Your Digital Academic Campus</p>
+          <p class="home-hero-description">A unified platform for students, faculty, and administrators to access academic information, attendance, marks, announcements, and campus resources.</p>
+          <div class="home-hero-actions">
+            <button type="button" class="hero-primary-btn" data-open-login>
+              <span>Student Login</span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </button>
+            <button type="button" class="hero-secondary-btn" data-open-signup>Get Started</button>
+          </div>
+        </div>
+
+        <div class="home-hero-visual reveal-item">
+          <div class="hero-image-frame">
+            <img
+              src="campus-students.jpg?v=20260915_hero_fit"
+              alt="Bharatesh BCA college students collaborating with laptop on campus"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async">
+            <div class="hero-image-overlay" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why-campussphere" class="home-section home-features" aria-labelledby="whyTitle">
+      <div class="home-section-heading reveal-item">
+        <span class="section-kicker">THE CAMPUSSPHERE EXPERIENCE</span>
+        <h2 id="whyTitle" style="color: #0A2540;">Why Choose CampusSphere?</h2>
+        <p>A smarter, more connected, and modern college experience.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card reveal-item">
+          <div class="feature-icon" aria-hidden="true">🎓</div>
+          <h3>Academic Management</h3>
+          <p>Access your academic records, attendance insights, and semester performance with ease.</p>
+        </article>
+        <article class="feature-card reveal-item">
+          <div class="feature-icon" aria-hidden="true">👤</div>
+          <h3>Student Support</h3>
+          <p>Direct communication with faculty mentors, academic guidance, and quick query resolution.</p>
+        </article>
+        <article class="feature-card reveal-item">
+          <div class="feature-icon" aria-hidden="true">📄</div>
+          <h3>Digital Resources</h3>
+          <p>Instant access to syllabus outlines, study materials, circulars, and departmental notices.</p>
+        </article>
+        <article class="feature-card reveal-item">
+          <div class="feature-icon" aria-hidden="true">🛡️</div>
+          <h3>Secure Platform</h3>
+          <p>Role-based authentication ensuring your student records and academic privacy are fully guarded.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="students-faculty-count" class="home-section stats-count-section" aria-labelledby="statsCountTitle">
+      <div class="home-section-heading reveal-item">
+        <span class="section-kicker">CAMPUS STRENGTH</span>
+        <h2 id="statsCountTitle" style="color: #0A2540;">Our Students &amp; Faculty Count</h2>
+        <p>Real-time strength of registered students and department faculty members.</p>
+      </div>
+
+      <div class="stats-count-grid reveal-item">
+        <!-- Student Statistics Card -->
+        <article class="student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: 3">
+          <div class="student-stat-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="student-stat-number" id="homeStudentCountVal">3</div>
+          <h3 class="student-stat-label">Registered Students</h3>
+          <p class="student-stat-subtext">Active student accounts in CampusSphere</p>
+        </article>
+
+        <!-- Faculty Statistics Card -->
+        <article class="student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Faculty Members: 4">
+          <div class="student-stat-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          </div>
+          <div class="student-stat-number" id="homeFacultyCountVal">4</div>
+          <h3 class="student-stat-label">Faculty Members</h3>
+          <p class="student-stat-subtext">Department faculty in CampusSphere</p>
+        </article>
+      </div>
+    </section>
+    <script>
+      (function() {
+        function syncCounts(force) {
+          var base = window.location.protocol.startsWith("http") ? window.location.origin : "http://127.0.0.1:3000";
+          var url = base + "/api/stats/counts" + (force ? "?fresh=1" : "");
+          fetch(url, { cache: "no-store" })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data && data.success) {
+                var elS = document.getElementById("homeStudentCountVal");
+                var elF = document.getElementById("homeFacultyCountVal");
+                var cardS = document.getElementById("studentStatCard");
+                var cardF = document.getElementById("facultyStatCard");
+                if (elS && typeof data.students === "number") {
+                  elS.textContent = Number(data.students).toLocaleString();
+                  elS.classList.remove("is-loading");
+                  if (cardS) cardS.setAttribute("aria-label", "Registered Students: " + elS.textContent);
+                }
+                if (elF && typeof data.faculty === "number") {
+                  elF.textContent = Number(data.faculty).toLocaleString();
+                  elF.classList.remove("is-loading");
+                  if (cardF) cardF.setAttribute("aria-label", "Faculty Members: " + elF.textContent);
+                }
+                try {
+                  localStorage.setItem("campussphere_stats_counts", JSON.stringify({
+                    students: data.students,
+                    faculty: data.faculty,
+                    time: Date.now()
+                  }));
+                } catch(_) {}
+              }
+            })
+            .catch(function() {});
+        }
+
+        try {
+          var raw = localStorage.getItem("campussphere_stats_counts");
+          if (raw) {
+            var c = JSON.parse(raw);
+            if (c && typeof c.students === "number") {
+              var elS = document.getElementById("homeStudentCountVal");
+              if (elS) elS.textContent = Number(c.students).toLocaleString();
+            }
+            if (c && typeof c.faculty === "number") {
+              var elF = document.getElementById("homeFacultyCountVal");
+              if (elF) elF.textContent = Number(c.faculty).toLocaleString();
+            }
+          }
+        } catch(_) {}
+
+        // Immediate background sync
+        syncCounts();
+
+        // 1. Cross-tab real-time listener: when admin creates or removes accounts in another tab
+        window.addEventListener("storage", function(e) {
+          if (e.key === "campussphere_stats_trigger") {
+            syncCounts(true);
+          }
+        });
+
+        // 2. Tab focus listener: re-verify when switching back to this tab
+        document.addEventListener("visibilitychange", function() {
+          if (!document.hidden) syncCounts(true);
+        });
+        window.addEventListener("focus", function() {
+          syncCounts(true);
+        });
+
+        // 3. Periodic heartbeat poller: ensures updates from other devices appear automatically
+        setInterval(function() {
+          if (!document.hidden) syncCounts();
+        }, 12000);
+
+        window.CampusSphereSyncCounts = syncCounts;
+      })();
+    </script>
+
+    <section id="student-community" class="home-section testimonials-section" aria-labelledby="testimonialsTitle">
+      <div class="home-section-heading reveal-item">
+        <span class="section-kicker">CAMPUS VOICES</span>
+        <h2 id="testimonialsTitle" style="color: #0A2540;">What Our Students &amp; Faculty Say</h2>
+        <p>Real experiences from our Bharatesh BCA college community.</p>
+      </div>
+      <div id="publicTestimonials" class="testimonial-grid" aria-live="polite">
+        <article class="testimonial-card reveal-item">
+          <div class="testimonial-stars" aria-label="5 stars">★★★★★</div>
+          <p class="testimonial-quote">"CampusSphere makes tracking our internal marks, attendance, and semester curriculum instantaneous. The practical computer labs make hands-on coding intuitive."</p>
+          <div class="testimonial-author">
+            <span class="author-avatar" aria-hidden="true">👨‍💻</span>
+            <div>
+              <strong>Final Year Student</strong>
+              <small>BCA Semester VI • Bharatesh BCA</small>
+            </div>
+          </div>
+        </article>
+        <article class="testimonial-card reveal-item">
+          <div class="testimonial-stars" aria-label="5 stars">★★★★★</div>
+          <p class="testimonial-quote">"The NEP curriculum structure and faculty mentorship prepare us thoroughly for IT software roles and technical campus interviews. Proud to be part of this institution!"</p>
+          <div class="testimonial-author">
+            <span class="author-avatar" aria-hidden="true">👩‍🎓</span>
+            <div>
+              <strong>Second Year Student</strong>
+              <small>BCA Semester IV • Coding Club Member</small>
+            </div>
+          </div>
+        </article>
+        <article class="testimonial-card reveal-item">
+          <div class="testimonial-stars" aria-label="5 stars">★★★★★</div>
+          <p class="testimonial-quote">"A collaborative environment where students receive dedicated support from teachers both inside the lab and through digital campus updates."</p>
+          <div class="testimonial-author">
+            <span class="author-avatar" aria-hidden="true">👨‍🏫</span>
+            <div>
+              <strong>Department Faculty</strong>
+              <small>Computer Applications Dept.</small>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+
+    <footer id="public-footer" class="public-footer">
+      <div class="footer-grid">
+        <div class="footer-col footer-col-brand">
+          <div class="footer-brand">
+            <span class="footer-logo-wrap"><img src="CampusSphere-logo.png?v=20260915_hq1" alt="College logo"></span>
+            <div><strong>BHARATESH COLLEGE OF COMPUTER APPLICATIONS</strong><small>Arihantgiri, B.C.188, Near Fort, Old P.B Road,
+Belagavi</small></div>
+          </div>
+          <p>Education • Equality • Empowerment</p>
+        </div>
+        <div class="footer-col">
+          <h3>Quick Links</h3>
+          <a href="#publicHome">Home</a>
+          <a href="courses.html">Courses</a>
+          <a href="#students-faculty-count">Faculty</a>
+          <a href="#students-faculty-count">Students</a>
+          <a href="#why-campussphere">Why CampusSphere</a>
+          <a href="about.html">About</a>
+          <a href="#public-footer">Contact</a>
+        </div>
+        <div class="footer-col footer-col-contact">
+          <h3>Contact</h3>
+          <div class="footer-contact-item">
+            <span class="contact-label">Landline</span>
+            <div class="contact-numbers">
+              <a href="tel:08312465227">0831 – 2465227</a>,
+              <a href="tel:0831246393">246393</a>
+            </div>
+          </div>
+          <div class="footer-contact-item">
+            <span class="contact-label">Mobile</span>
+            <div class="contact-numbers">
+              <a href="tel:+919538273344">+91 95382 73344</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-col footer-col-social">
+          <h3>Follow Us</h3>
+          <p class="footer-muted">Stay connected with our campus community:</p>
+          <div class="footer-social-links">
+            <a href="https://www.instagram.com/bharateshbca?utm_source=ig_web_button_share_sheet&amp;stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="social-icon-btn social-instagram" aria-label="Instagram" title="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+            <a href="https://www.facebook.com/bharateshbca?rdid=IeZZQEYLYvFqMWet&amp;share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F18XS5uTbnW%2F#" target="_blank" rel="noopener noreferrer" class="social-icon-btn social-facebook" aria-label="Facebook" title="Facebook">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.52-.14-2.783-.14-2.822 0-4.717 1.722-4.717 4.86v2.64H7v4h3v10h4v-10z"/>
+              </svg>
+            </a>
+            <a href="https://youtube.com/@bharateshbca6716?si=EjcWHN9nQFDkk6co" target="_blank" rel="noopener noreferrer" class="social-icon-btn social-youtube" aria-label="YouTube" title="YouTube">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="homeCurrentYear"></span> BHARATESH BCA. All rights reserved.</span>
+        <span class="footer-developer-credit">
+          Designed &amp; Developed by <strong class="creator-badge footer-creator-badge"><span class="creator-name">Shrikant Girisagar</span> <span class="creator-course-tag">BCA</span></strong>
+        </span>
+        <span><a href="#" data-footer-placeholder>Privacy Policy</a> <i>•</i> <a href="#" data-footer-placeholder>Terms of Service</a></span>
+      </div>
+    </footer>
+  </main>
+
+  <main id="loginPage" class="login-page" style="display:none;">
+    <div class="login-particles"></div>
+    <div class="login-glow glow-a"></div>
+    <div class="login-glow glow-b"></div>
+
+    <div class="login-shapes">
+      <div class="shape shape-a"></div>
+      <div class="shape shape-b"></div>
+      <div class="shape shape-c"></div>
+      <div class="shape shape-d"></div>
+    </div>
+
+    <div class="login-objects" aria-hidden="true">
+      <div class="obj obj-book">📚</div>
+      <div class="obj obj-pencil">✏️</div>
+      <div class="obj obj-laptop">💻</div>
+      <div class="obj obj-cap">🎓</div>
+      <div class="obj obj-star">⭐</div>
+    </div>
+
+    <section class="login-card auth-card-horizontal">
+      <div class="auth-showcase-panel">
+        <div class="showcase-brand-header">
+          <div class="showcase-logo-wrap">
+            <img src="CampusSphere-logo.png?v=20260915_hq1" alt="CampusSphere Logo">
+          </div>
+          <h1>Campus<span>Sphere</span></h1>
+          <div class="showcase-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</div>
+          <div class="showcase-college-sub">Belagavi | Karnataka • Academic Portal</div>
+          <div class="showcase-motto-pill">
+            <span>✨</span>
+            <span>Education • Equality • Empowerment</span>
+          </div>
+        </div>
+
+        <div class="showcase-features">
+          <div class="showcase-feature-item">
+            <span class="showcase-feature-icon">🎓</span>
+            <div class="showcase-feature-text">
+              <strong>Student Portal</strong>
+              <p>Real-time attendance, semester marks, timetable &amp; study notes.</p>
+            </div>
+          </div>
+          <div class="showcase-feature-item">
+            <span class="showcase-feature-icon">👨‍🏫</span>
+            <div class="showcase-feature-text">
+              <strong>Faculty Portal</strong>
+              <p>Instant attendance entry, IA evaluations &amp; class division management.</p>
+            </div>
+          </div>
+          <div class="showcase-feature-item">
+            <span class="showcase-feature-icon">🛡️</span>
+            <div class="showcase-feature-text">
+              <strong>Institutional Security</strong>
+              <p>Role-based authentication protecting student and faculty records.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-form-panel">
+        <div class="login-back-bar">
+          <a href="#publicHome" class="login-back-btn" id="loginBackHomeLink" data-back-home>
+            <span>←</span> Back to College Homepage
+          </a>
+        </div>
+
+        <div class="login-heading">
+          <span>WELCOME BACK</span>
+          <h2>Sign in to continue</h2>
+          <p>Select your account type below to access your portal.</p>
+        </div>
+
+        <div class="role-tabs">
+          <button class="role-tab active" data-role="student"><span
+              class="role-icon">🎓</span><span>Student</span></button>
+          <button class="role-tab" data-role="faculty"><span class="role-icon">👨‍🏫</span><span>Faculty</span></button>
+          <button class="role-tab" data-role="admin"><span class="role-icon">🛡️</span><span>Admin</span></button>
+        </div>
+
+        <form id="loginForm">
+          <label for="username" id="loginUsernameLabel">Username</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input id="username" type="text" placeholder="Enter your username" required autocomplete="username">
+          </div>
+
+          <label for="password">Password</label>
+          <div class="password-wrap">
+            <span class="input-icon">🔒</span>
+            <input id="password" type="password" placeholder="Enter your password" required
+              autocomplete="current-password">
+            <button type="button" id="togglePassword" class="eye-btn" aria-label="Show password" title="Show password">
+              <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path>
+                <circle cx="12" cy="12" r="2.7"></circle>
+              </svg>
+            </button>
+          </div>
+
+          <button class="primary-btn" type="submit"><span>Sign In</span><span class="arrow">→</span></button>
+          <p id="loginMessage" class="message"></p>
+        </form>
+
+        <div class="auth-switch-bar">
+          <span>Don't have an account?</span>
+          <button type="button" class="auth-switch-btn" data-open-signup>Register as Student or Faculty</button>
+        </div>
+
+        <div class="login-creator-credit">
+          <span>Designed &amp; Developed by</span>
+          <strong class="creator-badge login-creator-badge"><span class="creator-name">Shrikant Girisagar</span></strong>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main id="signupPage" class="login-page signup-page" style="display:none;">
+    <section class="login-card signup-card auth-card-horizontal">
+      <div class="auth-showcase-panel">
+        <div class="showcase-brand-header">
+          <div class="showcase-logo-wrap">
+            <img src="CampusSphere-logo.png?v=20260915_hq1" alt="CampusSphere Logo">
+          </div>
+          <h1>Campus<span>Sphere</span></h1>
+          <div class="showcase-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</div>
+          <div class="showcase-college-sub">Belagavi | Karnataka • Account Registration</div>
+          <div class="showcase-motto-pill">
+            <span>✨</span>
+            <span>Education • Equality • Empowerment</span>
+          </div>
+        </div>
+
+        <div class="showcase-features">
+          <div class="showcase-feature-item">
+            <span class="showcase-feature-icon">🎓</span>
+            <div class="showcase-feature-text">
+              <strong>Student Registration</strong>
+              <p>Quick onboarding for BCA 1st, 2nd, and 3rd Year batches with division mapping.</p>
+            </div>
+          </div>
+          <div class="showcase-feature-item">
+            <span class="showcase-feature-icon">👨‍🏫</span>
+            <div class="showcase-feature-text">
+              <strong>Faculty Registration</strong>
+              <p>Configure department and assign your specialized teaching subjects &amp; classes.</p>
+            </div>
+          </div>
+          <div class="showcase-feature-item">
+            <span class="showcase-feature-icon">⚡</span>
+            <div class="showcase-feature-text">
+              <strong>Instant Activation</strong>
+              <p>Direct login credentials generated and ready to use immediately upon signup.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-form-panel">
+        <div class="login-back-bar">
+          <a href="#publicHome" class="login-back-btn" data-back-home>
+            <span>←</span> Back to College Homepage
+          </a>
+        </div>
+
+        <div class="login-heading">
+          <span>CREATE ACCOUNT</span>
+          <h2 id="pageSignupTitle">Student Registration</h2>
+          <p id="pageSignupSubtitle">Register as a Student or Faculty member to access your portal.</p>
+        </div>
+
+        <div class="role-tabs signup-role-tabs">
+          <button type="button" class="role-tab active" id="tabSignupStudent" data-page-signup-role="student">
+            <span class="role-icon">🎓</span><span>Student</span>
+          </button>
+          <button type="button" class="role-tab" id="tabSignupFaculty" data-page-signup-role="faculty">
+            <span class="role-icon">👨‍🏫</span><span>Faculty</span>
+          </button>
+        </div>
+
+        <form id="pageSignupForm" autocomplete="off">
+          <input type="hidden" id="pageSignupRole" value="student">
+
+          <!-- 2-Column Horizontal Grid for Common Fields -->
+          <div class="auth-input-grid">
+            <div class="form-group">
+              <label for="pageSignupName">Full Name</label>
+              <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input id="pageSignupName" type="text" required placeholder="Enter full name" autocomplete="name">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="pageSignupUsername" id="pageSignupUsernameLabel">Username</label>
+              <div class="input-wrap">
+                <span class="input-icon">🪪</span>
+                <input id="pageSignupUsername" type="text" required placeholder="Choose a username" autocomplete="username">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="pageSignupPassword">Password</label>
+              <div class="password-wrap">
+                <span class="input-icon">🔒</span>
+                <input id="pageSignupPassword" type="password" required minlength="6" placeholder="Create a password" autocomplete="new-password">
+                <button type="button" id="togglePageSignupPassword" class="eye-btn" aria-label="Show password" title="Show password">
+                  <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2.2 12s3.5-6 9.8-6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path>
+                    <circle cx="12" cy="12" r="2.7"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="pageSignupEmail">Email Address</label>
+              <div class="input-wrap">
+                <span class="input-icon">✉️</span>
+                <input id="pageSignupEmail" type="email" required placeholder="Enter your email address" autocomplete="email">
+              </div>
+            </div>
+          </div>
+
+          <!-- Student Fields in 2-Column Grid -->
+          <div id="pageStudentFields">
+            <div class="auth-input-grid" style="margin-top: 8px;">
+              <div class="form-group">
+                <label for="pageSignupCourse">Course</label>
+                <div class="input-wrap">
+                  <span class="input-icon">🎓</span>
+                  <input id="pageSignupCourse" readonly value="Bachelor of Computer Applications (BCA)" title="Bachelor of Computer Applications (BCA)" style="color: #0A2540; font-weight: 700;">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label id="pageCourseYearLabel">Course Year</label>
+                <input type="hidden" id="pageSignupCourseYear" name="pageSignupCourseYear" value="">
+                <div class="year-segmented-toggle" role="radiogroup" aria-labelledby="pageCourseYearLabel">
+                  <button type="button" class="year-pill-btn" data-year="1st Year" role="radio" aria-checked="false">1st Year</button>
+                  <button type="button" class="year-pill-btn" data-year="2nd Year" role="radio" aria-checked="false">2nd Year</button>
+                  <button type="button" class="year-pill-btn" data-year="3rd Year" role="radio" aria-checked="false">3rd Year</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label id="pageSemesterLabel">Semester</label>
+                <input type="hidden" id="pageSignupSemester" name="pageSignupSemester" value="">
+                <div class="semester-segmented-toggle" id="pageSemesterSegmentedToggle" role="radiogroup" aria-labelledby="pageSemesterLabel">
+                  <button type="button" class="sem-pill-btn" data-sem="1st Semester" role="radio" aria-checked="false">1st Semester</button>
+                  <button type="button" class="sem-pill-btn" data-sem="2nd Semester" role="radio" aria-checked="false">2nd Semester</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label id="pageDivisionLabel">Division</label>
+                <input type="hidden" id="pageSignupDivision" name="pageSignupDivision" value="">
+                <div class="division-segmented-toggle" id="pageDivisionSegmentedToggle" role="radiogroup" aria-labelledby="pageDivisionLabel">
+                  <button type="button" class="div-pill-btn" data-div="Div A" role="radio" aria-checked="false">Div A</button>
+                  <button type="button" class="div-pill-btn" data-div="Div B" role="radio" aria-checked="false">Div B</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label id="pageLanguageLabel">Language Subject Choice</label>
+                <input type="hidden" id="pageSignupLanguage" name="pageSignupLanguage" value="">
+                <div class="language-segmented-toggle" id="pageLanguageSegmentedToggle" role="radiogroup" aria-labelledby="pageLanguageLabel">
+                  <button type="button" class="lang-pill-btn" data-lang="Kannada" role="radio" aria-checked="false">Kannada</button>
+                  <button type="button" class="lang-pill-btn" data-lang="Hindi" role="radio" aria-checked="false">Hindi</button>
+                </div>
+              </div>
+
+              <div id="pageSignupMathWrap" class="form-group">
+                <label for="pageSignupMathChoice">Math / Accounts Choice (1st Sem)</label>
+                <div class="input-wrap">
+                  <select id="pageSignupMathChoice">
+                    <option value="">-- Select Subject Choice --</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Accountancy">Accountancy</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Faculty Fields -->
+          <div id="pageFacultyFields" style="display:none; margin-top: 8px;">
+            <div class="form-group">
+              <label for="pageSignupDepartment">Faculty Department</label>
+              <div class="input-wrap">
+                <span class="input-icon">🏛️</span>
+                <input id="pageSignupDepartment" value="Department of Computer Science & Applications" placeholder="Enter department">
+              </div>
+            </div>
+
+            <div style="margin-top: 8px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <label style="margin: 0; font-weight: 700; color: #334155; font-size: 11.5px;">Assigned Subjects / Classes <span style="color:#e11d48;">*</span></label>
+              </div>
+              <div id="pageSignupSelectedSubjectsWrap" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:6px 10px; margin-bottom:6px; display:none; flex-wrap:wrap; align-items:center; gap:4px; font-size:11.5px;"></div>
+              <div class="subject-search-wrap" style="margin-bottom:6px; display: flex; gap: 6px;">
+                <input type="text" id="pageFacultySubjectSearch" placeholder="Filter subjects by name or code..." class="search-input" style="flex: 1; padding: 6px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 12px; height: 34px;">
+                <button type="button" id="pageBtnSearchFacultySubject" class="search-btn" style="padding: 0 12px; border: none; border-radius: 8px; background: #1459d9; color: #fff; font-weight: 700; font-size: 12px; height: 34px; cursor: pointer;">Filter</button>
+              </div>
+              <div id="pageSignupDirectSubjectsList" class="direct-subjects-list" style="max-height: 120px; overflow-y: auto;"></div>
+              <input type="hidden" id="pageSignupSubject" name="pageSignupSubject">
+            </div>
+          </div>
+
+          <button class="primary-btn" type="submit" style="margin-top: 10px;">
+            <span id="pageSignupSubmitLabel">Create Student Account</span>
+            <span class="arrow">→</span>
+          </button>
+          <p id="pageSignupMessage" class="message"></p>
+        </form>
+
+        <div class="auth-switch-bar">
+          <span>Already have an account?</span>
+          <button type="button" class="auth-switch-btn" data-open-login>Sign In to Account</button>
+        </div>
+
+        <div class="login-creator-credit">
+          <span>Designed &amp; Developed by</span>
+          <strong class="creator-badge login-creator-badge"><span class="creator-name">Shrikant Girisagar</span></strong>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="app" class="app hidden">
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="brand-left">
+          <span class="side-logo-wrap"><img src="CampusSphere-logo.png?v=20260915_hq1" alt="CampusSphere Logo" class="side-logo-img"></span>
+          <div><b>CampusSphere</b><small>Academic Portal</small></div>
+        </div>
+      </div>
+      <nav id="sidebarNav"></nav>
+      <button id="logoutBtn" class="logout-btn">↪ Logout</button>
+    </aside>
+
+    <section class="main-area">
+      <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+          <button id="sidebarMobileToggle" class="sidebar-mobile-toggle" type="button" aria-label="Toggle navigation menu">☰</button>
+          <div><span id="pageEyebrow">Dashboard</span>
+            <h2 id="pageTitle">Dashboard</h2>
+          </div>
+          <div id="facultySubjectSwitcherContainer"></div>
+        </div>
+        <div class="topbar-actions">
+          <button id="topbarDesktopNotifBtn" class="topbar-notice-btn desktop-notif-btn" title="Enable Desktop Push Notifications"
+            aria-label="Enable Desktop Push Notifications">
+            <span class="bell-icon">🖥️</span>
+            <span id="desktopNotifDot" class="desktop-notif-dot"></span>
+          </button>
+          <button id="topbarNoticeBtn" class="topbar-notice-btn" title="View Campus Notices"
+            aria-label="View Campus Notices">
+            <span class="bell-icon">🔔</span>
+            <span id="topbarNoticeBadge" class="notice-count-badge hidden">0</span>
+          </button>
+          <div class="user-chip"><span id="userAvatar">S</span>
+            <div><b id="userName">Student</b><small id="userRole">Student</small></div>
+          </div>
+        </div>
+      </header>
+      <div id="content" class="content"></div>
+    </section>
+
+  </div>
+
+  <!-- AI Marks & Attendance Analysis Modal -->
+  <div id="aiAnalysisModal" class="ai-modal hidden" role="dialog" aria-labelledby="aiModalTitle" aria-modal="true">
+    <div class="ai-modal-overlay" id="aiModalOverlay"></div>
+    <div class="ai-modal-container">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-wrap">
+          <div class="ai-sparkle-icon" id="aiModalHeaderIcon">🤖</div>
+          <div>
+            <h3 id="aiModalTitle">AI Marks & Attendance Analytics</h3>
+            <p id="aiModalSubtitle">Personalized AI Performance Diagnostic & Visual Breakdown</p>
+          </div>
+        </div>
+        <button type="button" class="ai-modal-close" id="closeAiModalBtn"
+          aria-label="Close AI Analytics Modal">&times;</button>
+      </div>
+
+      <div class="ai-modal-body">
+        <!-- Dynamic Metrics Cards Grid (Supports 5 or 6 cards) -->
+        <div class="ai-metrics-grid" id="aiMetricsGrid">
+          <div class="ai-metric-card" id="aiMetricCard1">
+            <span class="metric-icon" id="aiMetricIcon1">🏆</span>
+            <div class="metric-info">
+              <small id="aiMetricLabel1">Top Subject</small>
+              <h4 id="aiMetricVal1">--</h4>
+              <span class="metric-badge good" id="aiMetricBadge1">--</span>
+            </div>
+          </div>
+
+          <div class="ai-metric-card" id="aiMetricCard2">
+            <span class="metric-icon" id="aiMetricIcon2">🎯</span>
+            <div class="metric-info">
+              <small id="aiMetricLabel2">Low Subject</small>
+              <h4 id="aiMetricVal2">--</h4>
+              <span class="metric-badge warn" id="aiMetricBadge2">--</span>
+            </div>
+          </div>
+
+          <div class="ai-metric-card" id="aiMetricCard3">
+            <span class="metric-icon" id="aiMetricIcon3">🧪</span>
+            <div class="metric-info">
+              <small id="aiMetricLabel3">Top Lab</small>
+              <h4 id="aiMetricVal3">--</h4>
+              <span class="metric-badge good" id="aiMetricBadge3">--</span>
+            </div>
+          </div>
+
+          <div class="ai-metric-card" id="aiMetricCard4">
+            <span class="metric-icon" id="aiMetricIcon4">🔬</span>
+            <div class="metric-info">
+              <small id="aiMetricLabel4">Low Lab</small>
+              <h4 id="aiMetricVal4">--</h4>
+              <span class="metric-badge warn" id="aiMetricBadge4">--</span>
+            </div>
+          </div>
+
+          <div class="ai-metric-card" id="aiMetricCard5">
+            <span class="metric-icon" id="aiMetricIcon5">📈</span>
+            <div class="metric-info">
+              <small id="aiMetricLabel5">Grade Status</small>
+              <h4 id="aiMetricVal5">--</h4>
+              <span class="metric-badge good" id="aiMetricBadge5">--</span>
+            </div>
+          </div>
+
+          <div class="ai-metric-card" id="aiMetricCard6">
+            <span class="metric-icon" id="aiMetricIcon6">🚨</span>
+            <div class="metric-info">
+              <small id="aiMetricLabel6">Subjects < 75%</small>
+                  <h4 id="aiMetricVal6">--</h4>
+                  <span class="metric-badge danger" id="aiMetricBadge6">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Grid (Bar Graph & Pie Chart) -->
+        <div class="ai-charts-grid">
+          <div class="ai-chart-panel">
+            <div class="chart-panel-head">
+              <h5 id="aiBarChartTitle">📊 Subject Marks Comparison (Bar Graph)</h5>
+              <span class="chip-sm" id="aiBarChartChip">Bar Graph</span>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="aiMarksBarChart"></canvas>
+            </div>
+          </div>
+
+          <div class="ai-chart-panel">
+            <div class="chart-panel-head">
+              <h5 id="aiPieChartTitle">🥧 Distribution Ratio (Pie Chart)</h5>
+              <span class="chip-sm" id="aiPieChartChip">Pie Chart</span>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="aiAttendancePieChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Insights & Recommendation Panel -->
+        <div class="ai-insights-panel">
+          <div class="insights-head">
+            <div class="head-left">
+              <span class="ai-pulse-dot"></span>
+              <h4>✨ AI Intelligence Diagnosis & Recommendations</h4>
+            </div>
+            <button type="button" id="refreshAiInsightsBtn" class="refresh-ai-btn">
+              <span>🔄 Refresh AI Insights</span>
+            </button>
+          </div>
+
+          <div id="aiInsightsContent" class="insights-content">
+            <!-- Dynamic AI output rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-modal-footer">
+        <span class="ai-footer-note">Powered by Portal AI Core • Live Academic Analysis</span>
+        <button type="button" id="closeAiModalFooterBtn" class="secondary-btn">Close Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Subject Modal -->
+  <div id="subjectModal" class="ai-modal hidden" role="dialog" aria-labelledby="subjectModalTitle" aria-modal="true">
+    <div class="ai-modal-overlay" id="subjectModalOverlay"></div>
+    <div class="ai-modal-container" style="max-width: 480px;">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-wrap">
+          <div class="ai-sparkle-icon" style="background: #eedfff; color: #6366f1;">📚</div>
+          <div>
+            <h3 id="subjectModalTitle">Add Subject</h3>
+            <p id="subjectModalSubtitle">Configure semester subject details</p>
+          </div>
+        </div>
+        <button type="button" class="ai-modal-close" id="closeSubjectModalBtn"
+          aria-label="Close Subject Modal">&times;</button>
+      </div>
+      <form id="subjectForm">
+        <div class="ai-modal-body" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+          <input type="hidden" id="subjectMode" value="add">
+          <input type="hidden" id="originalSubjectId" value="">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="subjectIdInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Subject Code /
+              ID</label>
+            <input type="text" id="subjectIdInput" required placeholder="e.g. python, cn"
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="subjectNameInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Subject Full
+              Name</label>
+            <input type="text" id="subjectNameInput" required placeholder="e.g. Python Programming"
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="subjectShortInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Subject Short
+              Name</label>
+            <input type="text" id="subjectShortInput" required placeholder="e.g. Python"
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box;">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="subjectSemesterSelect"
+              style="font-size: 12.5px; font-weight: 700; color: #475569;">Semester</label>
+            <select id="subjectSemesterSelect" required
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box; background: white;">
+              <option value="1st Semester">1st Semester</option>
+              <option value="2nd Semester">2nd Semester</option>
+              <option value="3rd Semester">3rd Semester</option>
+              <option value="4th Semester">4th Semester</option>
+              <option value="5th Semester">5th Semester</option>
+              <option value="6th Semester">6th Semester</option>
+            </select>
+          </div>
+        </div>
+        <div class="ai-modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="cancelSubjectModalBtn" class="secondary-btn"
+            style="margin: 0; padding: 8px 16px;">Cancel</button>
+          <button type="submit" class="primary-btn" style="margin: 0; padding: 8px 16px;"><span>Save
+              Subject</span></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Division Modal -->
+  <div id="divisionModal" class="ai-modal hidden" role="dialog" aria-labelledby="divisionModalTitle" aria-modal="true">
+    <div class="ai-modal-overlay" id="divisionModalOverlay"></div>
+    <div class="ai-modal-container" style="max-width: 440px;">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-wrap">
+          <div class="ai-sparkle-icon" style="background: #e0f2fe; color: #0284c7;">🏫</div>
+          <div>
+            <h3 id="divisionModalTitle">Add New Division</h3>
+            <p id="divisionModalSubtitle">Create a class section/division for students</p>
+          </div>
+        </div>
+        <button type="button" class="ai-modal-close" id="closeDivisionModalBtn"
+          aria-label="Close Division Modal">&times;</button>
+      </div>
+      <form id="divisionForm">
+        <div class="ai-modal-body" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="divisionCourseYearSelect" style="font-size: 12.5px; font-weight: 700; color: #475569;">Target Course Year</label>
+            <select id="divisionCourseYearSelect" required
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box; background: white;">
+              <option value="1st Year">1st Year (1st & 2nd Semesters)</option>
+              <option value="2nd Year">2nd Year (3rd & 4th Semesters)</option>
+              <option value="3rd Year">3rd Year (5th & 6th Semesters)</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="divisionNameInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Division Name / Letter</label>
+            <input type="text" id="divisionNameInput" required placeholder="e.g. Div C, C, or Section C"
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box;">
+            <span style="font-size: 11.5px; color: #64748b;">Entering single letters like "C" will format as "Div C".</span>
+          </div>
+        </div>
+        <div class="ai-modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="cancelDivisionModalBtn" class="secondary-btn"
+            style="margin: 0; padding: 8px 16px;">Cancel</button>
+          <button type="submit" class="primary-btn" style="margin: 0; padding: 8px 16px;"><span>Create Division</span></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js?v=20260915_17"></script>
+</body>
+
+</html>

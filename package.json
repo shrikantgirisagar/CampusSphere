@@ -1,0 +1,18 @@
+{
+  "name": "campussphere",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CampusSphere with Express.js backend and persistent JSON database",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node scripts/test-mongodb-users.js && node scripts/test-academic-mongodb.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "mongoose": "^9.9.3"
+  }
+}

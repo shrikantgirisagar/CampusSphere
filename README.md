@@ -1,0 +1,106 @@
+# 🎓 CampusSphere — Academic Management System
+
+A modern, responsive **CampusSphere** web application built with HTML5, CSS3, JavaScript, Node.js, Express 5, and MongoDB / Mongoose. Developed and maintained using **Antigravity IDE**, it features secure `scrypt` password hashing, interactive Chart.js analytics, hash-based SPA routing, and persistent MongoDB database storage.
+
+---
+
+## 📁 Folder Structure
+
+```text
+smart-student/
+├── index.html                      # Single Page Application (SPA) HTML interface
+├── script.js                        # Dynamic frontend logic & API client handlers (~9k lines)
+├── style.css                       # Modern dark glassmorphism stylesheet (~5k lines)
+├── server.js                       # Express.js 5 backend server
+├── package.json                    # Node.js project manifest & dependencies
+├── package-lock.json               # Locked dependency tree
+├── .env                            # Environment variables (MongoDB configuration)
+├── .env.example                    # Template environment variables
+├── .gitignore                      # Git exclusion rules (secrets, node_modules, logs)
+├── README.md                       # Project documentation & setup guide
+├── Start_CampusSphere.bat  # 1-Click Local Launcher (starts server + opens browser)
+├── Stop_CampusSphere.bat   # 1-Click Stopper (terminates backend on port 3000)
+├── models/
+│   ├── AcademicStore.js            # Consolidated academic data store model
+│   ├── User.js                     # User accounts model (student, faculty, admin)
+│   ├── Timetable.js                # Schedule & timetable model
+│   ├── Notice.js                   # Notice schema definition
+│   ├── Attendance.js               # Attendance schema definition
+│   ├── Mark.js                     # Marks schema definition
+│   └── Assignment.js               # Assignment schema definition
+└── scripts/
+    ├── clear-demo-accounts.js      # Utility script to clean up demo/test accounts
+    ├── migrate-to-mongodb.js       # Script to migrate legacy database.json to MongoDB
+    ├── test-academic-mongodb.js    # Direct verification test for AcademicStore CRUD
+    └── test-mongodb-users.js       # Direct verification test for User CRUD & auth
+```
+
+---
+
+## ✨ Features
+
+- **🔐 Role-Based Access Control:** Dedicated portals for **Student**, **Faculty**, and **Admin** accounts.
+- **🔑 Server-Side Security:** Password hashing using Node.js `crypto.scrypt` with timing-safe verification.
+- **🍃 MongoDB Persistence:** Reliable, scalable cloud or local MongoDB storage via Mongoose 9.
+- **📊 Academic Management & Analytics:**
+  - **Student:** Profile details, attendance tracking, marks breakdown, assignments, notes, and AI Chart.js performance metrics.
+  - **Faculty:** Daily attendance recording, batch marks entry, assignment publishing, student interaction, and profile customization.
+  - **Admin:** Student and faculty user management, semester-wise subjects configuration, and system status overview.
+- **🧭 Hash-Based SPA Routing:** Persistent page navigation (`/#attendance`, `/#marks`, `/#assignments`) supporting browser Back/Forward navigation and refresh preservation.
+
+---
+
+## 🚀 Quick Start
+
+### 1. System Requirements
+- [Node.js](https://nodejs.org/) (v20.19.0 or higher recommended for Mongoose 9).
+- MongoDB instance (local service on `mongodb://127.0.0.1:27017` or a free MongoDB Atlas cluster).
+
+### 2. Configure Environment (`.env`)
+Copy `.env.example` to `.env` in the project root:
+```env
+PORT=3000
+MONGODB_URI=mongodb://127.0.0.1:27017/CampusSphere
+```
+
+### 3. Install Dependencies
+```powershell
+npm install
+```
+
+### 4. Run Automated Database Tests
+```powershell
+npm test
+```
+
+### 5. Launching the Portal (Windows)
+
+- **Via Terminal:**
+  ```powershell
+  npm start
+  ```
+  *(or `npm run dev` for auto-reload on file changes)*
+
+- **Via 1-Click Batch File:**
+  Double-click `Start_CampusSphere.bat` to launch the server and automatically open the application in your browser.
+
+- **To Stop the Portal:**
+  Double-click `Stop_CampusSphere.bat` to safely terminate the backend process on port 3000.
+
+---
+
+## 🔑 Starter Demo Accounts
+
+When connecting to a new database, the server automatically seeds the administrator account:
+
+| Role | Username | Default Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin` | `admin@123` |
+
+Students and faculty can self-register via the signup buttons on the login screen, or be provisioned by the Administrator.
+
+---
+
+## 🛡️ Security Notes
+- Keep `.env` secure and never commit it to public version control.
+- Ensure database access credentials are safe and whitelisted.

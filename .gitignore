@@ -1,0 +1,15 @@
+# Secrets
+.env
+data/*.json
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.antigravity/*
+!.antigravity/extensions.json
