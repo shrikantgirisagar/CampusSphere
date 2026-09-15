@@ -58,6 +58,10 @@ app.get("/script.js", (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(__dirname, "script.js"));
 });
+app.get("/animated-background.js", (req, res) => {
+  res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.sendFile(path.join(__dirname, "animated-background.js"));
+});
 
 
 const scryptAsync = promisify(crypto.scrypt);

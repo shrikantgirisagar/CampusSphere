@@ -3063,6 +3063,9 @@ function openPortal() {
   }
   if ($("loginPage")) $("loginPage").classList.add("hidden");
   if ($("app")) $("app").classList.remove("hidden");
+  if (window.AnimatedBackground) {
+    try { window.AnimatedBackground.ensure(); } catch (e) { console.warn("AnimatedBackground.ensure error:", e); }
+  }
   if ($("userName")) $("userName").textContent = currentUser ? currentUser.name : "";
   if ($("userRole")) $("userRole").textContent = roleLabel(currentUser ? currentUser.role : "", currentUser ? currentUser.subject : "");
   try { updateUserAvatarUI(); } catch (e) { console.warn("updateUserAvatarUI error:", e); }
@@ -3543,6 +3546,9 @@ function navigate(page, updateHash = true) {
   $("pageEyebrow").textContent = roleLabel(currentUser ? currentUser.role : "", currentUser ? currentUser.subject : "");
   $("pageTitle").textContent = titles[page] || "Dashboard";
   $("content").innerHTML = pages[page] ? pages[page]() : pages.dashboard();
+  if (window.AnimatedBackground) {
+    try { window.AnimatedBackground.ensure(); } catch (e) { console.warn("AnimatedBackground.ensure error:", e); }
+  }
   updateFacultySubjectSwitcher();
   initPage(page);
 
@@ -10158,7 +10164,7 @@ window.addEventListener("pageshow", () => {
           if (facultyVal && typeof cached.faculty === "number") {
             facultyVal.textContent = Number(cached.faculty).toLocaleString();
             facultyVal.classList.remove("is-loading");
-            if (facultyCard) facultyCard.setAttribute("aria-label", "Faculty Members: " + facultyVal.textContent);
+            if (facultyCard) facultyCard.setAttribute("aria-label", "Registered Faculty Members: " + facultyVal.textContent);
           }
         }
       } catch (_) {}
@@ -10176,7 +10182,7 @@ window.addEventListener("pageshow", () => {
         if (facultyVal && typeof res.faculty === "number") {
           facultyVal.textContent = Number(res.faculty).toLocaleString();
           facultyVal.classList.remove("is-loading");
-          if (facultyCard) facultyCard.setAttribute("aria-label", "Faculty Members: " + facultyVal.textContent);
+          if (facultyCard) facultyCard.setAttribute("aria-label", "Registered Faculty Members: " + facultyVal.textContent);
         }
         try {
           localStorage.setItem("campussphere_stats_counts", JSON.stringify({

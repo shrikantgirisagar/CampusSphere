@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260915_19">
+  <link rel="stylesheet" href="style.css?v=20260916_21">
+  <script src="animated-background.js?v=20260916_21"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
@@ -16,8 +17,8 @@
 </head>
 
 <body>
-  <!-- CampusSphere Ambient Animated Background (Shared Layout) -->
-  <div class="campus-ambient-bg" aria-hidden="true">
+  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
+  <animated-background class="campus-ambient-bg" aria-hidden="true">
     <div class="ambient-blob blob-blue"></div>
     <div class="ambient-blob blob-indigo"></div>
     <div class="ambient-blob blob-cyan"></div>
@@ -29,7 +30,7 @@
       <span class="ambient-ring ring-2"></span>
       <span class="ambient-ring ring-3"></span>
     </div>
-  </div>
+  </animated-background>
 
 
   <!-- =========================================================
@@ -164,7 +165,7 @@
         </article>
 
         <!-- Faculty Statistics Card -->
-        <article class="student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Faculty Members: 4">
+        <article class="student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Registered Faculty Members: 4">
           <div class="student-stat-icon-wrap" aria-hidden="true">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
@@ -172,7 +173,7 @@
             </svg>
           </div>
           <div class="student-stat-number" id="homeFacultyCountVal">4</div>
-          <h3 class="student-stat-label">Faculty Members</h3>
+          <h3 class="student-stat-label">Registered Faculty Members</h3>
           <p class="student-stat-subtext">Department faculty in CampusSphere</p>
         </article>
       </div>
@@ -198,7 +199,7 @@
                 if (elF && typeof data.faculty === "number") {
                   elF.textContent = Number(data.faculty).toLocaleString();
                   elF.classList.remove("is-loading");
-                  if (cardF) cardF.setAttribute("aria-label", "Faculty Members: " + elF.textContent);
+                  if (cardF) cardF.setAttribute("aria-label", "Registered Faculty Members: " + elF.textContent);
                 }
                 try {
                   localStorage.setItem("campussphere_stats_counts", JSON.stringify({

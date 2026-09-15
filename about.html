@@ -7,15 +7,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260915_19">
+  <link rel="stylesheet" href="style.css?v=20260916_21">
+  <script src="animated-background.js?v=20260916_21"></script>
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
   <link rel="apple-touch-icon" href="CampusSphere-logo.png?v=20260915_hq1">
 </head>
 
 <body class="about-page-body">
-  <!-- CampusSphere Ambient Animated Background (Shared Layout) -->
-  <div class="campus-ambient-bg" aria-hidden="true">
+  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
+  <animated-background class="campus-ambient-bg" aria-hidden="true">
     <div class="ambient-blob blob-blue"></div>
     <div class="ambient-blob blob-indigo"></div>
     <div class="ambient-blob blob-cyan"></div>
@@ -27,7 +28,7 @@
       <span class="ambient-ring ring-2"></span>
       <span class="ambient-ring ring-3"></span>
     </div>
-  </div>
+  </animated-background>
 
   <div class="about-page">
     <!-- INSTITUTION HEADER -->
@@ -42,14 +43,13 @@
       </div>
 
       <div class="institution-header-inner">
-        <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS home">
+        <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
           <span class="institution-logo-wrap">
-            <img src="CampusSphere-logo.png?v=20260915_hq1" alt="College logo" class="institution-logo">
+            <img src="CampusSphere-logo.png?v=20260915_hq1" alt="Bharatesh BCA and CampusSphere logo" class="institution-logo">
           </span>
           <span class="institution-copy">
-            <strong>BHARATESH COLLEGE OF COMPUTER APPLICATIONS</strong>
-            <small>Belagavi | Karnataka</small>
-            <em>Education • Equality • Empowerment</em>
+            <strong class="institution-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</strong>
+            <span class="institution-portal-identity">CampusSphere — Your Academic Portal</span>
           </span>
         </a>
         <div class="institution-actions">
@@ -66,7 +66,7 @@
         <a class="public-nav-link" href="courses.html">Courses</a>
         <a class="public-nav-link" href="index.html#students-faculty-count">Faculty</a>
         <a class="public-nav-link" href="index.html#students-faculty-count">Students</a>
-        <a class="public-nav-link" href="index.html#why-campussphere">Why CampusSphere</a>
+        <a class="public-nav-link" href="index.html#why-campussphere">Features</a>
         <a class="public-nav-link active" href="about.html">About</a>
         <a class="public-nav-link" href="#public-footer">Contact</a>
         <button class="public-menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" id="aboutMenuToggle">
