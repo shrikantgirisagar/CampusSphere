@@ -385,6 +385,55 @@ function bindCredentialsPhotoEvents() {
   }
 }
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizeDownloadUrl(url) {
+  if (!url) return "#";
+  const str = String(url).trim();
+  if (str.startsWith("data:image/") || str.startsWith("data:application/") || str.startsWith("data:text/plain") || str.startsWith("blob:") || str.startsWith("http://") || str.startsWith("https://")) {
+    return str;
+  }
+  if (str.startsWith("data:") && !str.startsWith("data:text/html")) {
+    return str;
+  }
+  return "#";
+}
+
+function getStoredAuthToken() {
+  try {
+    return sessionStorage.getItem("portalAuthToken") || "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function setStoredAuthToken(token) {
+  try {
+    if (token) {
+      sessionStorage.setItem("portalAuthToken", token);
+    } else {
+      sessionStorage.removeItem("portalAuthToken");
+    }
+  } catch (_) {}
+}
+
+function getAuthHeaders(extraHeaders = {}) {
+  const headers = { ...extraHeaders };
+  const token = getStoredAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 function loadUsers() {
   return normalizeClientUsers(DEFAULT_USERS);
 }
@@ -394,9 +443,84 @@ function saveUsers() {
   syncUsersToServer(data);
 }
 
+let isSessionExpiring = false;
+
+function handleSessionExpired(customMessage) {
+  if (isSessionExpiring) return;
+  isSessionExpiring = true;
+
+  const wasAuthenticated = !!currentUser || !!getStoredAuthToken() || !!sessionStorage.getItem("portalUser");
+
+  // 1. Stop treating the user as authenticated
+  currentUser = null;
+  sessionStorage.removeItem("portalUser");
+  setStoredAuthToken("");
+
+  try {
+    resetAttendanceFilters();
+  } catch (_) {}
+
+  try {
+    if (typeof cleanupClassNotifications === "function") cleanupClassNotifications();
+  } catch (_) {}
+
+  try {
+    const notifContainer = document.getElementById("classNotificationContainer");
+    if (notifContainer) notifContainer.remove();
+  } catch (_) {}
+
+  try {
+    document.querySelectorAll(".modal-backdrop, .schedule-modal-backdrop, #aiAnalysisModal").forEach(m => m.classList.add("hidden"));
+    if (typeof closeSignupModal === "function") closeSignupModal();
+  } catch (_) {}
+
+  const appEl = $("app");
+  if (appEl) appEl.classList.add("hidden");
+
+  // 2. Redirect to the existing login page/screen
+  if (typeof window.CampusSpherePublic?.showLogin === "function") {
+    window.CampusSpherePublic.showLogin(true);
+  } else {
+    const homeEl = $("publicHome");
+    const loginEl = $("loginPage");
+    if (homeEl) homeEl.classList.add("hidden");
+    if (loginEl) {
+      loginEl.classList.remove("hidden");
+      loginEl.style.display = "grid";
+      try { resetLoginForm(); } catch (_) {}
+    }
+  }
+
+  // 3. Display session expired notice
+  if (wasAuthenticated && $("loginMessage")) {
+    $("loginMessage").textContent = customMessage || "Your session has expired. Please sign in again.";
+    $("loginMessage").className = "message error";
+  }
+
+  setTimeout(() => {
+    isSessionExpiring = false;
+  }, 1000);
+}
+
+async function authenticatedFetch(url, options = {}) {
+  const optionsCopy = { ...options };
+  optionsCopy.headers = getAuthHeaders(optionsCopy.headers || {});
+
+  const response = await fetch(url, optionsCopy);
+
+  if (response.status === 401) {
+    if (getStoredAuthToken() || currentUser) {
+      handleSessionExpired("Your session has expired. Please sign in again.");
+    }
+  }
+
+  return response;
+}
+
 function syncUsersToServer(data) {
   if (!data) return;
-  fetch(`${API_BASE_URL}/api/users/migrate`, {
+  if (!currentUser || currentUser.role !== "admin") return;
+  authenticatedFetch(`${API_BASE_URL}/api/users/migrate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ users: data })
@@ -405,13 +529,18 @@ function syncUsersToServer(data) {
 
 async function hydrateUsersFromServer() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/public`);
+    const response = await authenticatedFetch(`${API_BASE_URL}/api/users/public`);
     const data = await response.json();
-    if (!response.ok || !data.success) throw new Error(data.message || "Unable to load database users.");
+    if (!response.ok || !data.success) {
+      if (response.status === 403) {
+        console.warn("Access forbidden when loading users.");
+      }
+      throw new Error(data.message || "Unable to load database users.");
+    }
     USERS = normalizeClientUsers({
-      student: data.users.filter(u => u.role === "student"),
-      faculty: data.users.filter(u => u.role === "faculty"),
-      admin: data.users.filter(u => u.role === "admin")
+      student: (data.users || []).filter(u => u.role === "student"),
+      faculty: (data.users || []).filter(u => u.role === "faculty"),
+      admin: (data.users || []).filter(u => u.role === "admin")
     });
     USERS.student.forEach(s => ensureStudentRecord(s.username));
 
@@ -435,13 +564,18 @@ async function hydrateUsersFromServer() {
 }
 
 async function createUserOnServer(userData) {
-  const response = await fetch(`${API_BASE_URL}/api/users`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(userData)
   });
   const data = await response.json();
-  if (!response.ok || !data.success) throw new Error(data.message || "Unable to save account to MongoDB.");
+  if (!response.ok || !data.success) {
+    if (response.status === 403) {
+      throw new Error(data.message || "Forbidden: Only administrators can create privileged accounts.");
+    }
+    throw new Error(data.message || "Unable to save account to MongoDB.");
+  }
   try {
     localStorage.setItem("campussphere_stats_trigger", String(Date.now()));
     if (typeof window.CampusSphereSyncCounts === "function") window.CampusSphereSyncCounts(true);
@@ -451,22 +585,32 @@ async function createUserOnServer(userData) {
 }
 
 async function updateUserOnServer(role, oldUsername, userData) {
-  const response = await fetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(oldUsername)}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(oldUsername)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(userData)
   });
   const data = await response.json();
-  if (!response.ok || !data.success) throw new Error(data.message || "Unable to update account in MongoDB.");
+  if (!response.ok || !data.success) {
+    if (response.status === 403) {
+      throw new Error(data.message || "Forbidden: You are not authorized to modify this account.");
+    }
+    throw new Error(data.message || "Unable to update account in MongoDB.");
+  }
   return data.user;
 }
 
 async function deleteUserOnServer(role, username) {
-  const response = await fetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(username)}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(username)}`, {
     method: "DELETE"
   });
   const data = await response.json();
-  if (!response.ok || !data.success) throw new Error(data.message || "Unable to delete account from MongoDB.");
+  if (!response.ok || !data.success) {
+    if (response.status === 403) {
+      throw new Error(data.message || "Forbidden: Only administrators can delete user accounts.");
+    }
+    throw new Error(data.message || "Unable to delete account from MongoDB.");
+  }
   try {
     localStorage.setItem("campussphere_stats_trigger", String(Date.now()));
     if (typeof window.CampusSphereSyncCounts === "function") window.CampusSphereSyncCounts(true);
@@ -484,6 +628,9 @@ async function loginOnServer(role, username, password) {
     });
     const data = await response.json();
     if (!response.ok || !data.success) throw new Error(data.message || "Invalid username or password.");
+    if (data.token) {
+      setStoredAuthToken(data.token);
+    }
     return data.user;
   } catch (error) {
     if (error.message && error.message !== "Failed to fetch" && !error.message.includes("fetch")) {
@@ -2300,7 +2447,7 @@ function getGradeStatus(marksPct) {
 
 function generateAiInsights(analytics, mode = "marks") {
   const { student, avgMarksPct, avgAttPct, topTheoryMarks, lowTheoryMarks, topLabMarks, lowLabMarks, topTheoryAtt, lowTheoryAtt, topLabAtt, lowLabAtt, lowAttendanceSubjects } = analytics;
-  const studentName = student ? student.name : "Student";
+  const studentName = escapeHtml(student ? student.name : "Student");
 
   if (mode === "marks") {
     const isI1Only = analytics.internalsMode === "i1_only";
@@ -3975,6 +4122,7 @@ function initFacultyProfilePage() {
       const currentDiv = currentUser.division || "Both Divisions";
       $("facultyProfileDivision").value = (currentDiv === "All Divisions") ? "Both Divisions" : currentDiv;
     }
+    if ($("facultyCurrentPassword")) $("facultyCurrentPassword").value = "";
     if ($("facultyAuthUsername")) $("facultyAuthUsername").value = "";
     if ($("facultyNewPassword")) $("facultyNewPassword").value = "";
     if ($("facultyConfirmPassword")) $("facultyConfirmPassword").value = "";
@@ -4016,7 +4164,7 @@ function initFacultyProfilePage() {
     const department = $("facultyProfileDepartment") ? $("facultyProfileDepartment").value.trim() : "";
     const divisionSelect = $("facultyProfileDivision");
     const division = divisionSelect ? divisionSelect.value : (currentUser.division || "Both Divisions");
-    const authUsername = $("facultyAuthUsername") ? $("facultyAuthUsername").value.trim() : "";
+    const currentPassword = $("facultyCurrentPassword") ? $("facultyCurrentPassword").value : ($("facultyAuthUsername") ? $("facultyAuthUsername").value.trim() : "");
     const newPassword = $("facultyNewPassword") ? $("facultyNewPassword").value : "";
     const confirmPassword = $("facultyConfirmPassword") ? $("facultyConfirmPassword").value : "";
     const submitBtn = $("facultySaveProfileBtn");
@@ -4039,15 +4187,11 @@ function initFacultyProfilePage() {
       return;
     }
 
-    if (newPassword || confirmPassword || authUsername) {
-      if (!authUsername) {
-        showFeedback("Please enter your Username to change password.", "error");
-        if ($("facultyAuthUsername")) $("facultyAuthUsername").focus();
-        return;
-      }
-      if (authUsername.toLowerCase() !== currentUser.username.toLowerCase()) {
-        showFeedback("Username does not match your current faculty account username.", "error");
-        if ($("facultyAuthUsername")) $("facultyAuthUsername").focus();
+    if (newPassword || confirmPassword || currentPassword) {
+      if (!currentPassword) {
+        showFeedback("Please enter your current password to change password.", "error");
+        if ($("facultyCurrentPassword")) $("facultyCurrentPassword").focus();
+        else if ($("facultyAuthUsername")) $("facultyAuthUsername").focus();
         return;
       }
       if (!newPassword) {
@@ -4113,6 +4257,7 @@ function initFacultyProfilePage() {
       };
       if (newPassword) {
         payload.password = newPassword;
+        payload.currentPassword = currentPassword;
       }
 
       const updated = await updateUserOnServer("faculty", oldUsername, payload);
@@ -4936,7 +5081,8 @@ function populateAdminEditFacultySubjectSelect(query = "") {
   renderAdminEditDirectSubjectsList(query);
 }
 
-function openAdminFacultyEditModal(username) {
+function openAdminFacultyEditModal(rawUsername) {
+  const username = decodeURIComponent(rawUsername || "");
   const f = (USERS.faculty || []).find(u => u.username.toLowerCase() === username.toLowerCase());
   if (!f) return;
   adminEditingFacultyUsername = username;
@@ -5701,15 +5847,15 @@ function initAssignmentsPage() {
         }
 
         const saveAndNavigate = (fileName, fileData) => {
-          const assignId = "assign_" + Date.now();
+          const assignBaseId = "assign_" + Date.now();
           const todayISO = getTodayISODate();
           if (!Array.isArray(ACADEMIC.deletedAssignments)) ACADEMIC.deletedAssignments = [];
 
-          targetStudents.forEach(s => {
+          targetStudents.forEach((s, sIdx) => {
             const deleteKey = `${String(s.username).toLowerCase()}___${targetSub}___${title}___${due}`;
             ACADEMIC.deletedAssignments = ACADEMIC.deletedAssignments.filter(k => k !== deleteKey);
             ACADEMIC.assignments.push({
-              id: assignId,
+              id: `${assignBaseId}_${encodeURIComponent(s.username || sIdx)}`,
               student: s.username,
               subject: targetSub,
               targetDivision: targetDiv,
@@ -5728,6 +5874,10 @@ function initAssignmentsPage() {
 
         if (fileInput && fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
+          if (file.size > 2 * 1024 * 1024) {
+            alert("Attachment size exceeds 2 MB limit. Please upload a smaller file.");
+            return;
+          }
           const reader = new FileReader();
           reader.onload = function (e) {
             saveAndNavigate(file.name, e.target.result);
@@ -5888,6 +6038,10 @@ function initNotesPage() {
 
         if (fileEl && fileEl.files && fileEl.files[0]) {
           const file = fileEl.files[0];
+          if (file.size > 2 * 1024 * 1024) {
+            alert("Attachment size exceeds 2 MB limit. Please upload a smaller file.");
+            return;
+          }
           const reader = new FileReader();
           reader.onload = function (e) {
             saveAndNavigate(file.name, e.target.result);
@@ -5997,6 +6151,11 @@ function initNoticesPage() {
 
         const file = (fileInput && fileInput.files && fileInput.files.length) ? fileInput.files[0] : null;
         if (file) {
+          if (file.size > 2 * 1024 * 1024) {
+            $("noticeMessage").textContent = "Attachment size exceeds 2 MB limit. Please upload a smaller file.";
+            $("noticeMessage").className = "message error";
+            return;
+          }
           const reader = new FileReader();
           reader.onload = function (e) {
             publishNoticeObj(file.name, e.target.result);
@@ -6587,14 +6746,11 @@ const pages = {
       const labSubjects = allEnrolled.filter(s => s.name.toLowerCase().includes("lab") || s.id.toLowerCase().includes("lab"));
 
       const renderStudentSubjectTag = (s, isLab) => {
-        const matchingFaculty = getFacultyForSubject(s.id, currentUser.division);
-        const facName = matchingFaculty.length ? matchingFaculty[0].name : "";
-        const facText = facName ? ` • 🧑‍🏫 ${facName}` : "";
         const bg = isLab ? "#e0f2fe" : "#eef2ff";
         const color = isLab ? "#075985" : "#3730a3";
         const border = isLab ? "#bae6fd" : "#c7d2fe";
         const icon = isLab ? "🧪" : "📖";
-        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${icon} ${s.name}${facText}</span>`;
+        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${icon} ${s.name}</span>`;
       };
 
       const theorySubjectsMarkup = theorySubjects.length
@@ -6951,12 +7107,15 @@ const pages = {
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
               <div>
-                <label for="facultyAuthUsername" style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; min-height: 18px;">
-                  Faculty Username
+                <label for="facultyCurrentPassword" style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; min-height: 18px;">
+                  Current Password
                 </label>
-                <div class="input-wrap">
+                <div class="password-wrap">
                   <span class="input-icon">🛡️</span>
-                  <input id="facultyAuthUsername" type="text" placeholder="Enter faculty username" autocomplete="username">
+                  <input id="facultyCurrentPassword" type="password" placeholder="Enter current password" autocomplete="current-password">
+                  <button type="button" class="eye-btn faculty-eye-toggle" data-target="facultyCurrentPassword" aria-label="Show password" title="Show password">
+                    ${eyeOpenSVG}
+                  </button>
                 </div>
               </div>
 
@@ -7978,22 +8137,22 @@ const pages = {
         const matches = !qInitial || studentName.toLowerCase().includes(qInitial) || String(a.student).toLowerCase().includes(qInitial) || String(a.title || "").toLowerCase().includes(qInitial);
 
         return `
-                    <tr class="assignment-table-row" data-student-name="${(studentName || '').replace(/"/g, '&quot;')}" data-student-username="${(a.student || '').replace(/"/g, '&quot;')}" data-assignment-title="${(a.title || '').replace(/"/g, '&quot;')}" style="${matches ? '' : 'display:none;'}">
+                    <tr class="assignment-table-row" data-student-name="${escapeHtml(studentName || '')}" data-student-username="${escapeHtml(a.student || '')}" data-assignment-title="${escapeHtml(a.title || '')}" style="${matches ? '' : 'display:none;'}">
                       <td style="font-size:11px; text-align:center;">${idx + 1}</td>
-                      <td><strong class="student-name">${studentName}</strong></td>
-                      <td><code class="uucms-code" style="font-weight:700; font-size:12px; color:#0f172a;">${a.student}</code></td>
-                      <td><span class="chip-sm" style="background:#f1f5f9; color:#475569; padding:0px 5px; border-radius:4px; font-weight:600; font-size:10.5px;">${studentDiv}</span></td>
-                      <td><span style="color:#475569; font-size:11px; font-weight:400;">${a.title}</span></td>
+                      <td><strong class="student-name">${escapeHtml(studentName)}</strong></td>
+                      <td><code class="uucms-code" style="font-weight:700; font-size:12px; color:#0f172a;">${escapeHtml(a.student)}</code></td>
+                      <td><span class="chip-sm" style="background:#f1f5f9; color:#475569; padding:0px 5px; border-radius:4px; font-weight:600; font-size:10.5px;">${escapeHtml(studentDiv)}</span></td>
+                      <td><span style="color:#475569; font-size:11px; font-weight:400;">${escapeHtml(a.title)}</span></td>
                       <td style="font-size:11px;">${formattedDue}</td>
                       <td style="font-size:11px;">${formattedSubmitted}</td>
                       <td style="text-align:center;">
                         <div class="pa-toggle-group" style="justify-content:center; gap: 4px;">
-                          <button type="button" class="btn-assign-status btn-pend ${a.status === "Pending" ? "active" : ""} btn-faculty-set-status" data-assign-index="${globalIdx}" data-student="${a.student}" data-title="${encodeURIComponent(a.title || '')}" data-due="${a.due}" data-status="Pending" title="Set Pending">Pending</button>
-                          <button type="button" class="btn-assign-status btn-sub ${a.status === "Submitted" ? "active" : ""} btn-faculty-set-status" data-assign-index="${globalIdx}" data-student="${a.student}" data-title="${encodeURIComponent(a.title || '')}" data-due="${a.due}" data-status="Submitted" title="Set Submitted">Submitted</button>
+                          <button type="button" class="btn-assign-status btn-pend ${a.status === "Pending" ? "active" : ""} btn-faculty-set-status" data-assign-index="${globalIdx}" data-student="${escapeHtml(a.student)}" data-title="${encodeURIComponent(a.title || '')}" data-due="${escapeHtml(a.due)}" data-status="Pending" title="Set Pending">Pending</button>
+                          <button type="button" class="btn-assign-status btn-sub ${a.status === "Submitted" ? "active" : ""} btn-faculty-set-status" data-assign-index="${globalIdx}" data-student="${escapeHtml(a.student)}" data-title="${encodeURIComponent(a.title || '')}" data-due="${escapeHtml(a.due)}" data-status="Submitted" title="Set Submitted">Submitted</button>
                         </div>
                       </td>
                       <td style="text-align:center;">
-                        <button type="button" class="btn-assign-status btn-del btn-delete-assignment" data-assign-index="${globalIdx}" data-student="${a.student}" data-title="${encodeURIComponent(a.title || '')}" data-due="${a.due}" title="Delete Record">🗑️ Delete</button>
+                        <button type="button" class="btn-assign-status btn-del btn-delete-assignment" data-assign-index="${globalIdx}" data-student="${escapeHtml(a.student)}" data-title="${encodeURIComponent(a.title || '')}" data-due="${escapeHtml(a.due)}" title="Delete Record">🗑️ Delete</button>
                       </td>
                     </tr>
                   `;
@@ -8027,7 +8186,7 @@ const pages = {
       const hasAttachments = !!a.fileData;
       const formattedDue = formatDateDDOrdinalMonth(a.due);
       const formattedSubmitted = a.submittedDate ? formatDateDDOrdinalMonth(a.submittedDate) : "";
-      return `<article class="assignment"><div class="assignment-icon">${s ? s.icon : '📝'}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${a.title}</b>${a.description ? `<p class="assignment-desc">${a.description}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${a.fileData}" download="${a.fileName || 'Assignment_Document'}" class="btn-doc-download"><span style="font-size:14px;">📄</span> ${a.fileName || 'Download Document'}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? s.name : ''} • <strong>Submission Date:</strong> ${formattedDue}${a.status === "Submitted" && formattedSubmitted ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formattedSubmitted}</span>` : ''}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;"><span class="status ${a.status === "Submitted" ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${a.status === "Submitted" ? "✓ Submitted" : "⏳ Pending"}</span></div></article>`;
+      return `<article class="assignment"><div class="assignment-icon">${s ? escapeHtml(s.icon) : '📝'}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${escapeHtml(a.title)}</b>${a.description ? `<p class="assignment-desc">${escapeHtml(a.description)}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${sanitizeDownloadUrl(a.fileData)}" download="${escapeHtml(a.fileName || 'Assignment_Document')}" class="btn-doc-download"><span style="font-size:14px;">📄</span> ${escapeHtml(a.fileName || 'Download Document')}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? escapeHtml(s.name) : ''} • <strong>Submission Date:</strong> ${formattedDue}${a.status === "Submitted" && formattedSubmitted ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formattedSubmitted}</span>` : ''}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;"><span class="status ${a.status === "Submitted" ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${a.status === "Submitted" ? "✓ Submitted" : "⏳ Pending"}</span></div></article>`;
     }).join("") : `<div class="empty-state">No assignments assigned to you yet.</div>`}</div></section>`;
   },
   notes() {
@@ -8095,15 +8254,15 @@ const pages = {
         const hasFile = !!n.fileData;
         const sub = subjectById(n.subject) || { name: n.subject, icon: "📚" };
         return `<article class="assignment" style="border-left:4px solid #0284c7;">
-              <div class="assignment-icon">${sub.icon || '📚'}</div>
+              <div class="assignment-icon">${escapeHtml(sub.icon || '📚')}</div>
               <div class="assignment-main">
-                <b style="font-size:15px; color:#1e293b;">${n.title}</b>
-                ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${n.fileData}" download="${n.fileName || 'Study_Notes'}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0f9ff; border:1px solid #7dd3fc; color:#0369a1; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">📄</span> Download ${n.fileName || 'Notes Document'}</a></div>` : ''}
+                <b style="font-size:15px; color:#1e293b;">${escapeHtml(n.title)}</b>
+                ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Study_Notes')}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0f9ff; border:1px solid #7dd3fc; color:#0369a1; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">📄</span> Download ${escapeHtml(n.fileName || 'Notes Document')}</a></div>` : ''}
                 <small style="margin-top:6px; color:#64748b; display:block;">
-                  ${sub.name} • Target: <strong>${n.division || 'All Divisions'}</strong> • Uploaded on ${n.date || 'Today'}
+                  ${escapeHtml(sub.name)} • Target: <strong>${escapeHtml(n.division || 'All Divisions')}</strong> • Uploaded on ${escapeHtml(n.date || 'Today')}
                 </small>
               </div>
-              <button type="button" class="btn-delete-note" data-note-id="${n.id}" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;" title="Delete this note">🗑️ Delete</button>
+              <button type="button" class="btn-delete-note" data-note-id="${escapeHtml(n.id)}" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;" title="Delete this note">🗑️ Delete</button>
             </article>`;
       }).join("") : `<div class="empty-state">No notes shared for your assigned subjects yet. Upload notes using the form above.</div>`}
         </div>
@@ -8148,17 +8307,17 @@ const pages = {
         ${allNotes.length ? allNotes.map(n => {
       const sub = subjectById(n.subject) || { name: n.subject || "General", short: n.subject || "General", icon: "📚" };
       const hasFile = !!n.fileData;
-      return `<article class="assignment note-card-item" data-title="${(n.title || '').replace(/"/g, '&quot;')}" data-subject="${n.subject || ''}" style="border-left:4px solid #16a34a;">
-            <div class="assignment-icon">${sub.icon || '📚'}</div>
+      return `<article class="assignment note-card-item" data-title="${escapeHtml(n.title || '')}" data-subject="${escapeHtml(n.subject || '')}" style="border-left:4px solid #16a34a;">
+            <div class="assignment-icon">${escapeHtml(sub.icon || '📚')}</div>
             <div class="assignment-main">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
-                <b style="font-size:15px; color:#1e293b;">${n.title}</b>
-                <span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:2px 8px; font-weight:700;">${sub.short}</span>
-                <span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; padding:2px 8px; font-weight:600;">${n.division || 'All Divisions'}</span>
+                <b style="font-size:15px; color:#1e293b;">${escapeHtml(n.title)}</b>
+                <span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:2px 8px; font-weight:700;">${escapeHtml(sub.short)}</span>
+                <span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; padding:2px 8px; font-weight:600;">${escapeHtml(n.division || 'All Divisions')}</span>
               </div>
-              ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${n.fileData}" download="${n.fileName || 'Study_Notes'}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #86efac; color:#166534; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">📄</span> Download ${n.fileName || 'Notes Document'}</a></div>` : ''}
+              ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Study_Notes')}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #86efac; color:#166534; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">📄</span> Download ${escapeHtml(n.fileName || 'Notes Document')}</a></div>` : ''}
               <small style="margin-top:6px; color:#64748b; display:block;">
-                Shared by <strong>Prof. ${n.uploadedByName || 'Faculty'}</strong> • Uploaded on ${n.date || 'Recently'}
+                Shared by <strong>Prof. ${escapeHtml(n.uploadedByName || 'Faculty')}</strong> • Uploaded on ${escapeHtml(n.date || 'Recently')}
               </small>
             </div>
           </article>`;
@@ -8496,16 +8655,16 @@ const pages = {
             <span>📢</span>
             <div style="flex:1;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
-                <small>${n.date}</small>
+                <small>${escapeHtml(n.date)}</small>
                 ${targetTag}
-                ${n.authorRole ? `<small style="color:#64748b; font-style:italic;">By ${n.authorName || (n.authorRole === 'admin' ? 'Admin' : 'Faculty')}</small>` : ''}
+                ${n.authorRole ? `<small style="color:#64748b; font-style:italic;">By ${escapeHtml(n.authorName || (n.authorRole === 'admin' ? 'Admin' : 'Faculty'))}</small>` : ''}
               </div>
-              <h3>${n.title}</h3>
-              <p>${n.text}</p>
+              <h3>${escapeHtml(n.title)}</h3>
+              <p>${escapeHtml(n.text)}</p>
               ${n.fileData ? `
                 <div style="margin-top:10px;">
-                  <a href="${n.fileData}" download="${(n.fileName || 'Notice_Document').replace(/"/g, '&quot;')}" class="notice-doc-link">
-                    <span>📄</span> ${n.fileName || 'Download Attachment'}
+                  <a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Notice_Document')}" class="notice-doc-link">
+                    <span>📄</span> ${escapeHtml(n.fileName || 'Download Attachment')}
                   </a>
                 </div>
               ` : ''}
@@ -8531,15 +8690,15 @@ const pages = {
           <span>📢</span>
           <div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
-              <small>${n.date}</small>
+              <small>${escapeHtml(n.date)}</small>
               ${targetTag}
             </div>
-            <h3>${n.title}</h3>
-            <p>${n.text}</p>
+            <h3>${escapeHtml(n.title)}</h3>
+            <p>${escapeHtml(n.text)}</p>
             ${n.fileData ? `
               <div style="margin-top:10px;">
-                <a href="${n.fileData}" download="${(n.fileName || 'Notice_Document').replace(/"/g, '&quot;')}" class="notice-doc-link">
-                  <span>📄</span> ${n.fileName || 'Download Attachment'}
+                <a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Notice_Document')}" class="notice-doc-link">
+                  <span>📄</span> ${escapeHtml(n.fileName || 'Download Attachment')}
                 </a>
               </div>
             ` : ''}
@@ -8571,7 +8730,7 @@ const pages = {
       const studentDiv = s.division || "Div A";
       const studentSem = s.semester || "1st Semester";
       const studentYear = s.courseYear || (studentSem === "3rd Semester" || studentSem === "4th Semester" ? "2nd Year" : (studentSem === "5th Semester" || studentSem === "6th Semester" ? "3rd Year" : "1st Year"));
-      return `<tr data-user-row="student" data-user-name="${s.name}" data-user-username="${s.username}" data-user-division="${studentDiv}"><td><strong>${s.name}</strong></td><td><code>${s.username}</code></td><td style="text-align:center !important;">${studentDiv}</td><td>${studentYear} - ${studentSem}</td><td style="text-align:center !important;"><span class="status good">Active</span></td><td class="admin-actions" style="text-align:center !important; vertical-align:middle !important;"><button class="danger-btn" type="button" data-remove-user-role="student" data-remove-user-username="${s.username}" data-remove-user-name="${s.name}" style="margin:0 auto !important; display:inline-block !important; height:28px; padding:0 12px; font-size:12px; font-weight:700;">Remove</button></td></tr>`;
+      return `<tr data-user-row="student" data-user-name="${escapeHtml(s.name)}" data-user-username="${escapeHtml(s.username)}" data-user-division="${escapeHtml(studentDiv)}"><td><strong>${escapeHtml(s.name)}</strong></td><td><code>${escapeHtml(s.username)}</code></td><td style="text-align:center !important;">${escapeHtml(studentDiv)}</td><td>${escapeHtml(studentYear)} - ${escapeHtml(studentSem)}</td><td style="text-align:center !important;"><span class="status good">Active</span></td><td class="admin-actions" style="text-align:center !important; vertical-align:middle !important;"><button class="danger-btn" type="button" data-remove-user-role="student" data-remove-user-username="${escapeHtml(s.username)}" data-remove-user-name="${escapeHtml(s.name)}" style="margin:0 auto !important; display:inline-block !important; height:28px; padding:0 12px; font-size:12px; font-weight:700;">Remove</button></td></tr>`;
     }).join("") || `<tr><td colspan="6" style="text-align:center;">No students registered yet.</td></tr>`}</tbody></table></div></section>`;
   },
   faculty() {
@@ -8600,19 +8759,19 @@ const pages = {
       const subjectBadges = subs.length
         ? subs.map(sub => `<span class="badge" style="font-size:11px; background:#f1f5f9; color:#334155; padding:3px 7px; border-radius:6px; margin:2px; display:inline-flex; align-items:center; gap:4px;"><span>${sub.icon || '📚'}</span> <strong>${sub.short || sub.name}</strong> <small style="color:#64748b;">(${sub.semester})</small></span>`).join(" ")
         : `<span style="font-size:12px; color:#94a3b8;">No subjects assigned</span>`;
-      return `<div class="faculty-card" data-user-row="faculty" data-user-name="${f.name}" data-user-username="${f.username}">
-          <div class="big-avatar">${f.name.charAt(0)}</div>
-          <h3>${f.name}</h3>
+      return `<div class="faculty-card" data-user-row="faculty" data-user-name="${escapeHtml(f.name)}" data-user-username="${escapeHtml(f.username)}">
+          <div class="big-avatar">${escapeHtml(f.name ? f.name.charAt(0) : 'F')}</div>
+          <h3>${escapeHtml(f.name)}</h3>
           <div style="margin: 6px 0 8px 0;">${divBadge}</div>
           <div style="margin-bottom:12px; text-align:left; width:100%;">
             <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px; text-transform:uppercase;">Managed Classes (${subs.length}):</div>
             <div style="display:flex; flex-wrap:wrap; gap:4px;">${subjectBadges}</div>
           </div>
-          <small>Username: ${f.username}</small>
+          <small>Username: ${escapeHtml(f.username)}</small>
           <span class="status good">Active</span>
           <div class="admin-actions admin-actions-stack">
-            <button class="secondary-btn full-width" type="button" onclick="openAdminFacultyEditModal('${f.username}')" style="margin-bottom:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px; cursor:pointer;">✏️ Manage Classes</button>
-            <button class="danger-btn full-width" type="button" data-remove-user-role="faculty" data-remove-user-username="${f.username}" data-remove-user-name="${f.name}">Remove</button>
+            <button class="secondary-btn full-width" type="button" onclick="openAdminFacultyEditModal('${encodeURIComponent(f.username)}')" style="margin-bottom:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px; cursor:pointer;">✏️ Manage Classes</button>
+            <button class="danger-btn full-width" type="button" data-remove-user-role="faculty" data-remove-user-username="${escapeHtml(f.username)}" data-remove-user-name="${escapeHtml(f.name)}">Remove</button>
           </div>
         </div>`;
     }).join("") : `<div class="empty-state">No faculty accounts registered yet.</div>`}</div></section>`;
@@ -9221,6 +9380,7 @@ function logout() {
   }
 
   sessionStorage.removeItem("portalUser");
+  setStoredAuthToken("");
   currentUser = null;
   updateFacultySubjectSwitcher();
   window.location.hash = "";
@@ -9297,7 +9457,7 @@ function logout() {
 
 function syncTimetableToBackend() {
   if (Array.isArray(ACADEMIC.timetable)) {
-    fetch(API_BASE_URL + "/api/timetable/sync", {
+    authenticatedFetch(API_BASE_URL + "/api/timetable/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ timetable: ACADEMIC.timetable })
@@ -9307,11 +9467,21 @@ function syncTimetableToBackend() {
 
 function syncAcademicDataToBackend() {
   if (!ACADEMIC) return Promise.resolve(null);
-  return fetch(API_BASE_URL + "/api/academic/sync", {
+  return authenticatedFetch(API_BASE_URL + "/api/academic/sync", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: ACADEMIC })
-  }).then(r => r.json()).catch(e => {
+  }).then(async r => {
+    try {
+      const json = await r.json();
+      if (!r.ok && r.status === 403) {
+        console.warn("Academic data backend sync forbidden:", json.message);
+      }
+      return json;
+    } catch (_) {
+      return null;
+    }
+  }).catch(e => {
     console.warn("Academic data backend sync error:", e);
     return null;
   });
@@ -9319,7 +9489,7 @@ function syncAcademicDataToBackend() {
 
 async function hydrateAcademicDataFromServer() {
   try {
-    const res = await fetch(API_BASE_URL + "/api/academic/data");
+    const res = await authenticatedFetch(API_BASE_URL + "/api/academic/data");
     const json = await res.json();
     if (json.success && json.data) {
       const serverAcademic = normalizeAcademicData(json.data);
@@ -9332,6 +9502,8 @@ async function hydrateAcademicDataFromServer() {
       updateNoticeBadges();
       updateNotesBadges();
       if (typeof render === "function") render();
+    } else if (res.status === 403) {
+      console.warn("Access forbidden when fetching academic data.");
     }
   } catch (e) {
     console.warn("Could not hydrate academic data from MongoDB backend:", e);
@@ -10103,6 +10275,24 @@ try {
   localStorage.removeItem("smartPortalAcademic");
 } catch (_) { }
 
+const saved = sessionStorage.getItem("portalUser");
+const savedToken = getStoredAuthToken();
+if (saved && savedToken) {
+  try {
+    currentUser = sanitizeClientUser(JSON.parse(saved));
+    sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
+  } catch (err) {
+    console.error("Session restore error:", err);
+    sessionStorage.removeItem("portalUser");
+    setStoredAuthToken("");
+    currentUser = null;
+  }
+} else {
+  sessionStorage.removeItem("portalUser");
+  setStoredAuthToken("");
+  currentUser = null;
+}
+
 hydrateAcademicDataFromServer();
 
 // ============================================================================
@@ -10110,16 +10300,8 @@ hydrateAcademicDataFromServer();
 // ============================================================================
 hydrateUsersFromServer();
 
-const saved = sessionStorage.getItem("portalUser");
-if (saved) {
-  try {
-    currentUser = sanitizeClientUser(JSON.parse(saved));
-    sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
-    openPortal();
-  } catch (err) {
-    console.error("Session restore error:", err);
-    sessionStorage.removeItem("portalUser");
-  }
+if (currentUser && getStoredAuthToken()) {
+  openPortal();
 }
 
 window.addEventListener("pageshow", () => {
@@ -10859,7 +11041,7 @@ window.addEventListener("pageshow", () => {
   updateActiveNav();
 
   window.addEventListener("hashchange", () => {
-    if (sessionStorage.getItem("portalUser")) return;
+    if (sessionStorage.getItem("portalUser") && getStoredAuthToken()) return;
     const h = window.location.hash.toLowerCase();
     if (h === "#signup") {
       showSignup("student", false);
@@ -10876,7 +11058,8 @@ window.addEventListener("pageshow", () => {
   /* If a logged-in session is restored, the existing openPortal()
      remains authoritative and hides this public layer. */
   const savedSession = sessionStorage.getItem("portalUser");
-  if (savedSession) {
+  const hasToken = !!getStoredAuthToken();
+  if (savedSession && hasToken) {
     home.classList.add("hidden");
     document.querySelectorAll(".bg-orb").forEach(el => { el.style.display = "none"; });
   } else if (window.location.hash.toLowerCase() === "#signup" || window.location.pathname.toLowerCase().startsWith("/signup")) {

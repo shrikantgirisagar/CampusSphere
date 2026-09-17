@@ -23,13 +23,48 @@ const PORT = Number(process.env.PORT || 3000);
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/CampusSphere";
 const DB_FILE = path.join(__dirname, "data", "database.json");
 
-
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
-// Favicon handler
-app.get("/favicon.ico", (req, res) => res.sendFile(path.join(__dirname, "favicon.ico")));
+// In-memory rate limiter for authentication endpoints
+const loginAttempts = new Map();
+function rateLimitLogin(req, res, next) {
+  const ip = req.ip || req.socket?.remoteAddress || "unknown";
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 mins
+  const maxAttempts = 25;
+  let record = loginAttempts.get(ip);
+  if (!record || now - record.startTime > windowMs) {
+    record = { count: 1, startTime: now };
+    loginAttempts.set(ip, record);
+    return next();
+  }
+  record.count++;
+  if (record.count > maxAttempts) {
+    return res.status(429).json({
+      success: false,
+      message: "Too many login attempts. Please try again after 15 minutes."
+    });
+  }
+  next();
+}
+
+// Favicon handler with safe fallback to logo if favicon.ico is not found
+app.get("/favicon.ico", (req, res) => {
+  const icoPath = path.join(__dirname, "favicon.ico");
+  if (fs.existsSync(icoPath)) {
+    return res.sendFile(icoPath);
+  }
+  return res.sendFile(path.join(__dirname, "CampusSphere-logo.png"));
+});
 
 // Serve static assets from project root
 app.use(express.static(__dirname, { index: false }));
@@ -107,6 +142,10 @@ function normalizeUsername(username) {
   return String(username || "").trim();
 }
 
+function escapeRegex(str) {
+  return String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function validRole(role) {
   return ["student", "faculty", "admin"].includes(role);
 }
@@ -153,6 +192,127 @@ async function verifyPassword(password, stored) {
   } catch {
     return false;
   }
+}
+
+// Session Token Creation & Verification
+const AUTH_SECRET = process.env.SESSION_SECRET || "campussphere_session_secret_key_2026_secure";
+
+function generateAuthToken(user) {
+  if (!user) return "";
+  const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+  const data = JSON.stringify({
+    id: String(user.id || ""),
+    role: String(user.role || ""),
+    username: String(user.username || ""),
+    exp: expiresAt
+  });
+  const payload = Buffer.from(data).toString("base64url");
+  const sig = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
+  return `${payload}.${sig}`;
+}
+
+function verifyAuthToken(token) {
+  try {
+    if (!token || typeof token !== "string") return { error: "malformed" };
+    // New JSON-based token format (payload.sig)
+    if (token.includes(".")) {
+      const parts = token.split(".");
+      if (parts.length !== 2) return { error: "malformed" };
+      const [payload, sig] = parts;
+      if (!payload || !sig) return { error: "malformed" };
+      const expected = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
+      if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return { error: "invalid" };
+      let data;
+      try {
+        data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+      } catch {
+        return { error: "malformed" };
+      }
+      if (!data || typeof data !== "object") return { error: "malformed" };
+      if (!data.exp || typeof data.exp !== "number" || data.exp < Date.now()) return { error: "expired" };
+      if (!data.id || !data.role || !data.username) return { error: "malformed" };
+      return { id: data.id, role: data.role, username: data.username, expiresAt: data.exp };
+    }
+    // Backward compatibility for legacy colon-delimited token format
+    let raw;
+    try {
+      raw = Buffer.from(token, "base64url").toString("utf8");
+    } catch {
+      return { error: "malformed" };
+    }
+    const parts = raw.split(":");
+    if (parts.length !== 5) return { error: "malformed" };
+    const [id, role, username, expStr, sig] = parts;
+    const expiresAt = Number(expStr);
+    if (!expiresAt || expiresAt < Date.now()) return { error: "expired" };
+    const payload = `${id}:${role}:${username}:${expiresAt}`;
+    const expected = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return { error: "invalid" };
+    return { id, role, username, expiresAt };
+  } catch {
+    return { error: "malformed" };
+  }
+}
+
+async function authenticateRequest(req, res, next) {
+  const authHeader = req.headers["authorization"] || req.headers["x-auth-token"];
+  let token = "";
+  if (authHeader && String(authHeader).startsWith("Bearer ")) {
+    token = String(authHeader).slice(7).trim();
+  } else if (authHeader) {
+    token = String(authHeader).trim();
+  }
+
+  // If no token was supplied, continue as unauthenticated guest
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  // A token was supplied; verify it strictly
+  const result = verifyAuthToken(token);
+  if (result.error) {
+    // Exempt login endpoint so a stale client-side header does not prevent logging in
+    if (req.path === "/auth/login" || req.path === "/login") {
+      req.user = null;
+      return next();
+    }
+    const message = result.error === "expired"
+      ? "Authentication token has expired. Please sign in again."
+      : (result.error === "malformed" ? "Malformed authentication token." : "Invalid authentication token signature.");
+    return res.status(401).json({ success: false, message });
+  }
+
+  try {
+    const dbUser = await User.findOne({
+      id: result.id,
+      role: result.role,
+      username: new RegExp(`^${escapeRegex(result.username)}$`, "i")
+    });
+    if (!dbUser) {
+      if (req.path === "/auth/login" || req.path === "/login") {
+        req.user = null;
+        return next();
+      }
+      return res.status(401).json({ success: false, message: "Authenticated user account no longer exists." });
+    }
+    req.user = sanitizeUser(dbUser);
+    next();
+  } catch {
+    return res.status(401).json({ success: false, message: "Authentication validation error." });
+  }
+}
+
+function requireAuth(roles = []) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Authentication required to access this resource." });
+    }
+    if (Array.isArray(roles) && roles.length > 0 && !roles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: Requires ${roles.join(" or ")} role.` });
+    }
+    next();
+  };
 }
 
 // Connect to MongoDB & Seed Initial Accounts
@@ -254,6 +414,9 @@ app.use("/api", async (req, res, next) => {
   next();
 });
 
+// Authenticate all /api requests (attaches req.user if a valid token is provided)
+app.use("/api", authenticateRequest);
+
 app.get("/api/status", (req, res) => {
   const states = ["disconnected", "connected", "connecting", "disconnecting"];
   const dbState = states[mongoose.connection.readyState] || "unknown";
@@ -335,10 +498,17 @@ app.get(["/api/students/count", "/api/users/count"], async (req, res) => {
 
 app.get("/api/users/public", async (req, res) => {
   try {
-    const users = await User.find({});
+    if (req.user) {
+      const users = await User.find({});
+      return res.json({
+        success: true,
+        users: users.map(sanitizeUser)
+      });
+    }
+    // Unauthenticated public request: return empty list to protect directory privacy
     res.json({
       success: true,
-      users: users.map(sanitizeUser)
+      users: []
     });
   } catch (error) {
     console.error("Get users error:", error);
@@ -346,13 +516,18 @@ app.get("/api/users/public", async (req, res) => {
   }
 });
 
-app.get("/api/users/:role/:username", async (req, res) => {
+app.get("/api/users/:role/:username", requireAuth(), async (req, res) => {
   try {
     const { role, username } = req.params;
     const decodedUsername = normalizeUsername(decodeURIComponent(username));
+    const isSelf = req.user.username.toLowerCase() === decodedUsername.toLowerCase() && req.user.role === role;
+    const isStaffOrAdmin = req.user.role === "admin" || req.user.role === "faculty";
+    if (!isSelf && !isStaffOrAdmin) {
+      return res.status(403).json({ success: false, message: "Forbidden: You are not authorized to view this user profile." });
+    }
     const user = await User.findOne({
       role: String(role).toLowerCase(),
-      username: new RegExp(`^${decodedUsername}$`, "i")
+      username: new RegExp(`^${escapeRegex(decodedUsername)}$`, "i")
     });
     if (!user) return res.status(404).json({ success: false, message: "User not found." });
     res.json({ success: true, user: sanitizeUser(user) });
@@ -362,7 +537,7 @@ app.get("/api/users/:role/:username", async (req, res) => {
   }
 });
 
-app.post("/api/users/migrate", async (req, res) => {
+app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
   try {
     const incoming = req.body?.users;
     if (!incoming || typeof incoming !== "object") {
@@ -378,7 +553,7 @@ app.post("/api/users/migrate", async (req, res) => {
         const username = normalizeUsername(item.username);
         if (!username) continue;
 
-        const existing = await User.findOne({ role, username: new RegExp(`^${username}$`, "i") });
+        const existing = await User.findOne({ role, username: new RegExp(`^${escapeRegex(username)}$`, "i") });
         if (existing) {
           if (item.email !== undefined) existing.email = normalizeEmail(item.email);
           if (item.name) existing.name = String(item.name).trim();
@@ -451,11 +626,25 @@ app.post("/api/users/migrate", async (req, res) => {
 app.post("/api/users", async (req, res) => {
   try {
     const { name, username, password, email, role, subject, subjects, subjectDivisions, department, division, semester, courseYear, course, languageChoice, mathChoice, profilePic } = req.body || {};
-    const validation = validateUserFields({ name, username, email, role, subject, subjects });
+    
+    const targetRole = String(role || "student").trim().toLowerCase();
+
+    // Privileged accounts (admin and faculty) can strictly only be created by an authenticated administrator.
+    // Public self-registration is strictly restricted to students.
+    if (targetRole !== "student") {
+      if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({
+          success: false,
+          message: `Forbidden: Only administrators can create ${targetRole} accounts.`
+        });
+      }
+    }
+
+    const validation = validateUserFields({ name, username, email, role: targetRole, subject, subjects });
     if (validation) return res.status(400).json({ success: false, message: validation });
     if (!password || String(password).length < 6) return res.status(400).json({ success: false, message: "Password must contain at least 6 characters." });
 
-    const existingUsername = await User.findOne({ username: new RegExp(`^${normalizeUsername(username)}$`, "i") });
+    const existingUsername = await User.findOne({ username: new RegExp(`^${escapeRegex(normalizeUsername(username))}$`, "i") });
     if (existingUsername) return res.status(409).json({ success: false, message: "That username is already in use." });
 
     if (email && normalizeEmail(email)) {
@@ -472,21 +661,21 @@ app.post("/api/users", async (req, res) => {
     const primarySubject = facultySubjects.length > 0 ? facultySubjects[0] : String(subject || "");
 
     const userObj = {
-      id: createId(role),
-      role,
+      id: createId(targetRole),
+      role: targetRole,
       name: String(name).trim(),
       username: normalizeUsername(username),
       email: normalizeEmail(email),
-      subject: role === "faculty" ? primarySubject : "",
-      subjects: role === "faculty" ? facultySubjects : [],
-      subjectDivisions: role === "faculty" && subjectDivisions && typeof subjectDivisions === "object" ? subjectDivisions : {},
-      department: role === "faculty" ? String(department || "Department of Computer Science & Applications").trim() : "",
-      division: role === "faculty" ? String(division || "Both Divisions").trim() : "",
+      subject: targetRole === "faculty" ? primarySubject : "",
+      subjects: targetRole === "faculty" ? facultySubjects : [],
+      subjectDivisions: targetRole === "faculty" && subjectDivisions && typeof subjectDivisions === "object" ? subjectDivisions : {},
+      department: targetRole === "faculty" ? String(department || "Department of Computer Science & Applications").trim() : "",
+      division: targetRole === "faculty" ? String(division || "Both Divisions").trim() : "",
       profilePic: String(profilePic || ""),
       passwordHash: await hashPassword(password)
     };
 
-    if (role === "student") {
+    if (targetRole === "student") {
       userObj.division = String(division || "Div A").trim();
       userObj.semester = String(semester || "1st Semester").trim();
       userObj.courseYear = String(courseYear || "1st Year").trim();
@@ -497,34 +686,44 @@ app.post("/api/users", async (req, res) => {
 
     const createdUser = await User.create(userObj);
     invalidateUserCountsCache();
-    res.status(201).json({ success: true, user: sanitizeUser(createdUser) });
+    const token = generateAuthToken(createdUser);
+    res.status(201).json({ success: true, token, user: sanitizeUser(createdUser) });
   } catch (error) {
     console.error("Create user error:", error);
     res.status(500).json({ success: false, message: "Unable to save the user." });
   }
 });
 
-app.put("/api/users/:role/:username", async (req, res) => {
+app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
   try {
-    const { role, username } = req.params;
-    const decodedUsername = normalizeUsername(decodeURIComponent(username || ""));
+    const targetRole = String(req.params.role || "").trim().toLowerCase();
+    const targetUsername = normalizeUsername(decodeURIComponent(req.params.username || ""));
+
+    const isAdmin = req.user.role === "admin";
+    const isOwner = req.user.role === targetRole && req.user.username.toLowerCase() === targetUsername.toLowerCase();
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ success: false, message: "Forbidden: You are not authorized to modify another user's account." });
+    }
+
     const { id, name, newUsername, password, currentPassword, email, subject, subjects, subjectDivisions, department, division, semester, courseYear, course, languageChoice, mathChoice, profilePic } = req.body || {};
 
-    let user = await User.findOne({ role, username: new RegExp(`^${decodedUsername}$`, "i") });
-    if (!user && id) {
-      user = await User.findOne({ role, id: String(id) });
-    }
-    if (!user && newUsername) {
-      user = await User.findOne({ role, username: new RegExp(`^${normalizeUsername(newUsername)}$`, "i") });
-    }
-    if (!user) {
-      user = await User.findOne({ username: new RegExp(`^${decodedUsername}$`, "i") });
-    }
-    if (!user && id) {
-      user = await User.findOne({ id: String(id) });
+    let user;
+    if (isAdmin) {
+      user = await User.findOne({
+        role: targetRole,
+        username: new RegExp(`^${escapeRegex(targetUsername)}$`, "i")
+      });
+      if (!user && id) {
+        user = await User.findOne({ role: targetRole, id: String(id) });
+      }
+    } else {
+      // Non-admin can ONLY modify their own authenticated record
+      user = await User.findOne({ id: req.user.id, role: req.user.role });
     }
     if (!user) return res.status(404).json({ success: false, message: "Account not found." });
 
+    const role = user.role;
     const nextUsername = normalizeUsername(newUsername || user.username);
     const nextEmail = email !== undefined ? normalizeEmail(email) : user.email;
     const validation = validateUserFields({
@@ -538,8 +737,30 @@ app.put("/api/users/:role/:username", async (req, res) => {
     if (validation) return res.status(400).json({ success: false, message: validation });
 
     if (nextUsername.toLowerCase() !== user.username.toLowerCase()) {
-      const takenUser = await User.findOne({ username: new RegExp(`^${nextUsername}$`, "i"), id: { $ne: user.id } });
+      const takenUser = await User.findOne({ username: new RegExp(`^${escapeRegex(nextUsername)}$`, "i"), id: { $ne: user.id } });
       if (takenUser) return res.status(409).json({ success: false, message: "That username is already in use." });
+
+      // Synchronize AcademicStore keys so student marks, attendance, and assignments are preserved
+      try {
+        const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+        if (store) {
+          if (store.students && store.students[user.username]) {
+            store.students[nextUsername] = store.students[user.username];
+            delete store.students[user.username];
+            store.markModified("students");
+          }
+          if (Array.isArray(store.assignments)) {
+            store.assignments.forEach(a => {
+              if (a.student && a.student.toLowerCase() === user.username.toLowerCase()) a.student = nextUsername;
+              if (a.facultyUsername && a.facultyUsername.toLowerCase() === user.username.toLowerCase()) a.facultyUsername = nextUsername;
+            });
+            store.markModified("assignments");
+          }
+          await store.save();
+        }
+      } catch (e) {
+        console.warn("Academic username sync warning:", e.message);
+      }
     }
 
     if (nextEmail && nextEmail !== user.email) {
@@ -583,7 +804,11 @@ app.put("/api/users/:role/:username", async (req, res) => {
     }
     if (password) {
       if (String(password).length < 6) return res.status(400).json({ success: false, message: "Password must contain at least 6 characters." });
-      if (currentPassword !== undefined) {
+      // Non-admin users must verify currentPassword before changing password
+      if (!isAdmin) {
+        if (!currentPassword) {
+          return res.status(400).json({ success: false, message: "Current password is required to change password." });
+        }
         if (!user.passwordHash || !(await verifyPassword(currentPassword, user.passwordHash))) {
           return res.status(400).json({ success: false, message: "Current password is incorrect." });
         }
@@ -599,7 +824,7 @@ app.put("/api/users/:role/:username", async (req, res) => {
   }
 });
 
-app.delete("/api/users/:role/:username", async (req, res) => {
+app.delete("/api/users/:role/:username", requireAuth(["admin"]), async (req, res) => {
   try {
     const { role, username } = req.params;
     if (role === "admin") return res.status(403).json({ success: false, message: "Admin accounts cannot be deleted here." });
@@ -609,7 +834,7 @@ app.delete("/api/users/:role/:username", async (req, res) => {
 
     const result = await User.deleteOne({
       role: targetRole,
-      username: new RegExp(`^${targetUsername}$`, "i")
+      username: new RegExp(`^${escapeRegex(targetUsername)}$`, "i")
     });
 
     if (result.deletedCount === 0) return res.status(404).json({ success: false, message: "Account not found." });
@@ -645,30 +870,30 @@ app.delete("/api/users/:role/:username", async (req, res) => {
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
   try {
     const { role, username, password } = req.body || {};
     if (!validRole(role) || !username || !password) return res.status(400).json({ success: false, message: "Role, username and password are required." });
 
     const user = await User.findOne({
       role,
-      username: new RegExp(`^${normalizeUsername(username)}$`, "i")
+      username: new RegExp(`^${escapeRegex(normalizeUsername(username))}$`, "i")
     });
 
-    if (!user) {
-      return res.status(401).json({ success: false, message: "Account not found in database." });
-    }
-
     let isMatch = false;
-    if (user.passwordHash) {
+    if (user && user.passwordHash) {
       isMatch = await verifyPassword(password, user.passwordHash);
+    } else {
+      // Dummy check to equalize response time against username enumeration
+      await verifyPassword(password, "scrypt$16384$8$1$c2FsdHNhbHQ$aGFzaGhhc2g");
     }
 
-    if (!isMatch) {
+    if (!user || !isMatch) {
       return res.status(401).json({ success: false, message: "Invalid username or password." });
     }
 
-    res.json({ success: true, user: sanitizeUser(user) });
+    const token = generateAuthToken(user);
+    res.json({ success: true, token, user: sanitizeUser(user) });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ success: false, message: "Unable to sign in right now." });
@@ -688,7 +913,7 @@ app.get("/api/timetable", async (req, res) => {
   }
 });
 
-app.post("/api/timetable/sync", async (req, res) => {
+app.post("/api/timetable/sync", requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
     const { timetable } = req.body || {};
     if (Array.isArray(timetable)) {
@@ -750,6 +975,86 @@ app.get("/api/academic/data", async (req, res) => {
     if (!store) {
       store = await AcademicStore.create({ storeKey: "default_academic_store" });
     }
+
+    // Unauthenticated guest request: return only public structure (subjects, divisions, public notices)
+    if (!req.user) {
+      const publicNotices = (store.notices || []).filter(n => !n.target || n.target === "all");
+      return res.json({
+        success: true,
+        data: {
+          students: {},
+          notices: publicNotices,
+          timetable: store.timetable || [],
+          timetableHeader: store.timetableHeader || {},
+          customBreakRows: store.customBreakRows || {},
+          assignments: [],
+          notes: [],
+          deletedAssignments: [],
+          dailyAttendance: [],
+          subjectMarksConfig: store.subjectMarksConfig || {},
+          subjects: store.subjects || [],
+          divisions: normalizeStoreDivisions(store.divisions)
+        }
+      });
+    }
+
+    // Student role: SCOPE academic data so student only receives their own private records
+    if (req.user.role === "student") {
+      const username = req.user.username;
+      const studentRec = (store.students && store.students[username]) ? { [username]: store.students[username] } : {};
+      const studentDiv = req.user.division || "";
+      
+      const scopedNotices = (store.notices || []).filter(n => {
+        if (!n.target || n.target === "all" || n.target === "student") {
+          if (n.targetDivision && n.targetDivision !== "all" && studentDiv && n.targetDivision !== studentDiv) return false;
+          return true;
+        }
+        return false;
+      });
+
+      const scopedAssignments = (store.assignments || []).filter(a => {
+        if (a.student && a.student.toLowerCase() === username.toLowerCase()) return true;
+        if (a.student === "all") {
+          if (a.targetDivision && studentDiv && a.targetDivision !== "All Divisions" && a.targetDivision !== studentDiv) return false;
+          return true;
+        }
+        return false;
+      });
+
+      const scopedNotes = (store.notes || []).filter(n => {
+        if (!n.division || n.division === "All Divisions" || (studentDiv && n.division === studentDiv)) return true;
+        return false;
+      });
+
+      // Redact other students' records from daily attendance logs
+      const scopedAttendance = (store.dailyAttendance || []).map(att => {
+        const logObj = { ...att };
+        if (logObj.records && typeof logObj.records === "object") {
+          logObj.records = { [username]: logObj.records[username] || "" };
+        }
+        return logObj;
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          students: studentRec,
+          notices: scopedNotices,
+          timetable: store.timetable || [],
+          timetableHeader: store.timetableHeader || {},
+          customBreakRows: store.customBreakRows || {},
+          assignments: scopedAssignments,
+          notes: scopedNotes,
+          deletedAssignments: (store.deletedAssignments || []).filter(k => String(k || "").toLowerCase().startsWith(`${username.toLowerCase()}___`)),
+          dailyAttendance: scopedAttendance,
+          subjectMarksConfig: store.subjectMarksConfig || {},
+          subjects: store.subjects || [],
+          divisions: normalizeStoreDivisions(store.divisions)
+        }
+      });
+    }
+
+    // Faculty or Admin role: return complete operational store data
     res.json({
       success: true,
       data: {
@@ -860,12 +1165,12 @@ async function syncCollectionsFromAcademicData(payload = {}) {
       }
     }
 
-    // 4. Sync Assignments into MongoDB 'assignments' collection
+    // 4. Sync Assignments into MongoDB 'assignments' collection with guaranteed distinct assignmentId
     if (Array.isArray(payload.assignments)) {
       await Assignment.deleteMany({});
       if (payload.assignments.length > 0) {
         const assignDocs = payload.assignments.map((as, idx) => ({
-          assignmentId: as.id || `assign-${Date.now()}-${idx}`,
+          assignmentId: as.id ? `${as.id}_${as.student || idx}` : `assign-${Date.now()}-${idx}-${as.student || ""}`,
           title: as.title || "Untitled Assignment",
           description: as.description || "",
           subject: as.subject || "",
@@ -923,23 +1228,35 @@ async function syncCollectionsFromAcademicData(payload = {}) {
   }
 }
 
-app.post("/api/academic/sync", async (req, res) => {
+app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
     const payload = req.body?.data || req.body || {};
     const update = {};
 
-    if (payload.students && typeof payload.students === "object") update.students = payload.students;
-    if (Array.isArray(payload.notices)) update.notices = payload.notices;
-    if (Array.isArray(payload.timetable)) update.timetable = payload.timetable;
-    if (payload.timetableHeader && typeof payload.timetableHeader === "object") update.timetableHeader = payload.timetableHeader;
-    if (payload.customBreakRows && typeof payload.customBreakRows === "object") update.customBreakRows = payload.customBreakRows;
-    if (Array.isArray(payload.assignments)) update.assignments = payload.assignments;
-    if (Array.isArray(payload.notes)) update.notes = payload.notes;
-    if (Array.isArray(payload.deletedAssignments)) update.deletedAssignments = payload.deletedAssignments;
-    if (Array.isArray(payload.dailyAttendance)) update.dailyAttendance = payload.dailyAttendance;
-    if (payload.subjectMarksConfig && typeof payload.subjectMarksConfig === "object") update.subjectMarksConfig = payload.subjectMarksConfig;
-    if (Array.isArray(payload.subjects)) update.subjects = payload.subjects;
-    if (payload.divisions) update.divisions = normalizeStoreDivisions(payload.divisions);
+    // If faculty, only allow updating their academic operational records (attendance, marks, notes, assignments, notices)
+    if (req.user && req.user.role === "faculty") {
+      if (payload.students && typeof payload.students === "object") update.students = payload.students;
+      if (Array.isArray(payload.notices)) update.notices = payload.notices;
+      if (Array.isArray(payload.assignments)) update.assignments = payload.assignments;
+      if (Array.isArray(payload.notes)) update.notes = payload.notes;
+      if (Array.isArray(payload.deletedAssignments)) update.deletedAssignments = payload.deletedAssignments;
+      if (Array.isArray(payload.dailyAttendance)) update.dailyAttendance = payload.dailyAttendance;
+      if (payload.subjectMarksConfig && typeof payload.subjectMarksConfig === "object") update.subjectMarksConfig = payload.subjectMarksConfig;
+    } else {
+      // Admin full sync
+      if (payload.students && typeof payload.students === "object") update.students = payload.students;
+      if (Array.isArray(payload.notices)) update.notices = payload.notices;
+      if (Array.isArray(payload.timetable)) update.timetable = payload.timetable;
+      if (payload.timetableHeader && typeof payload.timetableHeader === "object") update.timetableHeader = payload.timetableHeader;
+      if (payload.customBreakRows && typeof payload.customBreakRows === "object") update.customBreakRows = payload.customBreakRows;
+      if (Array.isArray(payload.assignments)) update.assignments = payload.assignments;
+      if (Array.isArray(payload.notes)) update.notes = payload.notes;
+      if (Array.isArray(payload.deletedAssignments)) update.deletedAssignments = payload.deletedAssignments;
+      if (Array.isArray(payload.dailyAttendance)) update.dailyAttendance = payload.dailyAttendance;
+      if (payload.subjectMarksConfig && typeof payload.subjectMarksConfig === "object") update.subjectMarksConfig = payload.subjectMarksConfig;
+      if (Array.isArray(payload.subjects)) update.subjects = payload.subjects;
+      if (payload.divisions) update.divisions = normalizeStoreDivisions(payload.divisions);
+    }
 
     await AcademicStore.findOneAndUpdate(
       { storeKey: "default_academic_store" },
@@ -967,7 +1284,8 @@ app.get(/.*/, (req, res) => {
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`CampusSphere backend running on port ${PORT}`);
-  console.log(`Database Mode: MongoDB (${MONGODB_URI})`);
+  const maskedUri = MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, "//***:***@");
+  console.log(`Database Mode: MongoDB (${maskedUri})`);
 });
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);

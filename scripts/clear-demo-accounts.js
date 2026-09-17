@@ -27,24 +27,49 @@ async function clearDemoAccounts() {
     console.log(` - Preserved: [${u.role}] ${u.name} (username: ${u.username}, email: ${u.email})`);
   });
 
-  // 3. Clean up AcademicStore student demo records
+  // 3. Clean up AcademicStore student demo records only for deleted users
   let store = await AcademicStore.findOne({ storeKey: 'default_academic_store' });
   if (store) {
-    store.students = {};
-    store.dailyAttendance = [];
+    const deletedUsernames = new Set(nonAdminUsers.map(u => String(u.username || '').toLowerCase()));
+
+    if (store.students && typeof store.students === 'object') {
+      Object.keys(store.students).forEach(uname => {
+        if (deletedUsernames.has(uname.toLowerCase())) {
+          delete store.students[uname];
+        }
+      });
+      store.markModified('students');
+    }
+
+    if (Array.isArray(store.dailyAttendance)) {
+      store.dailyAttendance = store.dailyAttendance.map(entry => {
+        if (entry && entry.records && typeof entry.records === 'object') {
+          Object.keys(entry.records).forEach(u => {
+            if (deletedUsernames.has(u.toLowerCase())) {
+              delete entry.records[u];
+            }
+          });
+        }
+        return entry;
+      });
+      store.markModified('dailyAttendance');
+    }
+
     if (Array.isArray(store.assignments)) {
-      // Clear demo assignment submissions or assignments assigned to demo students
-      store.assignments = [];
+      store.assignments = store.assignments.filter(a => !deletedUsernames.has(String(a.student || '').toLowerCase()));
+      store.markModified('assignments');
     }
+
     if (Array.isArray(store.deletedAssignments)) {
-      store.deletedAssignments = [];
+      store.deletedAssignments = store.deletedAssignments.filter(key => {
+        const parts = String(key || '').split('___');
+        return !deletedUsernames.has(parts[0].toLowerCase());
+      });
+      store.markModified('deletedAssignments');
     }
-    store.markModified('students');
-    store.markModified('dailyAttendance');
-    store.markModified('assignments');
-    store.markModified('deletedAssignments');
+
     await store.save();
-    console.log('Cleaned up demo academic records in AcademicStore.');
+    console.log('Cleaned up demo academic records for removed accounts in AcademicStore.');
   }
 
   console.log('--- ALL DEMO & TEST ACCOUNTS REMOVED SUCCESSFULLY! ---');
