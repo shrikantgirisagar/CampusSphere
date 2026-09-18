@@ -248,8 +248,56 @@ function sanitizeClientUser(user) {
 
 let pendingProfilePic = "";
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizeDownloadUrl(url) {
+  if (!url) return "#";
+  const str = String(url).trim().replace(/[\x00-\x1F\x7F]/g, "");
+  const lower = str.toLowerCase();
+  if (lower.startsWith("javascript:") || lower.startsWith("vbscript:") || lower.startsWith("data:text/html") || lower.startsWith("data:text/xhtml") || lower.startsWith("data:text/xml") || lower.startsWith("data:image/svg+xml")) {
+    return "#";
+  }
+  if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("blob:") || lower.startsWith("/") || lower.startsWith("./")) {
+    return str;
+  }
+  if (lower.startsWith("data:image/png") || lower.startsWith("data:image/jpeg") || lower.startsWith("data:image/jpg") || lower.startsWith("data:image/webp") || lower.startsWith("data:image/gif") || lower.startsWith("data:image/bmp") || lower.startsWith("data:application/pdf") || lower.startsWith("data:application/zip") || lower.startsWith("data:application/msword") || lower.startsWith("data:application/vnd.") || lower.startsWith("data:application/octet-stream") || lower.startsWith("data:text/plain") || lower.startsWith("data:text/csv")) {
+    return str;
+  }
+  return "#";
+}
+
+function sanitizeImageUrl(url) {
+  if (!url) return "";
+  const str = String(url).trim().replace(/[\x00-\x1F\x7F]/g, "");
+  const lower = str.toLowerCase();
+  if (lower.startsWith("javascript:") || lower.startsWith("vbscript:") || lower.startsWith("data:text/html") || lower.startsWith("data:text/xhtml") || lower.startsWith("data:text/xml")) {
+    return "";
+  }
+  if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("blob:") || lower.startsWith("/") || lower.startsWith("./")) {
+    return str;
+  }
+  if (lower.startsWith("data:image/png") || lower.startsWith("data:image/jpeg") || lower.startsWith("data:image/jpg") || lower.startsWith("data:image/webp") || lower.startsWith("data:image/gif") || lower.startsWith("data:image/bmp")) {
+    return str;
+  }
+  if (lower.startsWith("data:image/svg+xml")) {
+    if (/<\s*script/i.test(str) || /\bon\w+\s*=/i.test(str) || /javascript:/i.test(str)) {
+      return "";
+    }
+    return str;
+  }
+  return "";
+}
+
 function getStudentPresetAvatars(nameStr = "S") {
-  const initial = (nameStr || "S").charAt(0).toUpperCase();
+  const initial = (nameStr || "S").replace(/[^a-zA-Z0-9]/g, "").charAt(0).toUpperCase() || "S";
   const createSvg = (c1, c2, accent) => `data:image/svg+xml;utf8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
       <defs>
@@ -274,7 +322,10 @@ function getStudentPresetAvatars(nameStr = "S") {
 }
 
 function getProfilePicUrl(user) {
-  if (user && user.profilePic) return user.profilePic;
+  if (user && user.profilePic) {
+    const sanitized = sanitizeImageUrl(user.profilePic);
+    if (sanitized) return sanitized;
+  }
   const presets = getStudentPresetAvatars(user ? user.name : "U");
   return presets[0].url;
 }
@@ -282,14 +333,23 @@ function getProfilePicUrl(user) {
 function updateUserAvatarUI() {
   const avatarEl = $("userAvatar");
   if (!avatarEl || !currentUser) return;
-  const picUrl = getProfilePicUrl(currentUser);
-  avatarEl.innerHTML = `<img src="${picUrl}" alt="User Avatar" style="width:34px; height:34px; object-fit:cover; border-radius:50%; display:block;">`;
+  const picUrl = sanitizeImageUrl(getProfilePicUrl(currentUser));
+  avatarEl.innerHTML = "";
+  const img = document.createElement("img");
+  img.src = picUrl;
+  img.alt = "User Avatar";
+  img.style.width = "34px";
+  img.style.height = "34px";
+  img.style.objectFit = "cover";
+  img.style.borderRadius = "50%";
+  img.style.display = "block";
+  avatarEl.appendChild(img);
   avatarEl.style.padding = "0";
   avatarEl.style.background = "none";
 }
 
 function setPendingProfilePic(dataUrl) {
-  pendingProfilePic = dataUrl || "";
+  pendingProfilePic = sanitizeImageUrl(dataUrl) || "";
   const previewImgs = document.querySelectorAll("#credentialsPreviewImg, .credentials-preview-img");
   const fallbackUrl = getProfilePicUrl(currentUser || { name: "User" });
   previewImgs.forEach(img => {
@@ -385,27 +445,6 @@ function bindCredentialsPhotoEvents() {
   }
 }
 
-function escapeHtml(str) {
-  if (str === null || str === undefined) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function sanitizeDownloadUrl(url) {
-  if (!url) return "#";
-  const str = String(url).trim();
-  if (str.startsWith("data:image/") || str.startsWith("data:application/") || str.startsWith("data:text/plain") || str.startsWith("blob:") || str.startsWith("http://") || str.startsWith("https://")) {
-    return str;
-  }
-  if (str.startsWith("data:") && !str.startsWith("data:text/html")) {
-    return str;
-  }
-  return "#";
-}
 
 function getStoredAuthToken() {
   try {
@@ -1244,17 +1283,6 @@ function getGroupedSubjectOptionsHTML(selectedIds = [], query = "") {
   return html;
 }
 
-function escapeHtml(str) {
-  if (!str) return "";
-  return String(str).replace(/[&<>"']/g, m => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[m]));
-}
-
 function renderDirectSubjectSearchResults({ containerId, query, selectedIds, onAddFnName }) {
   const container = $(containerId);
   if (!container) return;
@@ -1292,14 +1320,14 @@ function renderDirectSubjectSearchResults({ containerId, query, selectedIds, onA
       <div class="direct-subject-card ${isAdded ? 'is-added' : ''}">
         <div style="min-width: 0;">
           <div style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(s.name)}">
-            ${s.name}
+            ${escapeHtml(s.name)}
           </div>
           <div style="font-size: 11px; color: #64748b; display: flex; gap: 6px; align-items: center; margin-top: 2px;">
-            <span style="background: #f1f5f9; color: #475569; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 10.5px;">${s.short || s.id}</span>
+            <span style="background: #f1f5f9; color: #475569; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 10.5px;">${escapeHtml(s.short || s.id)}</span>
             <span>•</span>
-            <span>${sem}</span>
+            <span>${escapeHtml(sem)}</span>
             <span>•</span>
-            <span style="color: #6366f1; font-weight: 600;">${yr}</span>
+            <span style="color: #6366f1; font-weight: 600;">${escapeHtml(yr)}</span>
           </div>
         </div>
         <div style="flex-shrink: 0;">
@@ -1308,7 +1336,7 @@ function renderDirectSubjectSearchResults({ containerId, query, selectedIds, onA
               ✓ Added
             </button>
           ` : `
-            <button type="button" onclick="${onAddFnName}('${s.id}')" class="primary-btn" style="padding: 5px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; white-space: nowrap; margin: 0; cursor: pointer;">
+            <button type="button" onclick="${escapeHtml(onAddFnName)}('${encodeURIComponent(s.id)}')" class="primary-btn" style="padding: 5px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; white-space: nowrap; margin: 0; cursor: pointer;">
               + Add
             </button>
           `}
@@ -1351,15 +1379,15 @@ function renderSignupFacultySubjectChips() {
     return `
       <div class="assigned-subject-config-item" style="display:flex; align-items:center; justify-content:space-between; gap:8px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:6px 10px; margin:3px 0; width:100%;">
         <div style="min-width:0; flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <span style="font-weight:700; color:#1e40af; font-size:12.5px;">${s.short || s.name}</span>
-          <small style="color:#3b82f6; font-size:11px; font-weight:600;">(${sem})</small>
+          <span style="font-weight:700; color:#1e40af; font-size:12.5px;">${escapeHtml(s.short || s.name)}</span>
+          <small style="color:#3b82f6; font-size:11px; font-weight:600;">(${escapeHtml(sem)})</small>
           ${idx === 0 ? `<span style="font-size:9.5px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; font-weight:700;">Primary</span>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-          <select onchange="updateSignupFacultySubjectDivision('${id}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
+          <select onchange="updateSignupFacultySubjectDivision('${escapeHtml(id)}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
             ${renderFacultyDivisionSelectOptions(currentDiv, yr)}
           </select>
-          <button type="button" onclick="removeSignupFacultySubject('${id}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>
+          <button type="button" onclick="removeSignupFacultySubject('${escapeHtml(id)}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>
         </div>
       </div>
     `;
@@ -2479,7 +2507,7 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item good-item">
           <span style="font-size:18px;">🏆</span>
           <div>
-            <strong>Top Performing Subject (Theory):</strong> <b>${topTheoryMarks.name} (${topTheoryMarks.short})</b> is your highest-scoring theory course at <strong>${topScoreStr}</strong>. Great academic mastery!
+            <strong>Top Performing Subject (Theory):</strong> <b>${escapeHtml(topTheoryMarks.name)} (${escapeHtml(topTheoryMarks.short)})</b> is your highest-scoring theory course at <strong>${topScoreStr}</strong>. Great academic mastery!
           </div>
         </li>
       `;
@@ -2491,7 +2519,7 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item ${(isI1Only ? lowTheoryMarks.i1Pct : lowTheoryMarks.markPct) < 50 ? 'alert-item' : ''}">
           <span style="font-size:18px;">🎯</span>
           <div>
-            <strong>Low Performing Subject (Theory):</strong> <b>${lowTheoryMarks.name} (${lowTheoryMarks.short})</b> currently stands at <strong>${lowScoreStr}</strong>. Focus on previous internal test blueprints to boost your score.
+            <strong>Low Performing Subject (Theory):</strong> <b>${escapeHtml(lowTheoryMarks.name)} (${escapeHtml(lowTheoryMarks.short)})</b> currently stands at <strong>${lowScoreStr}</strong>. Focus on previous internal test blueprints to boost your score.
           </div>
         </li>
       `;
@@ -2503,7 +2531,7 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item good-item">
           <span style="font-size:18px;">🧪</span>
           <div>
-            <strong>Top Performing Practical Lab:</strong> <b>${topLabMarks.name} (${topLabMarks.short})</b> leads practical performance at <strong>${topLabStr}</strong>.
+            <strong>Top Performing Practical Lab:</strong> <b>${escapeHtml(topLabMarks.name)} (${escapeHtml(topLabMarks.short)})</b> leads practical performance at <strong>${topLabStr}</strong>.
           </div>
         </li>
       `;
@@ -2515,7 +2543,7 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item">
           <span style="font-size:18px;">🔬</span>
           <div>
-            <strong>Low Performing Practical Lab:</strong> <b>${lowLabMarks.name} (${lowLabMarks.short})</b> stands at <strong>${lowLabStr}</strong>. Complete all pending lab manual submissions.
+            <strong>Low Performing Practical Lab:</strong> <b>${escapeHtml(lowLabMarks.name)} (${escapeHtml(lowLabMarks.short)})</b> stands at <strong>${lowLabStr}</strong>. Complete all pending lab manual submissions.
           </div>
         </li>
       `;
@@ -2553,7 +2581,7 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item good-item">
           <span style="font-size:18px;">🌟</span>
           <div>
-            <strong>Top Attendance Subject (Theory):</strong> <b>${topTheoryAtt.name} (${topTheoryAtt.short})</b> has your highest theory attendance at <strong>${topTheoryAtt.attPct}%</strong>.
+            <strong>Top Attendance Subject (Theory):</strong> <b>${escapeHtml(topTheoryAtt.name)} (${escapeHtml(topTheoryAtt.short)})</b> has your highest theory attendance at <strong>${topTheoryAtt.attPct}%</strong>.
           </div>
         </li>
       `;
@@ -2565,7 +2593,7 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item ${isRisk ? 'alert-item' : ''}">
           <span style="font-size:18px;">⚠️</span>
           <div>
-            <strong>Low Attendance Subject (Theory):</strong> <b>${lowTheoryAtt.name} (${lowTheoryAtt.short})</b> is at <strong>${lowTheoryAtt.attPct}%</strong>${isRisk ? ' — <strong style="color:#ef4444;">Below mandatory 75% cutoff!</strong>' : ''}.
+            <strong>Low Attendance Subject (Theory):</strong> <b>${escapeHtml(lowTheoryAtt.name)} (${escapeHtml(lowTheoryAtt.short)})</b> is at <strong>${lowTheoryAtt.attPct}%</strong>${isRisk ? ' — <strong style="color:#ef4444;">Below mandatory 75% cutoff!</strong>' : ''}.
           </div>
         </li>
       `;
@@ -2576,7 +2604,7 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item good-item">
           <span style="font-size:18px;">🧪</span>
           <div>
-            <strong>Top Attendance Lab:</strong> <b>${topLabAtt.name} (${topLabAtt.short})</b> leads lab attendance at <strong>${topLabAtt.attPct}%</strong>.
+            <strong>Top Attendance Lab:</strong> <b>${escapeHtml(topLabAtt.name)} (${escapeHtml(topLabAtt.short)})</b> leads lab attendance at <strong>${topLabAtt.attPct}%</strong>.
           </div>
         </li>
       `;
@@ -2588,14 +2616,14 @@ function generateAiInsights(analytics, mode = "marks") {
         <li class="ai-recommendation-item ${isRisk ? 'alert-item' : ''}">
           <span style="font-size:18px;">🔬</span>
           <div>
-            <strong>Low Attendance Lab:</strong> <b>${lowLabAtt.name} (${lowLabAtt.short})</b> stands at <strong>${lowLabAtt.attPct}%</strong>${isRisk ? ' — <strong style="color:#ef4444;">Below mandatory 75% cutoff!</strong>' : ''}.
+            <strong>Low Attendance Lab:</strong> <b>${escapeHtml(lowLabAtt.name)} (${escapeHtml(lowLabAtt.short)})</b> stands at <strong>${lowLabAtt.attPct}%</strong>${isRisk ? ' — <strong style="color:#ef4444;">Below mandatory 75% cutoff!</strong>' : ''}.
           </div>
         </li>
       `;
     }
 
     if (lowAttendanceSubjects.length > 0) {
-      const names = lowAttendanceSubjects.map(s => `${s.name} (${s.attPct}%)`).join(", ");
+      const names = lowAttendanceSubjects.map(s => `${escapeHtml(s.name)} (${s.attPct}%)`).join(", ");
       html += `
         <li class="ai-recommendation-item alert-item">
           <span style="font-size:18px;">🚨</span>
@@ -4749,15 +4777,15 @@ function renderFacultyEditSubjectChips() {
     return `
       <div class="assigned-subject-config-item" style="display:flex; align-items:center; justify-content:space-between; gap:8px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:6px 10px; margin:3px 0; width:100%;">
         <div style="min-width:0; flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <span style="font-weight:700; color:#1e40af; font-size:12.5px;">${s.short || s.name}</span>
-          <small style="color:#3b82f6; font-size:11px; font-weight:600;">(${sem} • ${yr})</small>
+          <span style="font-weight:700; color:#1e40af; font-size:12.5px;">${escapeHtml(s.short || s.name)}</span>
+          <small style="color:#3b82f6; font-size:11px; font-weight:600;">(${escapeHtml(sem)} • ${escapeHtml(yr)})</small>
           ${isPrimary ? `<span style="font-size:9.5px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; font-weight:700;">Active</span>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-          <select onchange="updateFacultyEditSubjectDivision('${id}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
+          <select onchange="updateFacultyEditSubjectDivision('${escapeHtml(id)}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
             ${renderFacultyDivisionSelectOptions(currentDiv, yr)}
           </select>
-          ${facultyEditSelectedSubjects.length > 1 ? `<button type="button" onclick="removeFacultyEditSubject('${id}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>` : ''}
+          ${facultyEditSelectedSubjects.length > 1 ? `<button type="button" onclick="removeFacultyEditSubject('${escapeHtml(id)}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>` : ''}
         </div>
       </div>
     `;
@@ -5041,15 +5069,15 @@ function renderAdminEditFacultySubjectChips() {
     return `
       <div class="assigned-subject-config-item" style="display:flex; align-items:center; justify-content:space-between; gap:8px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:8px; padding:6px 10px; margin:3px 0; width:100%;">
         <div style="min-width:0; flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <strong style="color:#3730a3; font-size:12.5px;">${s.short || s.name}</strong>
-          <small style="color:#4f46e5; font-size:11px; font-weight:600;">(${sem} • ${yr})</small>
+          <strong style="color:#3730a3; font-size:12.5px;">${escapeHtml(s.short || s.name)}</strong>
+          <small style="color:#4f46e5; font-size:11px; font-weight:600;">(${escapeHtml(sem)} • ${escapeHtml(yr)})</small>
           ${idx === 0 ? `<span style="font-size:9.5px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; font-weight:700;">Primary</span>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-          <select onchange="updateAdminEditFacultySubjectDivision('${id}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #a5b4fc; background:#ffffff; color:#1e293b; cursor:pointer;">
+          <select onchange="updateAdminEditFacultySubjectDivision('${escapeHtml(id)}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #a5b4fc; background:#ffffff; color:#1e293b; cursor:pointer;">
             ${renderFacultyDivisionSelectOptions(currentDiv, yr)}
           </select>
-          <button type="button" onclick="removeAdminEditFacultySubject('${id}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove subject">✕</button>
+          <button type="button" onclick="removeAdminEditFacultySubject('${escapeHtml(id)}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove subject">✕</button>
         </div>
       </div>
     `;
@@ -6362,7 +6390,7 @@ function printColorTimetablePDF(division) {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${headerTitle} - ${targetDivision}</title>
+      <title>${escapeHtml(headerTitle)} - ${escapeHtml(targetDivision)}</title>
       <style>
         * {
           box-sizing: border-box;
@@ -6460,8 +6488,8 @@ function printColorTimetablePDF(division) {
     </head>
     <body>
       <div class="banner">
-        <h1>${headerTitle}</h1>
-        <p>${headerSubtitle}</p>
+        <h1>${escapeHtml(headerTitle)}</h1>
+        <p>${escapeHtml(headerSubtitle)}</p>
       </div>
       <table>
         <thead>
@@ -6483,20 +6511,20 @@ function printColorTimetablePDF(division) {
     const isLunch = normT.includes("1:15-2:00") || normT === cLunchTime.replace(/\s+/g, "").toLowerCase();
 
     if (isBreak) {
-      return `<tr class="break-row"><td class="time-col">${cBreakTime}</td><td colspan="6">${cBreakLabel}</td></tr>`;
+      return `<tr class="break-row"><td class="time-col">${escapeHtml(cBreakTime)}</td><td colspan="6">${escapeHtml(cBreakLabel)}</td></tr>`;
     }
     if (isLunch) {
-      return `<tr class="lunch-row"><td class="time-col">${cLunchTime}</td><td colspan="6">${cLunchLabel}</td></tr>`;
+      return `<tr class="lunch-row"><td class="time-col">${escapeHtml(cLunchTime)}</td><td colspan="6">${escapeHtml(cLunchLabel)}</td></tr>`;
     }
     return `<tr>
-              <td class="time-col">${timeVal}</td>
+              <td class="time-col">${escapeHtml(timeVal)}</td>
               ${DAYS_HEADER.map(d => {
       const cellEntries = rows.filter(e => (e.time || "").replace(/\s+/g, "").toLowerCase() === (timeVal || "").replace(/\s+/g, "").toLowerCase() && e.day === d.full);
       const ownEntries = cellEntries.filter(e => isFacultyOwnEntry(e, currentUser));
       const subjectText = currentUser.role === "faculty"
         ? (ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : "")
         : Array.from(new Set(cellEntries.map(e => e.subjectText || (subjectById(e.subject) ? subjectById(e.subject).short || subjectById(e.subject).name : e.subject)).filter(Boolean))).join(" / ");
-      return `<td>${subjectText ? `<span class="subject-chip">${subjectText}</span>` : '-'}</td>`;
+      return `<td>${subjectText ? `<span class="subject-chip">${escapeHtml(subjectText)}</span>` : '-'}</td>`;
     }).join('')}
             </tr>`;
   }).join('')}
@@ -6715,7 +6743,7 @@ const pages = {
     return `<div class="welcome">
       <div>
         <p class="eyebrow">Welcome back</p>
-        <h1>${currentUser.name} 👋</h1>
+        <h1>${escapeHtml(currentUser.name)} 👋</h1>
         <p>Your academic overview is ready.</p>
       </div>
       <div class="welcome-icon">🎓</div>
@@ -6729,7 +6757,7 @@ const pages = {
         </div>
       <div class="subject-grid">${visibleSubjects.map(s => {
       const markValue = typeof record.marks[s.id] === "number" ? `${record.marks[s.id]}/100` : "--";
-      return `<div class="subject-card">${s.icon ? `<div class="subject-icon">${s.icon}</div>` : ''}<div><b>${s.short}</b><small>${s.name}</small></div><strong>${markValue}</strong></div>`;
+      return `<div class="subject-card">${s.icon ? `<div class="subject-icon">${s.icon}</div>` : ''}<div><b>${escapeHtml(s.short)}</b><small>${escapeHtml(s.name)}</small></div><strong>${markValue}</strong></div>`;
     }).join("")}</div></section>`;
   },
   profile() {
@@ -6761,7 +6789,7 @@ const pages = {
         const color = isLab ? "#075985" : "#3730a3";
         const border = isLab ? "#bae6fd" : "#c7d2fe";
         const icon = isLab ? "🧪" : "📖";
-        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${icon} ${s.name}</span>`;
+        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${icon} ${escapeHtml(s.name)}</span>`;
       };
 
       const theorySubjectsMarkup = theorySubjects.length
@@ -6780,11 +6808,11 @@ const pages = {
         ${setupBanner}
         <div class="profile-head">
           <div class="profile-avatar-container">
-            <img src="${getProfilePicUrl(currentUser)}" alt="${currentUser.name}" class="profile-picture-img">
+            <img src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="${escapeHtml(currentUser.name)}" class="profile-picture-img">
           </div>
           <div class="profile-main-info">
-            <h2>${currentUser.name} <span class="role-badge-chip">🎓 Student</span></h2>
-            <p>${subtitleText}</p>
+            <h2>${escapeHtml(currentUser.name)} <span class="role-badge-chip">🎓 Student</span></h2>
+            <p>${escapeHtml(subtitleText)}</p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
             <button id="openStudentCredentialsBtn" class="primary-btn profile-edit-btn" type="button" style="width: auto !important; margin: 0; padding: 10px 18px;">
@@ -6800,20 +6828,20 @@ const pages = {
           <h3>Personal & Academic Information</h3>
         </div>
         <div class="info-grid profile-info-grid">
-          <div><small>Full Name</small><b>${currentUser.name}</b></div>
-          <div><small>Username</small><b>${currentUser.username}</b></div>
-          <div><small>Division</small><b>${div}</b></div>
-          <div><small>Semester</small><b>${sem}</b></div>
-          <div><small>Course Year</small><b>${year}</b></div>
-          <div><small>Course</small><b>${course}</b></div>
-          <div><small>Email Address</small><b>${email}</b></div>
+          <div><small>Full Name</small><b>${escapeHtml(currentUser.name)}</b></div>
+          <div><small>Username</small><b>${escapeHtml(currentUser.username)}</b></div>
+          <div><small>Division</small><b>${escapeHtml(div)}</b></div>
+          <div><small>Semester</small><b>${escapeHtml(sem)}</b></div>
+          <div><small>Course Year</small><b>${escapeHtml(year)}</b></div>
+          <div><small>Course</small><b>${escapeHtml(course)}</b></div>
+          <div><small>Email Address</small><b>${escapeHtml(email)}</b></div>
           <div><small>Account Role</small><b>Student</b></div>
           <div style="grid-column: 1 / -1; background: #f8fafc; padding: 16px 20px; border-radius: 14px; border: 1px solid #e2e8f0; margin-top: 8px;">
-            <small style="color: #4f46e5; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">📖 Enrolled Semester Subjects (${sem})</small>
+            <small style="color: #4f46e5; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">📖 Enrolled Semester Subjects (${escapeHtml(sem)})</small>
             ${theorySubjectsMarkup}
           </div>
           <div style="grid-column: 1 / -1; background: #f0f9ff; padding: 16px 20px; border-radius: 14px; border: 1px solid #bae6fd; margin-top: 8px;">
-            <small style="color: #0284c7; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">🧪 Enrolled Semester Labs (${sem})</small>
+            <small style="color: #0284c7; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">🧪 Enrolled Semester Labs (${escapeHtml(sem)})</small>
             ${labSubjectsMarkup}
           </div>
         </div>
@@ -6844,7 +6872,7 @@ const pages = {
 
             <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
               <div class="credentials-avatar-interactive" id="credentialsAvatarTrigger" title="Click to upload or change profile photo">
-                <img id="credentialsPreviewImg" src="${getProfilePicUrl(currentUser)}" alt="Profile Picture" class="credentials-preview-img">
+                <img id="credentialsPreviewImg" src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="Profile Picture" class="credentials-preview-img">
                 <div class="avatar-hover-overlay">
                   <span>📷</span>
                   <small>Change</small>
@@ -6876,7 +6904,7 @@ const pages = {
               </label>
               <div class="input-wrap">
                 <span class="input-icon">👤</span>
-                <input id="studentProfileName" type="text" value="${currentUser.name}" required placeholder="Student Full Name">
+                <input id="studentProfileName" type="text" value="${escapeHtml(currentUser.name)}" required placeholder="Student Full Name">
               </div>
             </div>
 
@@ -6886,7 +6914,7 @@ const pages = {
               </label>
               <div class="input-wrap">
                 <span class="input-icon">🛡️</span>
-                <input id="studentProfileUsername" type="text" value="${currentUser.username}" required placeholder="Enter username (4–30 chars)">
+                <input id="studentProfileUsername" type="text" value="${escapeHtml(currentUser.username)}" required placeholder="Enter username (4–30 chars)">
               </div>
               <small style="display: block; margin-top: 4px; color: #64748b; font-size: 12px;">
                 4–30 letters, numbers, dot, dash or underscore.
@@ -6900,7 +6928,7 @@ const pages = {
             </label>
             <div class="input-wrap">
               <span class="input-icon">✉️</span>
-              <input id="studentProfileEmail" type="email" value="${currentUser.email || ""}" placeholder="student@smartportal.edu">
+              <input id="studentProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="student@smartportal.edu">
             </div>
           </div>
 
@@ -6975,11 +7003,11 @@ const pages = {
       return `<section class="panel profile">
         <div class="profile-head">
           <div class="profile-avatar-container">
-            <img src="${getProfilePicUrl(currentUser)}" alt="${currentUser.name}" class="profile-picture-img">
+            <img src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="${escapeHtml(currentUser.name)}" class="profile-picture-img">
           </div>
           <div class="profile-main-info">
-            <h2>${currentUser.name} <span class="role-badge-chip" style="background:#f3e8ff; color:#7e22ce;">🧑‍🏫 Faculty</span></h2>
-            <p>${roleLabel(currentUser.role, currentUser.subject)}</p>
+            <h2>${escapeHtml(currentUser.name)} <span class="role-badge-chip" style="background:#f3e8ff; color:#7e22ce;">🧑‍🏫 Faculty</span></h2>
+            <p>${escapeHtml(roleLabel(currentUser.role, currentUser.subject))}</p>
           </div>
           <button id="openFacultyCredentialsBtn" class="primary-btn profile-edit-btn" type="button" style="width: auto !important; margin: 0; padding: 10px 20px;">
             <span>✏️ Edit Details</span>
@@ -6990,13 +7018,13 @@ const pages = {
           <h3>Faculty Credentials & Account Information</h3>
         </div>
         <div class="info-grid profile-info-grid">
-          <div><small>Full Name</small><b>${currentUser.name}</b></div>
-          <div><small>Username</small><b>${currentUser.username}</b></div>
-          <div><small>Email Address</small><b>${email}</b></div>
+          <div><small>Full Name</small><b>${escapeHtml(currentUser.name)}</b></div>
+          <div><small>Username</small><b>${escapeHtml(currentUser.username)}</b></div>
+          <div><small>Email Address</small><b>${escapeHtml(email)}</b></div>
           <div><small>Account Role</small><b>Faculty Member</b></div>
-          <div><small>Department</small><b>${currentUser.department || "Department of Computer Science & Applications"}</b></div>
-          <div><small>Assigned Subject</small><b>${subjectObj ? subjectObj.name : "N/A"}</b></div>
-          <div><small>Assigned Division</small><b>${(!currentUser.division || currentUser.division === "Both Divisions" || currentUser.division === "All Divisions") ? "Both Divisions (Div A & Div B)" : currentUser.division}</b></div>
+          <div><small>Department</small><b>${escapeHtml(currentUser.department || "Department of Computer Science & Applications")}</b></div>
+          <div><small>Assigned Subject</small><b>${escapeHtml(subjectObj ? subjectObj.name : "N/A")}</b></div>
+          <div><small>Assigned Division</small><b>${escapeHtml((!currentUser.division || currentUser.division === "Both Divisions" || currentUser.division === "All Divisions") ? "Both Divisions (Div A & Div B)" : currentUser.division)}</b></div>
         </div>
       </section>
 
@@ -7025,7 +7053,7 @@ const pages = {
 
             <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
               <div class="credentials-avatar-interactive" id="credentialsAvatarTrigger" title="Click to upload or change profile photo">
-                <img id="credentialsPreviewImg" src="${getProfilePicUrl(currentUser)}" alt="Profile Picture" class="credentials-preview-img" style="border-color: #7c3aed;">
+                <img id="credentialsPreviewImg" src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="Profile Picture" class="credentials-preview-img" style="border-color: #7c3aed;">
                 <div class="avatar-hover-overlay">
                   <span>📷</span>
                   <small>Change</small>
@@ -7057,7 +7085,7 @@ const pages = {
               </label>
               <div class="input-wrap">
                 <span class="input-icon">🧑‍🏫</span>
-                <input id="facultyProfileName" type="text" value="${currentUser.name}" required placeholder="Faculty Full Name">
+                <input id="facultyProfileName" type="text" value="${escapeHtml(currentUser.name)}" required placeholder="Faculty Full Name">
               </div>
             </div>
 
@@ -7067,7 +7095,7 @@ const pages = {
               </label>
               <div class="input-wrap">
                 <span class="input-icon">🛡️</span>
-                <input id="facultyProfileUsername" type="text" value="${currentUser.username}" required placeholder="Enter username (4–30 chars)">
+                <input id="facultyProfileUsername" type="text" value="${escapeHtml(currentUser.username)}" required placeholder="Enter username (4–30 chars)">
               </div>
               <small style="display: block; margin-top: 4px; color: #64748b; font-size: 12px;">
                 4–30 letters, numbers, dot, dash or underscore.
@@ -7082,7 +7110,7 @@ const pages = {
               </label>
               <div class="input-wrap">
                 <span class="input-icon">✉️</span>
-                <input id="facultyProfileEmail" type="email" value="${currentUser.email || ""}" placeholder="faculty@smartportal.edu">
+                <input id="facultyProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="faculty@smartportal.edu">
               </div>
             </div>
 
@@ -7092,7 +7120,7 @@ const pages = {
               </label>
               <div class="input-wrap">
                 <span class="input-icon">🏛️</span>
-                <input id="facultyProfileDepartment" type="text" value="${currentUser.department || "Department of Computer Science & Applications"}" placeholder="Department">
+                <input id="facultyProfileDepartment" type="text" value="${escapeHtml(currentUser.department || "Department of Computer Science & Applications")}" placeholder="Department">
               </div>
             </div>
 
@@ -7180,15 +7208,15 @@ const pages = {
     return `<section class="panel profile admin-profile-panel">
       <div class="profile-head admin-profile-head">
         <div class="profile-avatar-container">
-          <img src="${getProfilePicUrl(currentUser)}" alt="${adminName}" class="profile-picture-img">
+          <img src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="${escapeHtml(adminName)}" class="profile-picture-img">
         </div>
         <div class="profile-main-info">
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <h2 style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0;">${adminName}</h2>
+            <h2 style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0;">${escapeHtml(adminName)}</h2>
             <span class="badge" style="background: linear-gradient(135deg, #e0e7ff, #ede9fe); color: #4338ca; border: 1px solid #c7d2fe; font-weight: 700; padding: 4px 10px; border-radius: 999px; font-size: 12px;">🛡️ Super Administrator</span>
           </div>
           <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
-            Account ID: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-weight: 700; color: #334155;">${adminId}</code> • Username: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-weight: 700; color: #4f46e5;">@${adminUsername}</code> • Full Access Level
+            Account ID: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-weight: 700; color: #334155;">${escapeHtml(adminId)}</code> • Username: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-weight: 700; color: #4f46e5;">@${escapeHtml(adminUsername)}</code> • Full Access Level
           </p>
         </div>
         <button id="openAdminCredentialsBtn" class="primary-btn profile-edit-btn" type="button" style="width: auto !important; margin: 0; padding: 10px 20px;">
@@ -7204,15 +7232,15 @@ const pages = {
       <div class="info-grid profile-info-grid admin-info-grid">
         <div class="admin-detail-box">
           <small style="color: #64748b; font-weight: 600;">Full Name</small>
-          <b id="adminDisplayFullName" style="font-size: 15px; color: #0f172a;">${adminName}</b>
+          <b id="adminDisplayFullName" style="font-size: 15px; color: #0f172a;">${escapeHtml(adminName)}</b>
         </div>
         <div class="admin-detail-box">
           <small style="color: #64748b; font-weight: 600;">Username</small>
-          <b id="adminDisplayUsername" style="font-size: 15px; color: #4f46e5;">@${adminUsername}</b>
+          <b id="adminDisplayUsername" style="font-size: 15px; color: #4f46e5;">@${escapeHtml(adminUsername)}</b>
         </div>
         <div class="admin-detail-box">
           <small style="color: #64748b; font-weight: 600;">Email Address</small>
-          <b id="adminDisplayEmail" style="font-size: 15px; color: #0f172a;">${adminEmail}</b>
+          <b id="adminDisplayEmail" style="font-size: 15px; color: #0f172a;">${escapeHtml(adminEmail)}</b>
         </div>
         <div class="admin-detail-box">
           <small style="color: #64748b; font-weight: 600;">System Role</small>
@@ -7246,7 +7274,7 @@ const pages = {
 
           <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
             <div class="credentials-avatar-interactive" id="credentialsAvatarTrigger" title="Click to upload or change profile photo">
-              <img id="credentialsPreviewImg" src="${getProfilePicUrl(currentUser)}" alt="Profile Picture" class="credentials-preview-img" style="border-color: #4f46e5;">
+              <img id="credentialsPreviewImg" src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="Profile Picture" class="credentials-preview-img" style="border-color: #4f46e5;">
               <div class="avatar-hover-overlay">
                 <span>📷</span>
                 <small>Change</small>
@@ -7278,7 +7306,7 @@ const pages = {
             </label>
             <div class="input-wrap">
               <span class="input-icon">👤</span>
-              <input id="adminProfileName" type="text" value="${adminName}" required placeholder="Administrator Full Name">
+              <input id="adminProfileName" type="text" value="${escapeHtml(adminName)}" required placeholder="Administrator Full Name">
             </div>
           </div>
 
@@ -7288,7 +7316,7 @@ const pages = {
             </label>
             <div class="input-wrap">
               <span class="input-icon">🛡️</span>
-              <input id="adminProfileUsername" type="text" value="${adminUsername}" required placeholder="Enter username (4–30 chars)">
+              <input id="adminProfileUsername" type="text" value="${escapeHtml(adminUsername)}" required placeholder="Enter username (4–30 chars)">
             </div>
             <small style="display: block; margin-top: 4px; color: #64748b; font-size: 12px;">
               4–30 letters, numbers, dot, dash or underscore.
@@ -7302,7 +7330,7 @@ const pages = {
           </label>
           <div class="input-wrap">
             <span class="input-icon">✉️</span>
-            <input id="adminProfileEmail" type="email" value="${adminEmail}" placeholder="admin@smartportal.edu">
+            <input id="adminProfileEmail" type="email" value="${escapeHtml(adminEmail)}" placeholder="admin@smartportal.edu">
           </div>
         </div>
 
@@ -7425,30 +7453,30 @@ const pages = {
         const absents = total - presents;
         return `
           <tr>
-            <td><strong class="date-highlight">${log.date || formatDateDDMMYY(log.isoDate)}</strong></td>
-            <td><span class="chip-sm">${log.courseYear || "2nd Year"} • ${log.semester || "3rd Sem"} • ${log.division || "Sec A"}</span></td>
+            <td><strong class="date-highlight">${escapeHtml(log.date || formatDateDDMMYY(log.isoDate))}</strong></td>
+            <td><span class="chip-sm">${escapeHtml(log.courseYear || "2nd Year")} • ${escapeHtml(log.semester || "3rd Sem")} • ${escapeHtml(log.division || "Sec A")}</span></td>
             <td><span class="badge-p">${presents} P</span> <span class="badge-a">${absents} A</span></td>
             <td>
               <div class="action-buttons-wrap">
                 <button type="button" class="btn-sm edit-log-btn" 
-                  data-date="${log.isoDate}" 
-                  data-div="${log.division}" 
-                  data-sem="${log.semester}" 
-                  data-year="${log.courseYear}">
+                  data-date="${escapeHtml(log.isoDate)}" 
+                  data-div="${escapeHtml(log.division)}" 
+                  data-sem="${escapeHtml(log.semester)}" 
+                  data-year="${escapeHtml(log.courseYear)}">
                   ✏️ Edit
                 </button>
                 <button type="button" class="btn-sm load-log-btn" 
-                  data-date="${log.isoDate}" 
-                  data-div="${log.division}" 
-                  data-sem="${log.semester}" 
-                  data-year="${log.courseYear}">
+                  data-date="${escapeHtml(log.isoDate)}" 
+                  data-div="${escapeHtml(log.division)}" 
+                  data-sem="${escapeHtml(log.semester)}" 
+                  data-year="${escapeHtml(log.courseYear)}">
                   📥 Load
                 </button>
                 <button type="button" class="btn-sm delete-log-btn" 
-                  data-date="${log.isoDate}" 
-                  data-div="${log.division}" 
-                  data-sem="${log.semester}" 
-                  data-year="${log.courseYear}">
+                  data-date="${escapeHtml(log.isoDate)}" 
+                  data-div="${escapeHtml(log.division)}" 
+                  data-sem="${escapeHtml(log.semester)}" 
+                  data-year="${escapeHtml(log.courseYear)}">
                   🗑️ Delete
                 </button>
               </div>
@@ -7462,29 +7490,29 @@ const pages = {
           <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
               <h3 style="margin:0;">Daily Attendance Entry</h3>
-              <small style="color:#64748b; font-weight:600;">Managing: <strong>${subjectObj.name}</strong> • ${facultySem} (${facultyYear})</small>
+              <small style="color:#64748b; font-weight:600;">Managing: <strong>${escapeHtml(subjectObj.name)}</strong> • ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})</small>
             </div>
             <div class="active-class-badge" style="display:inline-flex; align-items:center; gap:6px; background:#e0e7ff; color:#3730a3; padding:6px 14px; border-radius:8px; font-weight:700; font-size:13px;">
-              <span>📚</span> Active Class: ${subjectObj.name} — ${facultySem} (${facultyYear})
+              <span>📚</span> Active Class: ${escapeHtml(subjectObj.name)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})
             </div>
           </div>
           <div class="attendance-filters-grid">
             <div class="filter-group">
               <label for="attCourseYearSelect">1. Course Year</label>
               <select id="attCourseYearSelect" class="filter-select" disabled style="background:#f1f5f9; cursor:not-allowed; opacity:0.9;">
-                <option value="${facultyYear}" selected>${facultyYear}</option>
+                <option value="${escapeHtml(facultyYear)}" selected>${escapeHtml(facultyYear)}</option>
               </select>
             </div>
 
             <div class="filter-group">
               <label for="attSemesterSelect">2. Semester</label>
               <select id="attSemesterSelect" class="filter-select" disabled style="background:#f1f5f9; cursor:not-allowed; opacity:0.9;">
-                <option value="${facultySem}" selected>${facultySem}</option>
+                <option value="${escapeHtml(facultySem)}" selected>${escapeHtml(facultySem)}</option>
               </select>
             </div>
 
             <div class="filter-group">
-              <label for="attDivisionSelect">3. Division ${isBothDivisions ? '(All Divisions)' : `(Assigned: ${activeClassDivision})`}</label>
+              <label for="attDivisionSelect">3. Division ${isBothDivisions ? '(All Divisions)' : `(Assigned: ${escapeHtml(activeClassDivision)})`}</label>
               <select id="attDivisionSelect" class="filter-select" ${isAttendanceDetailsEntered ? 'disabled' : ''}>
                 ${isBothDivisions ? '<option value="" ' + (!attendanceFilterDivision ? 'selected' : '') + '>-- Select Division --</option>' : ''}
                 ${isBothDivisions
@@ -7497,8 +7525,8 @@ const pages = {
             <div class="filter-group">
               <label for="attDateInput">4. Particular Date (DD-MM-YY)</label>
               <div class="date-input-wrap">
-                <input type="date" id="attDateInput" max="${todayISO}" value="${attendanceFilterDate}" class="filter-input-date">
-                <span class="date-formatted-badge">📅 ${displayDate}</span>
+                <input type="date" id="attDateInput" max="${todayISO}" value="${escapeHtml(attendanceFilterDate)}" class="filter-input-date">
+                <span class="date-formatted-badge">📅 ${escapeHtml(displayDate)}</span>
               </div>
             </div>
 
@@ -7512,15 +7540,15 @@ const pages = {
             </div>
             <p id="attFilterErrorMsg" class="message error" style="display:none; grid-column:1/-1; margin-top:6px;"></p>
             ${attendanceSaveSuccessMessage ? `
-              <p id="attFilterSuccessMsg" class="message success" style="grid-column:1/-1; margin-top:6px;">${attendanceSaveSuccessMessage}</p>
+              <p id="attFilterSuccessMsg" class="message success" style="grid-column:1/-1; margin-top:6px;">${escapeHtml(attendanceSaveSuccessMessage)}</p>
             ` : ''}
           </div>
 
           ${isAttendanceDetailsEntered ? `
             <div class="attendance-header-banner">
               <div class="att-title-info">
-                <h4>Attendance Sheet: <span>${attendanceFilterCourseYear}</span> • <span>${attendanceFilterSemester}</span> • <span>${attendanceFilterDivision}</span></h4>
-                <p>Date: <strong class="date-highlight">${displayDate}</strong> | Subject: <strong>${subjectObj.name}</strong> ${existingLog ? `<span class="badge-p" style="margin-left:8px;">Saved Record Loaded</span>` : ''}</p>
+                <h4>Attendance Sheet: <span>${escapeHtml(attendanceFilterCourseYear)}</span> • <span>${escapeHtml(attendanceFilterSemester)}</span> • <span>${escapeHtml(attendanceFilterDivision)}</span></h4>
+                <p>Date: <strong class="date-highlight">${escapeHtml(displayDate)}</strong> | Subject: <strong>${escapeHtml(subjectObj.name)}</strong> ${existingLog ? `<span class="badge-p" style="margin-left:8px;">Saved Record Loaded</span>` : ''}</p>
               </div>
             </div>
 
@@ -7540,15 +7568,15 @@ const pages = {
                     ${filteredStudents.map((s, idx) => {
         const status = activeAttendanceMap[s.username] || "";
         return `
-                        <tr data-username="${s.username}">
+                        <tr data-username="${escapeHtml(s.username)}">
                           <td>${idx + 1}</td>
-                          <td><strong class="student-name">${s.name}</strong></td>
-                          <td><code class="uucms-code">${s.username}</code></td>
-                          <td><span class="chip-sm">${s.courseYear || "2nd Year"} • ${s.semester || "3rd Sem"} • ${s.division || "Sec A"}</span></td>
+                          <td><strong class="student-name">${escapeHtml(s.name)}</strong></td>
+                          <td><code class="uucms-code">${escapeHtml(s.username)}</code></td>
+                          <td><span class="chip-sm">${escapeHtml(s.courseYear || "2nd Year")} • ${escapeHtml(s.semester || "3rd Sem")} • ${escapeHtml(s.division || "Sec A")}</span></td>
                           <td style="text-align:center;">
                             <div class="pa-toggle-group">
-                              <button type="button" class="btn-pa btn-p ${status === "P" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${s.username}" data-status="P" title="P">P</button>
-                              <button type="button" class="btn-pa btn-a ${status === "A" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${s.username}" data-status="A" title="A">A</button>
+                              <button type="button" class="btn-pa btn-p ${status === "P" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="P" title="P">P</button>
+                              <button type="button" class="btn-pa btn-a ${status === "A" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="A" title="A">A</button>
                             </div>
                           </td>
                         </tr>
@@ -7561,7 +7589,7 @@ const pages = {
               ${!isAttendanceReadOnly ? `
                 <div class="att-submit-bar">
                   <button type="button" id="saveDailyAttendanceBtn" class="primary-btn save-att-btn">
-                    <span>💾 Save Daily Attendance (${displayDate})</span>
+                    <span>💾 Save Daily Attendance (${escapeHtml(displayDate)})</span>
                     <span class="arrow">→</span>
                   </button>
                   <p id="attSaveMessage" class="message"></p>
@@ -7570,7 +7598,7 @@ const pages = {
             ` : `
               <div class="empty-state" style="text-align:center; padding: 40px 20px;">
                 <span class="empty-icon" style="font-size:36px; display:block; margin-bottom:10px;">👥</span>
-                <p style="font-size:16px; font-weight:700; color:#475569; margin:0 0 6px;">No students found for ${attendanceFilterCourseYear}, ${attendanceFilterSemester}, ${attendanceFilterDivision}.</p>
+                <p style="font-size:16px; font-weight:700; color:#475569; margin:0 0 6px;">No students found for ${escapeHtml(attendanceFilterCourseYear)}, ${escapeHtml(attendanceFilterSemester)}, ${escapeHtml(attendanceFilterDivision)}.</p>
                 <small style="color:#94a3b8;">Try changing the division dropdown above and click Fetch Attendance.</small>
               </div>
             `}
@@ -7790,8 +7818,8 @@ const pages = {
       const maxTotal = maxI1 + maxI2 + 10;
 
       const studentOptions = filteredStudents.length
-        ? `<option value="" selected>-- Select Student --</option>` + filteredStudents.map(s => `<option value="${s.username}">${s.name} (${s.username}) - ${s.division || 'Sec A'}</option>`).join("")
-        : `<option value="">No students available in ${facultySem}</option>`;
+        ? `<option value="" selected>-- Select Student --</option>` + filteredStudents.map(s => `<option value="${escapeHtml(s.username)}">${escapeHtml(s.name)} (${escapeHtml(s.username)}) - ${escapeHtml(s.division || 'Sec A')}</option>`).join("")
+        : `<option value="">No students available in ${escapeHtml(facultySem)}</option>`;
 
       const rows = filteredStudents.map((s, idx) => {
         const record = getStudentRecord(s.username);
@@ -7820,15 +7848,15 @@ const pages = {
         }
 
         return `
-          <tr data-student-row="${s.username}">
+          <tr data-student-row="${escapeHtml(s.username)}">
             <td>${idx + 1}</td>
-            <td><strong class="student-name">${s.name}</strong></td>
-            <td><code class="uucms-code">${s.username}</code></td>
-            <td><code class="uucms-code">${s.division || 'Div A'}</code></td>
+            <td><strong class="student-name">${escapeHtml(s.name)}</strong></td>
+            <td><code class="uucms-code">${escapeHtml(s.username)}</code></td>
+            <td><code class="uucms-code">${escapeHtml(s.division || 'Div A')}</code></td>
             <td>
               <input type="number" 
                 class="marks-input-field" 
-                data-username="${s.username}" 
+                data-username="${escapeHtml(s.username)}" 
                 data-field="internal1" 
                 min="0" max="${maxI1}" step="0.5" 
                 value="${i1Val}" 
@@ -7838,7 +7866,7 @@ const pages = {
             <td>
               <input type="number" 
                 class="marks-input-field" 
-                data-username="${s.username}" 
+                data-username="${escapeHtml(s.username)}" 
                 data-field="internal2" 
                 min="0" max="${maxI2}" step="0.5" 
                 value="${i2Val}" 
@@ -7848,7 +7876,7 @@ const pages = {
             <td>
               <input type="number" 
                 class="marks-input-field" 
-                data-username="${s.username}" 
+                data-username="${escapeHtml(s.username)}" 
                 data-field="assignment" 
                 min="0" max="10" step="0.5" 
                 value="${assignVal}" 
@@ -7856,7 +7884,7 @@ const pages = {
                 style="width: 90px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 600;">
             </td>
             <td>
-              <span id="total-badge-${s.username}" class="badge-p">${totalText}</span>
+              <span id="total-badge-${escapeHtml(s.username)}" class="badge-p">${totalText}</span>
             </td>
           </tr>
         `;
@@ -7866,11 +7894,11 @@ const pages = {
         <section class="panel">
           <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
-              <h3>Subject Internal Exam Max Marks Configuration (${subjectObj.name})</h3>
-              <small style="color:#64748b; font-weight:600;">Faculty can select whether 1st Internal & 2nd Internal exams are out of 20 or 40 marks for ${facultySem} (${facultyYear}).</small>
+              <h3>Subject Internal Exam Max Marks Configuration (${escapeHtml(subjectObj.name)})</h3>
+              <small style="color:#64748b; font-weight:600;">Faculty can select whether 1st Internal & 2nd Internal exams are out of 20 or 40 marks for ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)}).</small>
             </div>
             <div class="active-class-badge" style="display:inline-flex; align-items:center; gap:6px; background:#dbeafe; color:#1e40af; padding:6px 14px; border-radius:8px; font-weight:700; font-size:13px;">
-              <span>📊</span> Active Class: ${subjectObj.name} — ${facultySem} (${facultyYear})
+              <span>📊</span> Active Class: ${escapeHtml(subjectObj.name)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})
             </div>
           </div>
           <form id="maxMarksConfigForm" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap; background:#f8fafc; padding:14px 18px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:16px;">
@@ -7901,8 +7929,8 @@ const pages = {
         <section class="panel" style="margin-top:20px;">
           <div class="panel-head">
             <div>
-              <h3>Student Marks Entry Table (${subjectObj.name})</h3>
-              <small style="color:#64748b; font-weight:600;">${facultySem} (${facultyYear}) • Enter marks directly in the table below</small>
+              <h3>Student Marks Entry Table (${escapeHtml(subjectObj.name)})</h3>
+              <small style="color:#64748b; font-weight:600;">${escapeHtml(facultySem)} (${escapeHtml(facultyYear)}) • Enter marks directly in the table below</small>
             </div>
             <span class="badge">Faculty Table Entry</span>
           </div>
@@ -7917,10 +7945,10 @@ const pages = {
                       <th>Student Name</th>
                       <th>Username</th>
                       <th>Division</th>
-                      <th>1st Internal</th>
-                      <th>2nd Internal</th>
-                      <th>Assignment</th>
-                      <th>Total Marks (Out of ${maxTotal})</th>
+                      <th>1st Internal (/${maxI1})</th>
+                      <th>2nd Internal (/${maxI2})</th>
+                      <th>Assignment (/10)</th>
+                      <th>Total Real Marks (/${maxTotal})</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -7928,17 +7956,14 @@ const pages = {
                   </tbody>
                 </table>
               </div>
-              <div style="display:flex; gap:16px; align-items:center; margin-top:16px; padding-top:12px; border-top:1px solid #e2e8f0;">
-                <button type="submit" id="saveBatchMarksBtn" class="primary-btn" style="padding:10px 24px; font-size:14px;">
-                  <span>💾 Save All Student Marks</span>
-                  <span class="arrow">→</span>
-                </button>
-                <p id="marksBatchMessage" class="message"></p>
+              <div style="margin-top:14px; display:flex; gap:12px; align-items:center;">
+                <button class="primary-btn" type="submit"><span>💾 Save Marks Batch</span><span class="arrow">→</span></button>
+                <p id="marksMessage" class="message"></p>
               </div>
             </form>
           ` : `
-            <div class="empty-state" style="text-align:center; padding:40px 20px;">
-              <p style="font-size:16px; font-weight:700; color:#475569; margin:0 0 6px;">No students found for ${facultySem} (${facultyYear}).</p>
+            <div class="empty-state" style="text-align:center; padding: 40px 20px;">
+              <p style="font-size:15px; color:#64748b; margin:0;">No students enrolled for ${escapeHtml(subjectObj.name)}.</p>
             </div>
           `}
         </section>
@@ -7979,7 +8004,7 @@ const pages = {
       return `
         <tr>
           <td>${idx + 1}</td>
-          <td><strong class="student-name">${s.name}</strong></td>
+          <td><strong class="student-name">${escapeHtml(s.name)}</strong></td>
           <td><span class="chip-sm">${i1Text}</span></td>
           <td><span class="chip-sm">${i2Text}</span></td>
           <td><span class="chip-sm">${assignText}</span></td>
@@ -7993,13 +8018,13 @@ const pages = {
         <div class="panel-head">
           <div>
             <h3>Academic Marks Statement</h3>
-            <small style="color:#64748b;">Detailed breakdown of Internal Exams & Assignment Marks • ${currentUser.semester || '1st Semester'} (${currentUser.division || 'Div A'})</small>
+            <small style="color:#64748b;">Detailed breakdown of Internal Exams & Assignment Marks • ${escapeHtml(currentUser.semester || '1st Semester')} (${escapeHtml(currentUser.division || 'Div A')})</small>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
-            <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" onclick="openAiAnalysisModal('${currentUser.username}', 'marks')">
+            <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" onclick="openAiAnalysisModal('${encodeURIComponent(currentUser.username)}', 'marks')">
               <span>📈 AI Marks Analysis</span>
             </button>
-            <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;">${currentUser.division || 'Div A'} • Student Statement</span>
+            <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;">${escapeHtml(currentUser.division || 'Div A')} • Student Statement</span>
           </div>
         </div>
 
@@ -8102,7 +8127,7 @@ const pages = {
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <div class="assignment-search-box">
               <span class="assignment-search-icon">🔍</span>
-              <input id="assignmentStudentSearch" type="text" class="assignment-search-input" placeholder="Search student name or USN..." value="${assignmentSearchQuery || ''}">
+              <input id="assignmentStudentSearch" type="text" class="assignment-search-input" placeholder="Search student name or USN..." value="${escapeHtml(assignmentSearchQuery || '')}">
               <button type="button" id="clearAssignmentSearch" class="assignment-search-clear" title="Clear search" style="${assignmentSearchQuery ? 'display:inline-block;' : 'display:none;'}">✕</button>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
@@ -8309,7 +8334,7 @@ const pages = {
           <label style="font-size:13px; font-weight:700; color:#475569;">Filter Subject:</label>
           <select id="notesSubjectFilter" class="filter-select" style="padding:6px 12px; font-size:13px; font-weight:700; border-radius:8px;">
             <option value="All Subjects">All Subjects</option>
-            ${studentSubjects.map(s => `<option value="${s.id}">${s.short} (${s.name})</option>`).join("")}
+            ${studentSubjects.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.short)} (${escapeHtml(s.name)})</option>`).join("")}
           </select>
         </div>
       </div>
@@ -8400,13 +8425,13 @@ const pages = {
         <div class="college-timetable-container">
           <div class="college-header-banner" style="text-align:center; margin-bottom: 8px;">
             ${canEdit ? `
-              <input id="timetableHeaderTitleInput" type="text" class="direct-cell-input" value="${(headerTitle || '').replace(/"/g, '&quot;')}" placeholder="College Title (e.g. BHARATESH COLLEGE OF COMPUTER APPLICATIONS 2026)" style="text-align:center; font-weight:800; font-size:17px; color:#1e293b; border:1px solid #c084fc; background:#ffffff; padding:4px 8px; border-radius:4px; margin-bottom:4px; width:100%; box-sizing:border-box;">
-              <input id="timetableHeaderSubtitleInput" type="text" class="direct-cell-input" value="${(headerSubtitle || '').replace(/<[^>]*>/g, '').replace(/"/g, '&quot;')}" placeholder="Enter Timetable Subtitle here..." style="text-align:center; font-weight:700; font-size:13.5px; color:#475569; border:1px solid #c084fc; background:#ffffff; padding:3px 8px; border-radius:4px; width:100%; box-sizing:border-box;">
+              <input id="timetableHeaderTitleInput" type="text" class="direct-cell-input" value="${escapeHtml(headerTitle || '')}" placeholder="College Title (e.g. BHARATESH COLLEGE OF COMPUTER APPLICATIONS 2026)" style="text-align:center; font-weight:800; font-size:17px; color:#1e293b; border:1px solid #c084fc; background:#ffffff; padding:4px 8px; border-radius:4px; margin-bottom:4px; width:100%; box-sizing:border-box;">
+              <input id="timetableHeaderSubtitleInput" type="text" class="direct-cell-input" value="${escapeHtml(headerSubtitle || '')}" placeholder="Enter Timetable Subtitle here..." style="text-align:center; font-weight:700; font-size:13.5px; color:#475569; border:1px solid #c084fc; background:#ffffff; padding:3px 8px; border-radius:4px; width:100%; box-sizing:border-box;">
             ` : `
-              <h2 style="text-align:center; margin:0 0 3px 0; font-size:17px; font-weight:800; color:#1e293b;">${headerTitle}</h2>
+              <h2 style="text-align:center; margin:0 0 3px 0; font-size:17px; font-weight:800; color:#1e293b;">${escapeHtml(headerTitle)}</h2>
               ${headerSubtitle ? `
                 <div class="timetable-subtitle" style="text-align:center; font-size:13.5px; font-weight:700; color:#475569;">
-                  ${headerSubtitle}
+                  ${escapeHtml(headerSubtitle)}
                 </div>
               ` : ''}
             `}
@@ -8445,16 +8470,16 @@ const pages = {
                       <tr class="break-row">
                         <td class="time-col" style="text-align:center; vertical-align:middle; padding:2px 1px;">
                           ${canEdit ? `
-                            <textarea id="breakTimeInput" class="direct-time-input" data-row-idx="${rowIdx}" rows="1" style="text-align:center; padding:0; resize:none; border:none; background:transparent;">${breakTimeVal}</textarea>
+                            <textarea id="breakTimeInput" class="direct-time-input" data-row-idx="${rowIdx}" rows="1" style="text-align:center; padding:0; resize:none; border:none; background:transparent;">${escapeHtml(breakTimeVal)}</textarea>
                           ` : `
-                            <span class="matrix-time-chip">${breakTimeVal}</span>
+                            <span class="matrix-time-chip">${escapeHtml(breakTimeVal)}</span>
                           `}
                         </td>
                         <td colspan="6" style="text-align:center; vertical-align:middle; font-weight:700; letter-spacing:0.5px; background:#f3e8ff; color:#581c87; text-transform:uppercase; padding:2px 1px;">
                           ${canEdit ? `
-                            <input id="breakLabelInput" type="text" class="direct-cell-input" value="${breakLabelVal}" style="text-align:center; font-weight:700; background:#f3e8ff; border:1px solid #c084fc; color:#581c87; text-transform:uppercase; font-size:11px; padding:2px 4px; width:100%; border-radius:4px;" placeholder="Break Time label...">
+                            <input id="breakLabelInput" type="text" class="direct-cell-input" value="${escapeHtml(breakLabelVal)}" style="text-align:center; font-weight:700; background:#f3e8ff; border:1px solid #c084fc; color:#581c87; text-transform:uppercase; font-size:11px; padding:2px 4px; width:100%; border-radius:4px;" placeholder="Break Time label...">
                           ` : `
-                            ${breakLabelVal}
+                            ${escapeHtml(breakLabelVal)}
                           `}
                         </td>
                       </tr>
@@ -8466,16 +8491,16 @@ const pages = {
                       <tr class="lunch-row">
                         <td class="time-col" style="text-align:center; vertical-align:middle; padding:2px 1px;">
                           ${canEdit ? `
-                            <textarea id="lunchTimeInput" class="direct-time-input" data-row-idx="${rowIdx}" rows="1" style="text-align:center; padding:0; resize:none; border:none; background:transparent;">${lunchTimeVal}</textarea>
+                            <textarea id="lunchTimeInput" class="direct-time-input" data-row-idx="${rowIdx}" rows="1" style="text-align:center; padding:0; resize:none; border:none; background:transparent;">${escapeHtml(lunchTimeVal)}</textarea>
                           ` : `
-                            <span class="matrix-time-chip">${lunchTimeVal}</span>
+                            <span class="matrix-time-chip">${escapeHtml(lunchTimeVal)}</span>
                           `}
                         </td>
                         <td colspan="6" style="text-align:center; vertical-align:middle; font-weight:700; letter-spacing:0.5px; background:#f3e8ff; color:#581c87; text-transform:uppercase; padding:2px 1px;">
                           ${canEdit ? `
-                            <input id="lunchLabelInput" type="text" class="direct-cell-input" value="${lunchLabelVal}" style="text-align:center; font-weight:700; background:#f3e8ff; border:1px solid #c084fc; color:#581c87; text-transform:uppercase; font-size:11px; padding:2px 4px; width:100%; border-radius:4px;" placeholder="Lunch Break label...">
+                            <input id="lunchLabelInput" type="text" class="direct-cell-input" value="${escapeHtml(lunchLabelVal)}" style="text-align:center; font-weight:700; background:#f3e8ff; border:1px solid #c084fc; color:#581c87; text-transform:uppercase; font-size:11px; padding:2px 4px; width:100%; border-radius:4px;" placeholder="Lunch Break label...">
                           ` : `
-                            ${lunchLabelVal}
+                            ${escapeHtml(lunchLabelVal)}
                           `}
                         </td>
                       </tr>
@@ -8490,9 +8515,9 @@ const pages = {
                                     data-row-idx="${rowIdx}"
                                     rows="1"
                                     style="text-align:center;"
-                                    placeholder="Timing...">${timeVal || ''}</textarea>
+                                    placeholder="Timing...">${escapeHtml(timeVal || '')}</textarea>
                         ` : `
-                          <span class="matrix-time-chip">${timeVal || '-'}</span>
+                          <span class="matrix-time-chip">${escapeHtml(timeVal || '-')}</span>
                         `}
                       </td>
                       ${DAYS_HEADER.map(d => {
@@ -8506,7 +8531,7 @@ const pages = {
                           <td>
                             ${canEdit ? `
                               ${otherEntries.length > 0 ? `
-                                <div class="matrix-occupied-chip" title="Timing booked by another faculty: ${otherEntries[0].subjectText || ''}">
+                                <div class="matrix-occupied-chip" title="Timing booked by another faculty: ${escapeHtml(otherEntries[0].subjectText || '')}">
                                   Occupied
                                 </div>
                               ` : `
@@ -8514,10 +8539,10 @@ const pages = {
                                           data-row-idx="${rowIdx}"
                                           data-day="${d.full}"
                                           rows="1"
-                                          placeholder="-">${ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : ''}</textarea>
+                                          placeholder="-">${escapeHtml(ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : '')}</textarea>
                               `}
                             ` : `
-                              <span class="matrix-subject-chip">${(isFaculty ? (ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : '-') : masterText) || '-'}</span>
+                              <span class="matrix-subject-chip">${escapeHtml((isFaculty ? (ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : '-') : masterText) || '-')}</span>
                             `}
                           </td>
                         `;
@@ -8599,7 +8624,7 @@ const pages = {
           ${allFacultySubjects.map(s => {
             const sSem = s.semester || getSemesterForSubject(s.id);
             const isCurrent = (displaySemester === sSem);
-            return `<button type="button" onclick="activeTimetableSemester='${sSem}'; navigate('timetable');" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#4f46e5' : '#cbd5e1'}; background:${isCurrent ? '#4f46e5' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${s.icon || '📚'} ${s.short || s.name} (${sSem})</button>`;
+            return `<button type="button" onclick="activeTimetableSemester='${escapeHtml(sSem)}'; navigate('timetable');" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#4f46e5' : '#cbd5e1'}; background:${isCurrent ? '#4f46e5' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${escapeHtml(s.icon || '📚')} ${escapeHtml(s.short || s.name)} (${escapeHtml(sSem)})</button>`;
           }).join("")}
         </div>
       ` : ''}
@@ -8766,9 +8791,9 @@ const pages = {
       <div class="faculty-grid">${USERS.faculty.length ? USERS.faculty.map(f => {
       const subs = getFacultyEligibleSubjects(f);
       const divText = (!f.division || f.division === "Both Divisions" || f.division === "All Divisions") ? "Both Divs (A & B)" : f.division;
-      const divBadge = `<span class="badge" style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:6px;">📍 ${divText}</span>`;
+      const divBadge = `<span class="badge" style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:6px;">📍 ${escapeHtml(divText)}</span>`;
       const subjectBadges = subs.length
-        ? subs.map(sub => `<span class="badge" style="font-size:11px; background:#f1f5f9; color:#334155; padding:3px 7px; border-radius:6px; margin:2px; display:inline-flex; align-items:center; gap:4px;"><span>${sub.icon || '📚'}</span> <strong>${sub.short || sub.name}</strong> <small style="color:#64748b;">(${sub.semester})</small></span>`).join(" ")
+        ? subs.map(sub => `<span class="badge" style="font-size:11px; background:#f1f5f9; color:#334155; padding:3px 7px; border-radius:6px; margin:2px; display:inline-flex; align-items:center; gap:4px;"><span>${escapeHtml(sub.icon || '📚')}</span> <strong>${escapeHtml(sub.short || sub.name)}</strong> <small style="color:#64748b;">(${escapeHtml(sub.semester)})</small></span>`).join(" ")
         : `<span style="font-size:12px; color:#94a3b8;">No subjects assigned</span>`;
       return `<div class="faculty-card" data-user-row="faculty" data-user-name="${escapeHtml(f.name)}" data-user-username="${escapeHtml(f.username)}">
           <div class="big-avatar">${escapeHtml(f.name ? f.name.charAt(0) : 'F')}</div>
@@ -8879,7 +8904,7 @@ function facultyDashboard() {
   return `<div class="welcome">
     <div>
       <p class="eyebrow">Faculty Portal</p>
-      <h1>Welcome back, ${facultyName} 👋</h1>
+      <h1>Welcome back, ${escapeHtml(facultyName)} 👋</h1>
     </div>
     <div class="welcome-icon">🧑‍🏫</div>
   </div>
@@ -8938,11 +8963,11 @@ function facultyDashboard() {
             <div>
               <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;">
                 <div style="flex:1; min-width:0; padding-right:${isActive ? '75px' : '0'};">
-                  <h4 style="margin:0; font-size:15px; font-weight:800; color:#1e293b; line-height:1.3;">${s.name}</h4>
+                  <h4 style="margin:0; font-size:15px; font-weight:800; color:#1e293b; line-height:1.3;">${escapeHtml(s.name)}</h4>
                   <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
-                    <span class="chip-sm" style="background:#e0f2fe; color:#0369a1; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${sYear}</span>
-                    <span class="chip-sm" style="background:#f1f5f9; color:#475569; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${sSem}</span>
-                    <span class="chip-sm" style="background:#fef3c7; color:#92400e; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${sDivText}</span>
+                    <span class="chip-sm" style="background:#e0f2fe; color:#0369a1; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${escapeHtml(sYear)}</span>
+                    <span class="chip-sm" style="background:#f1f5f9; color:#475569; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${escapeHtml(sSem)}</span>
+                    <span class="chip-sm" style="background:#fef3c7; color:#92400e; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${escapeHtml(sDivText)}</span>
                   </div>
                 </div>
               </div>
@@ -8961,7 +8986,7 @@ function facultyDashboard() {
                   <button type="button" class="btn-sm" onclick="navigate('marks')" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;">📈 Marks</button>
                 </div>
               ` : `
-                <button type="button" onclick="switchFacultyActiveSubject('${s.id}')" class="primary-btn" style="width:100% !important; margin:0; padding:8px 12px; font-size:12px; font-weight:700; border-radius:8px; cursor:pointer;">
+                <button type="button" onclick="switchFacultyActiveSubject('${escapeHtml(s.id)}')" class="primary-btn" style="width:100% !important; margin:0; padding:8px 12px; font-size:12px; font-weight:700; border-radius:8px; cursor:pointer;">
                   <span>Switch to Manage This Class</span>
                   <span class="arrow">→</span>
                 </button>
@@ -8992,8 +9017,8 @@ function facultyDashboard() {
     <section class="panel faculty-course-panel" style="margin-top: 18px;">
       <div class="panel-head">
         <div>
-          <h3>📚 Active Class: ${subjectObj.name}</h3>
-          <span class="badge" style="background:#dcfce7; color:#15803d;">${sem} • ${courseYear}</span>
+          <h3>📚 Active Class: ${escapeHtml(subjectObj.name)}</h3>
+          <span class="badge" style="background:#dcfce7; color:#15803d;">${escapeHtml(sem)} • ${escapeHtml(courseYear)}</span>
         </div>
       </div>
 
@@ -9002,7 +9027,7 @@ function facultyDashboard() {
           <div class="subject-icon">🎓</div>
           <div>
             <b>Degree Program</b>
-            <small>${courseName}</small>
+            <small>${escapeHtml(courseName)}</small>
           </div>
           <strong>BCA</strong>
         </div>
@@ -9011,27 +9036,27 @@ function facultyDashboard() {
           <div class="subject-icon">💻</div>
           <div>
             <b>Active Subject</b>
-            <small>${subjectObj.name}</small>
+            <small>${escapeHtml(subjectObj.name)}</small>
           </div>
-          <strong>${subjectObj.short || subjectObj.code || subjectObj.id}</strong>
+          <strong>${escapeHtml(subjectObj.short || subjectObj.code || subjectObj.id)}</strong>
         </div>
 
         <div class="subject-card">
           <div class="subject-icon">📅</div>
           <div>
             <b>Semester & Year</b>
-            <small>${sem} (${courseYear})</small>
+            <small>${escapeHtml(sem)} (${escapeHtml(courseYear)})</small>
           </div>
-          <strong>${sem}</strong>
+          <strong>${escapeHtml(sem)}</strong>
         </div>
 
         <div class="subject-card">
           <div class="subject-icon">🏫</div>
           <div>
             <b>Assigned Division(s)</b>
-            <small>${activeDivLabelFull}</small>
+            <small>${escapeHtml(activeDivLabelFull)}</small>
           </div>
-          <strong>${activeDivLabelShort}</strong>
+          <strong>${escapeHtml(activeDivLabelShort)}</strong>
         </div>
 
         <div class="subject-card">
@@ -9070,7 +9095,7 @@ function facultyDashboard() {
         <div class="subject-icon">🪪</div>
         <div>
           <b>Full Name</b>
-          <small>${facultyName}</small>
+          <small>${escapeHtml(facultyName)}</small>
         </div>
         <strong>Faculty</strong>
       </div>
@@ -9079,7 +9104,7 @@ function facultyDashboard() {
         <div class="subject-icon">👤</div>
         <div>
           <b>Username</b>
-          <small>${currentUser.username}</small>
+          <small>${escapeHtml(currentUser.username)}</small>
         </div>
         <strong>System ID</strong>
       </div>
@@ -9088,7 +9113,7 @@ function facultyDashboard() {
         <div class="subject-icon">✉️</div>
         <div>
           <b>Email Address</b>
-          <small style="word-break:break-all;">${email}</small>
+          <small style="word-break:break-all;">${escapeHtml(email)}</small>
         </div>
         <strong>Primary</strong>
       </div>
@@ -9097,7 +9122,7 @@ function facultyDashboard() {
         <div class="subject-icon">🏛️</div>
         <div>
           <b>Department</b>
-          <small>${currentUser.department || "Department of Computer Science & Applications"}</small>
+          <small>${escapeHtml(currentUser.department || "Department of Computer Science & Applications")}</small>
         </div>
         <strong>BCA</strong>
       </div>
@@ -9125,7 +9150,7 @@ function adminDashboard() {
   </div>
 
   <div class="stat-grid">
-    <div class="stat" style="cursor: pointer;" onclick="navigate('profile')"><span>👤</span><b>${adminName}</b><small>Admin (@${adminUsername})</small></div>
+    <div class="stat" style="cursor: pointer;" onclick="navigate('profile')"><span>👤</span><b>${escapeHtml(adminName)}</b><small>Admin (@${escapeHtml(adminUsername)})</small></div>
     <div class="stat" style="cursor: pointer;" onclick="navigate('divisions')"><span>🏫</span><b>${totalDivisions}</b><small>Class Divisions</small></div>
     <div class="stat" style="cursor: pointer;" onclick="navigate('subjects')"><span>📚</span><b>${totalSubjects}</b><small>Semester Subjects</small></div>
     <div class="stat" style="cursor: pointer;" onclick="navigate('students')"><span>👥</span><b>${USERS.student.length}</b><small>Students</small></div>
@@ -9239,17 +9264,17 @@ function adminSubjects() {
     const courseYear = getCourseYearForSemester(sem);
 
     return `
-      <div class="semester-subject-block" data-semester-block="${sem}" style="${isVisible ? '' : 'display: none;'}">
+      <div class="semester-subject-block" data-semester-block="${escapeHtml(sem)}" style="${isVisible ? '' : 'display: none;'}">
         <div class="semester-block-header">
           <div class="header-info">
             <div class="sem-icon-bubble">📚</div>
             <div>
-              <h4>${sem} <span class="sem-year-badge">${courseYear}</span></h4>
+              <h4>${escapeHtml(sem)} <span class="sem-year-badge">${escapeHtml(courseYear)}</span></h4>
               <p class="sem-meta-text">${semSubjects.length} Total Subjects • ${semTheory} Theory • ${semLab} Practical Labs</p>
             </div>
           </div>
-          <button type="button" class="primary-btn btn-add-subject-sem" onclick="openAddSubjectModal('${sem}')">
-            <span>➕ Add Subject to ${sem}</span>
+          <button type="button" class="primary-btn btn-add-subject-sem" onclick="openAddSubjectModal('${escapeHtml(sem)}')">
+            <span>➕ Add Subject to ${escapeHtml(sem)}</span>
           </button>
         </div>
 
@@ -9263,26 +9288,26 @@ function adminSubjects() {
       }).join(", ");
 
       return `
-              <div class="subject-manage-card" data-subject-item="${s.id}" data-subject-name="${(s.name || '').toLowerCase()}" data-subject-short="${(s.short || '').toLowerCase()}" data-subject-id="${(s.id || '').toLowerCase()}" data-subject-semester="${sem}">
+              <div class="subject-manage-card" data-subject-item="${escapeHtml(s.id)}" data-subject-name="${escapeHtml((s.name || '').toLowerCase())}" data-subject-short="${escapeHtml((s.short || '').toLowerCase())}" data-subject-id="${escapeHtml((s.id || '').toLowerCase())}" data-subject-semester="${escapeHtml(sem)}">
                 <div class="card-top">
-                  <h5 class="subject-title">${s.short}</h5>
+                  <h5 class="subject-title">${escapeHtml(s.short)}</h5>
                   <div class="subject-type-badge ${isLab ? 'badge-lab' : 'badge-theory'}">
                     ${isLab ? 'Practical Lab' : 'Theory'}
                   </div>
                 </div>
                 <div class="card-body">
-                  <p class="subject-fullname" title="${s.name}">${s.name}</p>
+                  <p class="subject-fullname" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</p>
                   <div class="subject-meta-row">
-                    <span class="subject-code-tag">Code: <code>${s.id}</code></span>
-                    <span class="subject-sem-tag">${s.semester}</span>
+                    <span class="subject-code-tag">Code: <code>${escapeHtml(s.id)}</code></span>
+                    <span class="subject-sem-tag">${escapeHtml(s.semester)}</span>
                   </div>
-                  ${facultyNames ? `<div class="faculty-assigned-text">🧑‍🏫 <span>${facultyNames}</span></div>` : `<div class="faculty-assigned-text unassigned">⚪ No faculty assigned</div>`}
+                  ${facultyNames ? `<div class="faculty-assigned-text">🧑‍🏫 <span>${escapeHtml(facultyNames)}</span></div>` : `<div class="faculty-assigned-text unassigned">⚪ No faculty assigned</div>`}
                 </div>
                 <div class="card-actions">
-                  <button type="button" class="btn-action-edit" onclick="openEditSubjectModal('${s.id}')" title="Edit Subject Details">
+                  <button type="button" class="btn-action-edit" onclick="openEditSubjectModal('${escapeHtml(s.id)}')" title="Edit Subject Details">
                     <span>✏️ Edit</span>
                   </button>
-                  <button type="button" class="btn-action-delete" onclick="deleteSubject('${s.id}')" title="Delete Subject">
+                  <button type="button" class="btn-action-delete" onclick="deleteSubject('${escapeHtml(s.id)}')" title="Delete Subject">
                     <span>🗑️ Delete</span>
                   </button>
                 </div>
@@ -9291,8 +9316,8 @@ function adminSubjects() {
     }).join("") : `
             <div class="empty-state-box">
               <span class="empty-icon">📂</span>
-              <p>No subjects configured for ${sem} yet.</p>
-              <button type="button" class="secondary-btn" onclick="openAddSubjectModal('${sem}')">➕ Add Subject to ${sem}</button>
+              <p>No subjects configured for ${escapeHtml(sem)} yet.</p>
+              <button type="button" class="secondary-btn" onclick="openAddSubjectModal('${escapeHtml(sem)}')">➕ Add Subject to ${escapeHtml(sem)}</button>
             </div>
           `}
         </div>
@@ -9924,15 +9949,15 @@ function adminDivisions() {
           </div>
 
           <div class="card-actions" style="display:flex; align-items:center; gap:8px;">
-            <button type="button" class="secondary-btn" onclick="renameDivision('${escapeHtml(divName)}', '${yr}')" style="margin:0; padding:6px 12px; font-size:12px; font-weight:700;">
+            <button type="button" class="secondary-btn" onclick="renameDivision('${escapeHtml(divName)}', '${escapeHtml(yr)}')" style="margin:0; padding:6px 12px; font-size:12px; font-weight:700;">
               <span>✏️ Rename</span>
             </button>
             ${isRemovable ? `
-              <button type="button" class="danger-btn" onclick="deleteDivision('${escapeHtml(divName)}', '${yr}')" style="margin:0; padding:6px 14px; font-size:12px; font-weight:700;">
+              <button type="button" class="danger-btn" onclick="deleteDivision('${escapeHtml(divName)}', '${escapeHtml(yr)}')" style="margin:0; padding:6px 14px; font-size:12px; font-weight:700;">
                 <span>🗑️ Remove</span>
               </button>
             ` : `
-              <span style="font-size:11.5px; color:#94a3b8; font-style:italic;">Primary Division (${yr})</span>
+              <span style="font-size:11.5px; color:#94a3b8; font-style:italic;">Primary Division (${escapeHtml(yr)})</span>
             `}
           </div>
         </div>
@@ -9940,22 +9965,22 @@ function adminDivisions() {
     }).join("");
 
     return `
-      <div class="semester-subject-block" data-division-year-block="${yr}" style="${isVisible ? '' : 'display: none;'} margin-bottom: 24px;">
+      <div class="semester-subject-block" data-division-year-block="${escapeHtml(yr)}" style="${isVisible ? '' : 'display: none;'} margin-bottom: 24px;">
         <div class="semester-block-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 16px;">
           <div class="header-info" style="display: flex; align-items: center; gap: 12px;">
             <div class="sem-icon-bubble">🏫</div>
             <div>
               <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                <span>${yr} Divisions</span>
-                <span class="sem-year-badge">${semsCovered}</span>
+                <span>${escapeHtml(yr)} Divisions</span>
+                <span class="sem-year-badge">${escapeHtml(semsCovered)}</span>
               </h4>
               <p class="sem-meta-text" style="margin: 3px 0 0 0; font-size: 12px; color: #64748b;">
                 ${yrDivs.length} Active Divisions • ${yrStudents.length} Students Enrolled
               </p>
             </div>
           </div>
-          <button type="button" class="primary-btn btn-add-subject-sem" onclick="openAddDivisionModal('${yr}')">
-            <span>+ Add Division to ${yr}</span>
+          <button type="button" class="primary-btn btn-add-subject-sem" onclick="openAddDivisionModal('${escapeHtml(yr)}')">
+            <span>+ Add Division to ${escapeHtml(yr)}</span>
           </button>
         </div>
 
@@ -10268,8 +10293,8 @@ function updateFacultySubjectSwitcher() {
             const sDiv = getFacultySubjectDivision(currentUser, s.id);
             const sDivText = (!sDiv || sDiv === "Both Divisions" || sDiv === "All Divisions") ? "Div A & B" : sDiv;
             return `
-              <option value="${s.id}" ${s.id === currentUser.subject ? "selected" : ""}>
-                ${s.short || s.name} — ${sSem} [${sDivText}]
+              <option value="${escapeHtml(s.id)}" ${s.id === currentUser.subject ? "selected" : ""}>
+                ${escapeHtml(s.short || s.name)} — ${escapeHtml(sSem)} [${escapeHtml(sDivText)}]
               </option>
             `;
           }).join("")}

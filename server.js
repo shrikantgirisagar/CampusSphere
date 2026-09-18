@@ -171,9 +171,31 @@ function validRole(role) {
   return ["student", "faculty", "admin"].includes(role);
 }
 
+function isValidImageUrl(url) {
+  if (!url) return true;
+  const s = String(url).trim();
+  if (!s) return true;
+  if (/^(javascript:|vbscript:|data:text\/html)/i.test(s)) return false;
+  if (/<[^>]*>/.test(s)) return false;
+  if (/^(https?:\/\/|\/|\.\/|data:image\/)/i.test(s)) return true;
+  return false;
+}
+
+function containsDangerousHtml(str) {
+  if (!str || typeof str !== "string") return false;
+  return /<[a-z\/!?[\]]|javascript:|data:text\/html/i.test(str);
+}
+
+function stripHtmlTags(str) {
+  if (!str || typeof str !== "string") return "";
+  return str.replace(/<[^>]*>/g, "").trim();
+}
+
 function validateUserFields({ name, username, email, role, subject, subjects }) {
   if (!validRole(role)) return "Invalid account role.";
   if (!String(name || "").trim()) return "Full name is required.";
+  if (/<[a-z\/!?[\]]/i.test(String(name || ""))) return "Full name cannot contain HTML or script tags.";
+  if (String(name).trim().length > 100) return "Full name cannot exceed 100 characters.";
   if (!/^[A-Za-z0-9_.-]{4,30}$/.test(username || "")) return "Username must be 4–30 letters, numbers, dot, dash or underscore.";
   if (role !== "admin" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email))) return "Enter a valid email address.";
   if (role === "admin" && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email))) return "Enter a valid email address.";
@@ -735,6 +757,22 @@ app.post("/api/users", async (req, res) => {
     if (validation) return res.status(400).json({ success: false, message: validation });
     if (!password || String(password).length < 6) return res.status(400).json({ success: false, message: "Password must contain at least 6 characters." });
 
+    if (profilePic !== undefined && profilePic !== "" && !isValidImageUrl(profilePic)) {
+      return res.status(400).json({ success: false, message: "Invalid profile picture URL format." });
+    }
+
+    if (
+      containsDangerousHtml(department) ||
+      containsDangerousHtml(division) ||
+      containsDangerousHtml(semester) ||
+      containsDangerousHtml(courseYear) ||
+      containsDangerousHtml(course) ||
+      containsDangerousHtml(languageChoice) ||
+      containsDangerousHtml(mathChoice)
+    ) {
+      return res.status(400).json({ success: false, message: "Input fields cannot contain HTML or script tags." });
+    }
+
     const existingUsername = await User.findOne({ username: new RegExp(`^${escapeRegex(normalizeUsername(username))}$`, "i") });
     if (existingUsername) return res.status(409).json({ success: false, message: "That username is already in use." });
 
@@ -850,6 +888,22 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
       subjects: role === "faculty" ? (subjects !== undefined ? subjects : user.subjects) : []
     });
     if (validation) return res.status(400).json({ success: false, message: validation });
+
+    if (profilePic !== undefined && profilePic !== "" && !isValidImageUrl(profilePic)) {
+      return res.status(400).json({ success: false, message: "Invalid profile picture URL format." });
+    }
+
+    if (
+      containsDangerousHtml(department) ||
+      containsDangerousHtml(division) ||
+      containsDangerousHtml(semester) ||
+      containsDangerousHtml(courseYear) ||
+      containsDangerousHtml(course) ||
+      containsDangerousHtml(languageChoice) ||
+      containsDangerousHtml(mathChoice)
+    ) {
+      return res.status(400).json({ success: false, message: "Input fields cannot contain HTML or script tags." });
+    }
 
     if (nextUsername.toLowerCase() !== user.username.toLowerCase()) {
       const takenUser = await User.findOne({ username: new RegExp(`^${escapeRegex(nextUsername)}$`, "i"), id: { $ne: user.id } });
@@ -1066,13 +1120,13 @@ app.post("/api/timetable/sync", requireAuth(["faculty", "admin"]), async (req, r
 
     for (const item of timetable) {
       if (!item || typeof item !== "object") continue;
-      const division = String(item.division || "Div A").trim();
-      const semester = String(item.semester || "").trim();
-      const day = String(item.day || "").trim();
-      const time = String(item.time || "").trim();
-      const subject = String(item.subject || "").trim();
-      const subjectText = String(item.subjectText || item.subject || "Class").trim();
-      const faculty = String(item.faculty || "").trim();
+      const division = stripHtmlTags(String(item.division || "Div A"));
+      const semester = stripHtmlTags(String(item.semester || ""));
+      const day = stripHtmlTags(String(item.day || ""));
+      const time = stripHtmlTags(String(item.time || ""));
+      const subject = stripHtmlTags(String(item.subject || ""));
+      const subjectText = stripHtmlTags(String(item.subjectText || item.subject || "Class"));
+      const faculty = stripHtmlTags(String(item.faculty || ""));
 
       if (!division || !day || !time || !subjectText || !validDays.includes(day)) {
         continue;
@@ -1336,19 +1390,19 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                 update: {
                   $set: {
                     noticeId,
-                    title: n.title || "Untitled Notice",
-                    text: n.text || n.content || "",
-                    content: n.content || n.text || "",
+                    title: stripHtmlTags(n.title) || "Untitled Notice",
+                    text: stripHtmlTags(n.text || n.content || ""),
+                    content: stripHtmlTags(n.content || n.text || ""),
                     date: n.date || new Date().toISOString().slice(0, 10),
                     target: n.target || "all",
-                    postedBy: n.postedBy || n.authorName || (n.authorRole === "admin" ? "Admin" : "Faculty"),
-                    postedByName: n.postedByName || n.authorName || "Faculty",
+                    postedBy: stripHtmlTags(n.postedBy || n.authorName || (n.authorRole === "admin" ? "Admin" : "Faculty")),
+                    postedByName: stripHtmlTags(n.postedByName || n.authorName || "Faculty"),
                     authorRole: n.authorRole || (n.postedBy === "admin" ? "admin" : "faculty"),
-                    authorName: n.authorName || n.postedByName || "Faculty",
+                    authorName: stripHtmlTags(n.authorName || n.postedByName || "Faculty"),
                     targetRole: n.targetRole || n.target || "all",
                     targetDivision: n.targetDivision || "all",
                     targetSemester: n.targetSemester || "all",
-                    fileName: n.fileName || "",
+                    fileName: stripHtmlTags(n.fileName || ""),
                     fileData: n.fileData || "",
                     isImportant: Boolean(n.isImportant)
                   }
@@ -1462,12 +1516,12 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                 update: {
                   $set: {
                     assignmentId,
-                    title: as.title || "Untitled Assignment",
-                    description: as.description || "",
+                    title: stripHtmlTags(as.title) || "Untitled Assignment",
+                    description: stripHtmlTags(as.description || ""),
                     subject: as.subject || "",
                     student: as.student || "",
                     targetDivision: as.targetDivision || "",
-                    fileName: as.fileName || "",
+                    fileName: stripHtmlTags(as.fileName || ""),
                     fileData: as.fileData || "",
                     due: as.due || "",
                     status: as.status || "Pending",
@@ -1521,12 +1575,12 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                   $set: {
                     noteId,
                     subject: n.subject || "",
-                    title: n.title || "Untitled Note",
-                    division: n.division || "All Divisions",
-                    fileName: n.fileName || "",
+                    title: stripHtmlTags(n.title) || "Untitled Note",
+                    division: stripHtmlTags(n.division || "All Divisions"),
+                    fileName: stripHtmlTags(n.fileName || ""),
                     fileData: n.fileData || "",
                     uploadedBy: n.uploadedBy || "",
-                    uploadedByName: n.uploadedByName || "Faculty",
+                    uploadedByName: stripHtmlTags(n.uploadedByName || "Faculty"),
                     date: n.date || new Date().toISOString().slice(0, 10)
                   }
                 },
@@ -1554,20 +1608,20 @@ async function syncCollectionsFromAcademicData(payload = {}) {
           .map(item => ({
             updateOne: {
               filter: {
-                division: item.division || "Div A",
-                semester: item.semester || "",
-                day: item.day,
-                time: item.time
+                division: stripHtmlTags(item.division || "Div A"),
+                semester: stripHtmlTags(item.semester || ""),
+                day: stripHtmlTags(item.day),
+                time: stripHtmlTags(item.time)
               },
               update: {
                 $set: {
-                  division: item.division || "Div A",
-                  semester: item.semester || "",
-                  day: item.day,
-                  time: item.time,
-                  subject: item.subject || "",
-                  subjectText: item.subjectText || item.subject || "Class",
-                  faculty: item.faculty || ""
+                  division: stripHtmlTags(item.division || "Div A"),
+                  semester: stripHtmlTags(item.semester || ""),
+                  day: stripHtmlTags(item.day),
+                  time: stripHtmlTags(item.time),
+                  subject: stripHtmlTags(item.subject || ""),
+                  subjectText: stripHtmlTags(item.subjectText || item.subject || "Class"),
+                  faculty: stripHtmlTags(item.faculty || "")
                 }
               },
               upsert: true
@@ -1621,6 +1675,9 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
     if (Array.isArray(payload.notices)) {
       const sanitizedNotices = payload.notices.map(n => ({
         ...n,
+        title: stripHtmlTags(n.title),
+        text: stripHtmlTags(n.text),
+        content: stripHtmlTags(n.content || n.text),
         authorRole: req.user.role === "faculty" && n.authorRole === "admin" ? "faculty" : (n.authorRole || (req.user.role === "admin" ? "admin" : "faculty"))
       }));
       const noticeMap = new Map();
@@ -1653,7 +1710,14 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
         if (a && a.id) asgnMap.set(`${a.id}_${a.student || ""}`, a);
       });
       payload.assignments.forEach(a => {
-        if (a && a.id) asgnMap.set(`${a.id}_${a.student || ""}`, a);
+        if (a && a.id) {
+          asgnMap.set(`${a.id}_${a.student || ""}`, {
+            ...a,
+            title: stripHtmlTags(a.title),
+            description: stripHtmlTags(a.description),
+            fileName: stripHtmlTags(a.fileName)
+          });
+        }
       });
       update.assignments = Array.from(asgnMap.values());
     }
@@ -1664,7 +1728,15 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
         if (n && n.id) noteMap.set(n.id, n);
       });
       payload.notes.forEach(n => {
-        if (n && n.id) noteMap.set(n.id, n);
+        if (n && n.id) {
+          noteMap.set(n.id, {
+            ...n,
+            title: stripHtmlTags(n.title),
+            division: stripHtmlTags(n.division),
+            fileName: stripHtmlTags(n.fileName),
+            uploadedByName: stripHtmlTags(n.uploadedByName)
+          });
+        }
       });
       if (Array.isArray(payload.deletedNotes)) {
         payload.deletedNotes.forEach(delId => noteMap.delete(delId));
@@ -1689,15 +1761,47 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
           if (t && t.division && t.day && t.time) ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
         });
         payload.timetable.forEach(t => {
-          if (t && t.division && t.day && t.time) ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
+          if (t && t.division && t.day && t.time) {
+            ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, {
+              ...t,
+              division: stripHtmlTags(t.division),
+              semester: stripHtmlTags(t.semester),
+              subjectText: stripHtmlTags(t.subjectText || t.subject || "Class"),
+              faculty: stripHtmlTags(t.faculty)
+            });
+          }
         });
         update.timetable = Array.from(ttMap.values());
       }
       if (payload.timetableHeader && typeof payload.timetableHeader === "object") {
-        update.timetableHeader = { ...(existingStore?.timetableHeader || {}), ...payload.timetableHeader };
+        const sanitizedHeader = {};
+        for (const [k, v] of Object.entries(payload.timetableHeader)) {
+          if (v && typeof v === "object") {
+            sanitizedHeader[k] = {
+              title: stripHtmlTags(v.title),
+              subtitle: stripHtmlTags(v.subtitle)
+            };
+          } else {
+            sanitizedHeader[k] = v;
+          }
+        }
+        update.timetableHeader = { ...(existingStore?.timetableHeader || {}), ...sanitizedHeader };
       }
       if (payload.customBreakRows && typeof payload.customBreakRows === "object") {
-        update.customBreakRows = { ...(existingStore?.customBreakRows || {}), ...payload.customBreakRows };
+        const sanitizedBreaks = {};
+        for (const [k, v] of Object.entries(payload.customBreakRows)) {
+          if (v && typeof v === "object") {
+            sanitizedBreaks[k] = {
+              breakTime: stripHtmlTags(v.breakTime),
+              breakLabel: stripHtmlTags(v.breakLabel),
+              lunchTime: stripHtmlTags(v.lunchTime),
+              lunchLabel: stripHtmlTags(v.lunchLabel)
+            };
+          } else {
+            sanitizedBreaks[k] = v;
+          }
+        }
+        update.customBreakRows = { ...(existingStore?.customBreakRows || {}), ...sanitizedBreaks };
       }
       if (Array.isArray(payload.subjects)) update.subjects = payload.subjects;
       if (payload.divisions) update.divisions = normalizeStoreDivisions(payload.divisions);
