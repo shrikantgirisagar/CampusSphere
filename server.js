@@ -903,7 +903,7 @@ app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
 
 // --- Timetable Endpoints ---
 
-app.get("/api/timetable", async (req, res) => {
+app.get("/api/timetable", requireAuth(), async (req, res) => {
   try {
     const entries = await Timetable.find({});
     res.json({ success: true, timetable: entries });
@@ -969,51 +969,38 @@ function normalizeStoreDivisions(divisions) {
   return defaultDivs;
 }
 
-app.get("/api/academic/data", async (req, res) => {
+app.get("/api/academic/data", requireAuth(), async (req, res) => {
   try {
     let store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
     if (!store) {
       store = await AcademicStore.create({ storeKey: "default_academic_store" });
     }
 
-    // Unauthenticated guest request: return only public structure (subjects, divisions, public notices)
-    if (!req.user) {
-      const publicNotices = (store.notices || []).filter(n => !n.target || n.target === "all");
-      return res.json({
-        success: true,
-        data: {
-          students: {},
-          notices: publicNotices,
-          timetable: store.timetable || [],
-          timetableHeader: store.timetableHeader || {},
-          customBreakRows: store.customBreakRows || {},
-          assignments: [],
-          notes: [],
-          deletedAssignments: [],
-          dailyAttendance: [],
-          subjectMarksConfig: store.subjectMarksConfig || {},
-          subjects: store.subjects || [],
-          divisions: normalizeStoreDivisions(store.divisions)
-        }
-      });
-    }
-
     // Student role: SCOPE academic data so student only receives their own private records
     if (req.user.role === "student") {
       const username = req.user.username;
-      const studentRec = (store.students && store.students[username]) ? { [username]: store.students[username] } : {};
+      const normUsername = String(username).toLowerCase();
+      let studentRec = {};
+      if (store.students && typeof store.students === "object") {
+        for (const [sKey, sVal] of Object.entries(store.students)) {
+          if (String(sKey).toLowerCase() === normUsername) {
+            studentRec = { [sKey]: sVal };
+            break;
+          }
+        }
+      }
       const studentDiv = req.user.division || "";
       
       const scopedNotices = (store.notices || []).filter(n => {
         if (!n.target || n.target === "all" || n.target === "student") {
-          if (n.targetDivision && n.targetDivision !== "all" && studentDiv && n.targetDivision !== studentDiv) return false;
+          if (n.targetDivision && n.targetDivision !== "all" && n.targetDivision !== "All Divisions" && studentDiv && n.targetDivision !== studentDiv) return false;
           return true;
         }
         return false;
       });
 
       const scopedAssignments = (store.assignments || []).filter(a => {
-        if (a.student && a.student.toLowerCase() === username.toLowerCase()) return true;
+        if (a.student && a.student.toLowerCase() === normUsername) return true;
         if (a.student === "all") {
           if (a.targetDivision && studentDiv && a.targetDivision !== "All Divisions" && a.targetDivision !== studentDiv) return false;
           return true;
@@ -1030,7 +1017,14 @@ app.get("/api/academic/data", async (req, res) => {
       const scopedAttendance = (store.dailyAttendance || []).map(att => {
         const logObj = { ...att };
         if (logObj.records && typeof logObj.records === "object") {
-          logObj.records = { [username]: logObj.records[username] || "" };
+          let status = "";
+          for (const [rKey, rVal] of Object.entries(logObj.records)) {
+            if (String(rKey).toLowerCase() === normUsername) {
+              status = rVal;
+              break;
+            }
+          }
+          logObj.records = { [username]: status };
         }
         return logObj;
       });
@@ -1045,7 +1039,7 @@ app.get("/api/academic/data", async (req, res) => {
           customBreakRows: store.customBreakRows || {},
           assignments: scopedAssignments,
           notes: scopedNotes,
-          deletedAssignments: (store.deletedAssignments || []).filter(k => String(k || "").toLowerCase().startsWith(`${username.toLowerCase()}___`)),
+          deletedAssignments: (store.deletedAssignments || []).filter(k => String(k || "").toLowerCase().startsWith(`${normUsername}___`)),
           dailyAttendance: scopedAttendance,
           subjectMarksConfig: store.subjectMarksConfig || {},
           subjects: store.subjects || [],
@@ -1055,23 +1049,27 @@ app.get("/api/academic/data", async (req, res) => {
     }
 
     // Faculty or Admin role: return complete operational store data
-    res.json({
-      success: true,
-      data: {
-        students: store.students || {},
-        notices: store.notices || [],
-        timetable: store.timetable || [],
-        timetableHeader: store.timetableHeader || {},
-        customBreakRows: store.customBreakRows || {},
-        assignments: store.assignments || [],
-        notes: store.notes || [],
-        deletedAssignments: store.deletedAssignments || [],
-        dailyAttendance: store.dailyAttendance || [],
-        subjectMarksConfig: store.subjectMarksConfig || {},
-        subjects: store.subjects || [],
-        divisions: normalizeStoreDivisions(store.divisions)
-      }
-    });
+    if (req.user.role === "faculty" || req.user.role === "admin") {
+      return res.json({
+        success: true,
+        data: {
+          students: store.students || {},
+          notices: store.notices || [],
+          timetable: store.timetable || [],
+          timetableHeader: store.timetableHeader || {},
+          customBreakRows: store.customBreakRows || {},
+          assignments: store.assignments || [],
+          notes: store.notes || [],
+          deletedAssignments: store.deletedAssignments || [],
+          dailyAttendance: store.dailyAttendance || [],
+          subjectMarksConfig: store.subjectMarksConfig || {},
+          subjects: store.subjects || [],
+          divisions: normalizeStoreDivisions(store.divisions)
+        }
+      });
+    }
+
+    return res.status(403).json({ success: false, message: "Access forbidden." });
   } catch (error) {
     console.error("Fetch academic data error:", error);
     res.status(500).json({ success: false, message: "Failed to fetch academic data." });
@@ -1236,7 +1234,12 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
     // If faculty, only allow updating their academic operational records (attendance, marks, notes, assignments, notices)
     if (req.user && req.user.role === "faculty") {
       if (payload.students && typeof payload.students === "object") update.students = payload.students;
-      if (Array.isArray(payload.notices)) update.notices = payload.notices;
+      if (Array.isArray(payload.notices)) {
+        update.notices = payload.notices.map(n => ({
+          ...n,
+          authorRole: n.authorRole === "admin" ? "faculty" : (n.authorRole || "faculty")
+        }));
+      }
       if (Array.isArray(payload.assignments)) update.assignments = payload.assignments;
       if (Array.isArray(payload.notes)) update.notes = payload.notes;
       if (Array.isArray(payload.deletedAssignments)) update.deletedAssignments = payload.deletedAssignments;

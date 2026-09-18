@@ -9456,6 +9456,7 @@ function logout() {
 
 
 function syncTimetableToBackend() {
+  if (!currentUser || (currentUser.role !== "faculty" && currentUser.role !== "admin")) return;
   if (Array.isArray(ACADEMIC.timetable)) {
     authenticatedFetch(API_BASE_URL + "/api/timetable/sync", {
       method: "POST",
@@ -9466,6 +9467,7 @@ function syncTimetableToBackend() {
 }
 
 function syncAcademicDataToBackend() {
+  if (!currentUser || (currentUser.role !== "faculty" && currentUser.role !== "admin")) return Promise.resolve(null);
   if (!ACADEMIC) return Promise.resolve(null);
   return authenticatedFetch(API_BASE_URL + "/api/academic/sync", {
     method: "POST",
@@ -9488,6 +9490,7 @@ function syncAcademicDataToBackend() {
 }
 
 async function hydrateAcademicDataFromServer() {
+  if (!getStoredAuthToken() && !currentUser) return;
   try {
     const res = await authenticatedFetch(API_BASE_URL + "/api/academic/data");
     const json = await res.json();
@@ -10293,7 +10296,9 @@ if (saved && savedToken) {
   currentUser = null;
 }
 
-hydrateAcademicDataFromServer();
+if (currentUser && getStoredAuthToken()) {
+  hydrateAcademicDataFromServer();
+}
 
 // ============================================================================
 // APP BOOTSTRAP & SESSION RESTORATION (DIRECT FROM MONGODB)
