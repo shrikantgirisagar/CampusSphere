@@ -550,11 +550,19 @@ app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
     for (const role of ["student", "faculty", "admin"]) {
       const list = Array.isArray(incoming[role]) ? incoming[role] : [];
       for (const item of list) {
+        if (!item || typeof item !== "object") continue;
         const username = normalizeUsername(item.username);
         if (!username) continue;
 
-        const existing = await User.findOne({ role, username: new RegExp(`^${escapeRegex(username)}$`, "i") });
+        // Check if user exists under ANY role to prevent duplicate key crashes or role hijacking
+        const existing = await User.findOne({ username: new RegExp(`^${escapeRegex(username)}$`, "i") });
         if (existing) {
+          // If existing user has a different role, preserve the existing role and skip to avoid collision
+          if (existing.role !== role) {
+            console.warn(`Migration skip: Username '${username}' is already registered with role '${existing.role}'.`);
+            continue;
+          }
+
           if (item.email !== undefined) existing.email = normalizeEmail(item.email);
           if (item.name) existing.name = String(item.name).trim();
           if (item.subject !== undefined) existing.subject = String(item.subject).trim();
@@ -599,7 +607,7 @@ app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
           subjectDivisions: role === "faculty" && item.subjectDivisions && typeof item.subjectDivisions === "object" ? item.subjectDivisions : {},
           department: role === "faculty" ? String(item.department || "Department of Computer Science & Applications") : "",
           profilePic: String(item.profilePic || ""),
-          passwordHash: item.passwordHash ? item.passwordHash : (item.password ? await hashPassword(item.password) : "")
+          passwordHash: item.passwordHash ? item.passwordHash : (item.password ? await hashPassword(item.password) : await hashPassword("student@123"))
         };
         if (role === "student") {
           newUser.division = String(item.division || "Div A").trim();
@@ -916,22 +924,87 @@ app.get("/api/timetable", requireAuth(), async (req, res) => {
 app.post("/api/timetable/sync", requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
     const { timetable } = req.body || {};
-    if (Array.isArray(timetable)) {
-      await Timetable.deleteMany({});
-      if (timetable.length > 0) {
-        const docs = timetable.map(item => ({
-          division: item.division || "Div A",
-          semester: item.semester || "",
-          day: item.day,
-          time: item.time,
-          subject: item.subject || "",
-          subjectText: item.subjectText || item.subject || "Class",
-          faculty: item.faculty || ""
-        }));
-        await Timetable.insertMany(docs);
+    if (!timetable || !Array.isArray(timetable)) {
+      return res.status(400).json({ success: false, message: "Timetable must be an array of schedule entries." });
+    }
+
+    const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const validEntries = [];
+
+    for (const item of timetable) {
+      if (!item || typeof item !== "object") continue;
+      const division = String(item.division || "Div A").trim();
+      const semester = String(item.semester || "").trim();
+      const day = String(item.day || "").trim();
+      const time = String(item.time || "").trim();
+      const subject = String(item.subject || "").trim();
+      const subjectText = String(item.subjectText || item.subject || "Class").trim();
+      const faculty = String(item.faculty || "").trim();
+
+      if (!division || !day || !time || !subjectText || !validDays.includes(day)) {
+        continue;
+      }
+
+      validEntries.push({
+        division,
+        semester,
+        day,
+        time,
+        subject,
+        subjectText,
+        faculty
+      });
+    }
+
+    if (validEntries.length > 0) {
+      const ops = validEntries.map(item => ({
+        updateOne: {
+          filter: {
+            division: item.division,
+            semester: item.semester,
+            day: item.day,
+            time: item.time
+          },
+          update: {
+            $set: {
+              division: item.division,
+              semester: item.semester,
+              day: item.day,
+              time: item.time,
+              subject: item.subject,
+              subjectText: item.subjectText,
+              faculty: item.faculty
+            }
+          },
+          upsert: true
+        }
+      }));
+
+      await Timetable.bulkWrite(ops, { ordered: false });
+
+      // Synchronize AcademicStore.timetable so both layers stay consistent without wiping
+      try {
+        const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+        if (store) {
+          const ttMap = new Map();
+          (store.timetable || []).forEach(t => {
+            if (t && t.division && t.day && t.time) {
+              ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
+            }
+          });
+          validEntries.forEach(t => {
+            ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
+          });
+          store.timetable = Array.from(ttMap.values());
+          store.markModified("timetable");
+          await store.save();
+        }
+      } catch (storeErr) {
+        console.warn("Timetable AcademicStore sync warning:", storeErr.message);
       }
     }
-    res.json({ success: true, message: "Timetable synchronized." });
+
+    res.json({ success: true, message: "Timetable synchronized safely." });
   } catch (error) {
     console.error("Sync timetable error:", error);
     res.status(500).json({ success: false, message: "Failed to sync timetable." });
@@ -1076,187 +1149,423 @@ app.get("/api/academic/data", requireAuth(), async (req, res) => {
   }
 });
 
+function getDeterministicNoticeId(n, idx = 0) {
+  if (n.id) return String(n.id).trim();
+  if (n.noticeId) return String(n.noticeId).trim();
+  const raw = `${n.title || ""}_${n.date || ""}_${n.postedBy || ""}_${idx}`;
+  return "notice-" + crypto.createHash("sha256").update(raw).digest("hex").slice(0, 16);
+}
+
+function getDeterministicAttendanceId(a, idx = 0) {
+  if (a.id) return String(a.id).trim();
+  if (a.attendanceId) return String(a.attendanceId).trim();
+  const raw = `${a.date || ""}_${a.subject || ""}_${a.division || ""}_${a.facultyUsername || ""}_${idx}`;
+  return "att-" + crypto.createHash("sha256").update(raw).digest("hex").slice(0, 16);
+}
+
+function getDeterministicAssignmentId(as, idx = 0) {
+  if (as.assignmentId) return String(as.assignmentId).trim();
+  if (as.id) {
+    return as.student ? `${as.id}_${as.student}` : String(as.id);
+  }
+  const raw = `${as.title || ""}_${as.subject || ""}_${as.student || ""}_${as.due || ""}_${idx}`;
+  return "assign-" + crypto.createHash("sha256").update(raw).digest("hex").slice(0, 16);
+}
+
+function getDeterministicNoteId(n, idx = 0) {
+  if (n.id) return String(n.id).trim();
+  if (n.noteId) return String(n.noteId).trim();
+  const raw = `${n.title || ""}_${n.subject || ""}_${n.uploadedBy || ""}_${idx}`;
+  return "note-" + crypto.createHash("sha256").update(raw).digest("hex").slice(0, 16);
+}
+
+// In-flight concurrency serializer for academic collection synchronization
+let academicSyncQueue = Promise.resolve();
+
+function enqueueAcademicSync(task) {
+  const next = academicSyncQueue.then(task, task);
+  academicSyncQueue = next.catch(() => {});
+  return next;
+}
+
 async function syncCollectionsFromAcademicData(payload = {}) {
-  try {
-    // 1. Sync Notices into MongoDB 'notices' collection
-    if (Array.isArray(payload.notices)) {
-      await Notice.deleteMany({});
-      if (payload.notices.length > 0) {
-        const noticeDocs = payload.notices.map((n, idx) => ({
-          noticeId: n.id || `notice-${Date.now()}-${idx}`,
-          title: n.title || "Untitled Notice",
-          text: n.text || n.content || "",
-          content: n.content || n.text || "",
-          date: n.date || new Date().toISOString().slice(0, 10),
-          target: n.target || "all",
-          postedBy: n.postedBy || n.authorName || (n.authorRole === "admin" ? "Admin" : "Faculty"),
-          postedByName: n.postedByName || n.authorName || "Faculty",
-          authorRole: n.authorRole || (n.postedBy === "admin" ? "admin" : "faculty"),
-          authorName: n.authorName || n.postedByName || "Faculty",
-          targetRole: n.targetRole || n.target || "all",
-          targetDivision: n.targetDivision || "all",
-          targetSemester: n.targetSemester || "all",
-          fileName: n.fileName || "",
-          fileData: n.fileData || "",
-          isImportant: Boolean(n.isImportant)
-        }));
-        await Notice.insertMany(noticeDocs, { ordered: false }).catch(err => console.warn("Notice sync warning:", err.message));
+  return enqueueAcademicSync(async () => {
+    try {
+      // 1. Sync Notices into MongoDB 'notices' collection via safe bulkWrite upsert
+      if (Array.isArray(payload.notices) && payload.notices.length > 0) {
+        const noticeOps = payload.notices
+          .filter(n => n && typeof n === "object")
+          .map((n, idx) => {
+            const noticeId = getDeterministicNoticeId(n, idx);
+            return {
+              updateOne: {
+                filter: { noticeId },
+                update: {
+                  $set: {
+                    noticeId,
+                    title: n.title || "Untitled Notice",
+                    text: n.text || n.content || "",
+                    content: n.content || n.text || "",
+                    date: n.date || new Date().toISOString().slice(0, 10),
+                    target: n.target || "all",
+                    postedBy: n.postedBy || n.authorName || (n.authorRole === "admin" ? "Admin" : "Faculty"),
+                    postedByName: n.postedByName || n.authorName || "Faculty",
+                    authorRole: n.authorRole || (n.postedBy === "admin" ? "admin" : "faculty"),
+                    authorName: n.authorName || n.postedByName || "Faculty",
+                    targetRole: n.targetRole || n.target || "all",
+                    targetDivision: n.targetDivision || "all",
+                    targetSemester: n.targetSemester || "all",
+                    fileName: n.fileName || "",
+                    fileData: n.fileData || "",
+                    isImportant: Boolean(n.isImportant)
+                  }
+                },
+                upsert: true
+              }
+            };
+          });
+        if (noticeOps.length > 0) {
+          await Notice.bulkWrite(noticeOps, { ordered: false });
+        }
       }
-    }
 
-    // 2. Sync Daily Attendance into MongoDB 'attendances' collection
-    if (Array.isArray(payload.dailyAttendance)) {
-      await Attendance.deleteMany({});
-      if (payload.dailyAttendance.length > 0) {
-        const attDocs = payload.dailyAttendance.map((a, idx) => ({
-          attendanceId: a.id || `att-${Date.now()}-${idx}`,
-          subject: a.subject || "",
-          division: a.division || "",
-          semester: a.semester || "",
-          courseYear: a.courseYear || "",
-          date: a.date || "",
-          isoDate: a.isoDate || "",
-          records: a.records || {},
-          studentUsername: a.studentUsername || "",
-          status: a.status || "",
-          facultyUsername: a.facultyUsername || ""
-        }));
-        await Attendance.insertMany(attDocs, { ordered: false }).catch(err => console.warn("Attendance sync warning:", err.message));
+      // Explicit notice deletion (only when explicitly requested)
+      if (Array.isArray(payload.deletedNotices) && payload.deletedNotices.length > 0) {
+        const validDelNoticeIds = payload.deletedNotices.map(id => String(id).trim()).filter(Boolean);
+        if (validDelNoticeIds.length > 0) {
+          await Notice.deleteMany({ noticeId: { $in: validDelNoticeIds } });
+        }
       }
-    }
 
-    // 3. Sync Student Marks into MongoDB 'marks' collection
-    if (payload.students && typeof payload.students === "object") {
-      await Mark.deleteMany({});
-      const markDocs = [];
-      for (const [username, record] of Object.entries(payload.students)) {
-        if (record && record.marks && typeof record.marks === "object") {
-          for (const [subId, m] of Object.entries(record.marks)) {
-            if (m && typeof m === "object") {
-              markDocs.push({
-                markId: `${username}_${subId}`,
-                studentUsername: username,
-                studentName: record.name || username,
-                subject: subId,
-                internal1: typeof m.internal1 === "number" ? m.internal1 : null,
-                internal2: typeof m.internal2 === "number" ? m.internal2 : null,
-                assignment: typeof m.assignment === "number" ? m.assignment : null,
-                final: typeof m.final === "number" ? m.final : null,
-                maxInternal1: typeof m.maxInternal1 === "number" ? m.maxInternal1 : 20,
-                maxInternal2: typeof m.maxInternal2 === "number" ? m.maxInternal2 : 20,
-                maxAssignment: typeof m.maxAssignment === "number" ? m.maxAssignment : 10,
-                maxFinal: typeof m.maxFinal === "number" ? m.maxFinal : 70,
-                total: typeof m.total === "number" ? m.total : (
+      // 2. Sync Daily Attendance into MongoDB 'attendances' collection via safe bulkWrite upsert
+      if (Array.isArray(payload.dailyAttendance) && payload.dailyAttendance.length > 0) {
+        const attOps = payload.dailyAttendance
+          .filter(a => a && typeof a === "object")
+          .map((a, idx) => {
+            const attendanceId = getDeterministicAttendanceId(a, idx);
+            return {
+              updateOne: {
+                filter: { attendanceId },
+                update: {
+                  $set: {
+                    attendanceId,
+                    subject: a.subject || "",
+                    division: a.division || "",
+                    semester: a.semester || "",
+                    courseYear: a.courseYear || "",
+                    date: a.date || "",
+                    isoDate: a.isoDate || "",
+                    records: a.records && typeof a.records === "object" ? a.records : {},
+                    studentUsername: a.studentUsername || "",
+                    status: a.status || "",
+                    facultyUsername: a.facultyUsername || ""
+                  }
+                },
+                upsert: true
+              }
+            };
+          });
+        if (attOps.length > 0) {
+          await Attendance.bulkWrite(attOps, { ordered: false });
+        }
+      }
+
+      // 3. Sync Student Marks into MongoDB 'marks' collection via safe bulkWrite upsert
+      if (payload.students && typeof payload.students === "object") {
+        const markOps = [];
+        for (const [username, record] of Object.entries(payload.students)) {
+          if (record && record.marks && typeof record.marks === "object") {
+            for (const [subId, m] of Object.entries(record.marks)) {
+              if (m && typeof m === "object") {
+                const markId = `${username}_${subId}`;
+                const totalVal = typeof m.total === "number" ? m.total : (
                   (typeof m.internal1 === "number" ? m.internal1 : 0) +
                   (typeof m.internal2 === "number" ? m.internal2 : 0) +
                   (typeof m.assignment === "number" ? m.assignment : 0)
-                ),
-                grade: m.grade || "",
-                marksObtained: typeof m.total === "number" ? m.total : null
-              });
+                );
+                markOps.push({
+                  updateOne: {
+                    filter: { markId },
+                    update: {
+                      $set: {
+                        markId,
+                        studentUsername: username,
+                        studentName: record.name || username,
+                        subject: subId,
+                        internal1: typeof m.internal1 === "number" ? m.internal1 : null,
+                        internal2: typeof m.internal2 === "number" ? m.internal2 : null,
+                        assignment: typeof m.assignment === "number" ? m.assignment : null,
+                        final: typeof m.final === "number" ? m.final : null,
+                        maxInternal1: typeof m.maxInternal1 === "number" ? m.maxInternal1 : 20,
+                        maxInternal2: typeof m.maxInternal2 === "number" ? m.maxInternal2 : 20,
+                        maxAssignment: typeof m.maxAssignment === "number" ? m.maxAssignment : 10,
+                        maxFinal: typeof m.maxFinal === "number" ? m.maxFinal : 70,
+                        total: totalVal,
+                        grade: m.grade || "",
+                        marksObtained: totalVal
+                      }
+                    },
+                    upsert: true
+                  }
+                });
+              }
             }
           }
         }
+        if (markOps.length > 0) {
+          await Mark.bulkWrite(markOps, { ordered: false });
+        }
       }
-      if (markDocs.length > 0) {
-        await Mark.insertMany(markDocs, { ordered: false }).catch(err => console.warn("Mark sync warning:", err.message));
-      }
-    }
 
-    // 4. Sync Assignments into MongoDB 'assignments' collection with guaranteed distinct assignmentId
-    if (Array.isArray(payload.assignments)) {
-      await Assignment.deleteMany({});
-      if (payload.assignments.length > 0) {
-        const assignDocs = payload.assignments.map((as, idx) => ({
-          assignmentId: as.id ? `${as.id}_${as.student || idx}` : `assign-${Date.now()}-${idx}-${as.student || ""}`,
-          title: as.title || "Untitled Assignment",
-          description: as.description || "",
-          subject: as.subject || "",
-          student: as.student || "",
-          targetDivision: as.targetDivision || "",
-          fileName: as.fileName || "",
-          fileData: as.fileData || "",
-          due: as.due || "",
-          status: as.status || "Pending",
-          submittedDate: as.submittedDate || "",
-          facultyUsername: as.facultyUsername || "",
-          submissions: Array.isArray(as.submissions) ? as.submissions : []
-        }));
-        await Assignment.insertMany(assignDocs, { ordered: false }).catch(err => console.warn("Assignment sync warning:", err.message));
+      // 4. Sync Assignments into MongoDB 'assignments' collection via safe bulkWrite upsert
+      if (Array.isArray(payload.assignments) && payload.assignments.length > 0) {
+        const assignOps = payload.assignments
+          .filter(as => as && typeof as === "object")
+          .map((as, idx) => {
+            const assignmentId = getDeterministicAssignmentId(as, idx);
+            return {
+              updateOne: {
+                filter: { assignmentId },
+                update: {
+                  $set: {
+                    assignmentId,
+                    title: as.title || "Untitled Assignment",
+                    description: as.description || "",
+                    subject: as.subject || "",
+                    student: as.student || "",
+                    targetDivision: as.targetDivision || "",
+                    fileName: as.fileName || "",
+                    fileData: as.fileData || "",
+                    due: as.due || "",
+                    status: as.status || "Pending",
+                    submittedDate: as.submittedDate || "",
+                    facultyUsername: as.facultyUsername || "",
+                    submissions: Array.isArray(as.submissions) ? as.submissions : []
+                  }
+                },
+                upsert: true
+              }
+            };
+          });
+        if (assignOps.length > 0) {
+          await Assignment.bulkWrite(assignOps, { ordered: false });
+        }
       }
-    }
 
-    // 5. Sync Study Notes into MongoDB 'notes' collection
-    if (Array.isArray(payload.notes)) {
-      await Note.deleteMany({});
-      if (payload.notes.length > 0) {
-        const noteDocs = payload.notes.map((n, idx) => ({
-          noteId: n.id || `note-${Date.now()}-${idx}`,
-          subject: n.subject || "",
-          title: n.title || "Untitled Note",
-          division: n.division || "All Divisions",
-          fileName: n.fileName || "",
-          fileData: n.fileData || "",
-          uploadedBy: n.uploadedBy || "",
-          uploadedByName: n.uploadedByName || "Faculty",
-          date: n.date || new Date().toISOString().slice(0, 10)
-        }));
-        await Note.insertMany(noteDocs, { ordered: false }).catch(err => console.warn("Note sync warning:", err.message));
+      // Explicit assignment deletions (only when explicitly requested in payload.deletedAssignments)
+      if (Array.isArray(payload.deletedAssignments) && payload.deletedAssignments.length > 0) {
+        const deleteConditions = [];
+        for (const key of payload.deletedAssignments) {
+          const k = String(key || "").trim();
+          if (!k) continue;
+          if (k.includes("___")) {
+            const [stu, titleOrId] = k.split("___");
+            deleteConditions.push({
+              $or: [
+                { assignmentId: `${titleOrId}_${stu}` },
+                { student: new RegExp(`^${escapeRegex(stu)}$`, "i"), title: new RegExp(`^${escapeRegex(titleOrId)}$`, "i") }
+              ]
+            });
+          } else {
+            deleteConditions.push({ assignmentId: k });
+          }
+        }
+        if (deleteConditions.length > 0) {
+          await Assignment.deleteMany({ $or: deleteConditions });
+        }
       }
-    }
 
-    // 6. Sync Timetable into MongoDB 'timetables' collection
-    if (Array.isArray(payload.timetable)) {
-      await Timetable.deleteMany({});
-      if (payload.timetable.length > 0) {
-        const ttDocs = payload.timetable.map(item => ({
-          division: item.division || "Div A",
-          semester: item.semester || "",
-          day: item.day,
-          time: item.time,
-          subject: item.subject || "",
-          subjectText: item.subjectText || item.subject || "Class",
-          faculty: item.faculty || ""
-        }));
-        await Timetable.insertMany(ttDocs, { ordered: false }).catch(err => console.warn("Timetable sync warning:", err.message));
+      // 5. Sync Study Notes into MongoDB 'notes' collection via safe bulkWrite upsert
+      if (Array.isArray(payload.notes) && payload.notes.length > 0) {
+        const noteOps = payload.notes
+          .filter(n => n && typeof n === "object")
+          .map((n, idx) => {
+            const noteId = getDeterministicNoteId(n, idx);
+            return {
+              updateOne: {
+                filter: { noteId },
+                update: {
+                  $set: {
+                    noteId,
+                    subject: n.subject || "",
+                    title: n.title || "Untitled Note",
+                    division: n.division || "All Divisions",
+                    fileName: n.fileName || "",
+                    fileData: n.fileData || "",
+                    uploadedBy: n.uploadedBy || "",
+                    uploadedByName: n.uploadedByName || "Faculty",
+                    date: n.date || new Date().toISOString().slice(0, 10)
+                  }
+                },
+                upsert: true
+              }
+            };
+          });
+        if (noteOps.length > 0) {
+          await Note.bulkWrite(noteOps, { ordered: false });
+        }
       }
+
+      // Explicit study notes deletion (only when explicitly requested)
+      if (Array.isArray(payload.deletedNotes) && payload.deletedNotes.length > 0) {
+        const validDelNoteIds = payload.deletedNotes.map(id => String(id).trim()).filter(Boolean);
+        if (validDelNoteIds.length > 0) {
+          await Note.deleteMany({ noteId: { $in: validDelNoteIds } });
+        }
+      }
+
+      // 6. Sync Timetable into MongoDB 'timetables' collection via safe bulkWrite upsert
+      if (Array.isArray(payload.timetable) && payload.timetable.length > 0) {
+        const ttOps = payload.timetable
+          .filter(item => item && typeof item === "object" && item.day && item.time)
+          .map(item => ({
+            updateOne: {
+              filter: {
+                division: item.division || "Div A",
+                semester: item.semester || "",
+                day: item.day,
+                time: item.time
+              },
+              update: {
+                $set: {
+                  division: item.division || "Div A",
+                  semester: item.semester || "",
+                  day: item.day,
+                  time: item.time,
+                  subject: item.subject || "",
+                  subjectText: item.subjectText || item.subject || "Class",
+                  faculty: item.faculty || ""
+                }
+              },
+              upsert: true
+            }
+          }));
+        if (ttOps.length > 0) {
+          await Timetable.bulkWrite(ttOps, { ordered: false });
+        }
+      }
+    } catch (syncErr) {
+      console.warn("Collection sync helper warning:", syncErr.message);
     }
-  } catch (syncErr) {
-    console.warn("Collection sync helper warning:", syncErr.message);
-  }
+  });
 }
 
 app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
     const payload = req.body?.data || req.body || {};
+
+    // 1. Validate payload structure before database modifications
+    if (!payload || typeof payload !== "object") {
+      return res.status(400).json({ success: false, message: "Invalid academic synchronization payload." });
+    }
+    if (payload.students !== undefined && (typeof payload.students !== "object" || Array.isArray(payload.students))) {
+      return res.status(400).json({ success: false, message: "Invalid students payload format: Expected an object." });
+    }
+    if (payload.notices !== undefined && !Array.isArray(payload.notices)) {
+      return res.status(400).json({ success: false, message: "Invalid notices payload format: Expected an array." });
+    }
+    if (payload.dailyAttendance !== undefined && !Array.isArray(payload.dailyAttendance)) {
+      return res.status(400).json({ success: false, message: "Invalid dailyAttendance payload format: Expected an array." });
+    }
+    if (payload.assignments !== undefined && !Array.isArray(payload.assignments)) {
+      return res.status(400).json({ success: false, message: "Invalid assignments payload format: Expected an array." });
+    }
+    if (payload.notes !== undefined && !Array.isArray(payload.notes)) {
+      return res.status(400).json({ success: false, message: "Invalid notes payload format: Expected an array." });
+    }
+    if (payload.timetable !== undefined && !Array.isArray(payload.timetable)) {
+      return res.status(400).json({ success: false, message: "Invalid timetable payload format: Expected an array." });
+    }
+
+    const existingStore = await AcademicStore.findOne({ storeKey: "default_academic_store" });
     const update = {};
 
-    // If faculty, only allow updating their academic operational records (attendance, marks, notes, assignments, notices)
-    if (req.user && req.user.role === "faculty") {
-      if (payload.students && typeof payload.students === "object") update.students = payload.students;
-      if (Array.isArray(payload.notices)) {
-        update.notices = payload.notices.map(n => ({
-          ...n,
-          authorRole: n.authorRole === "admin" ? "faculty" : (n.authorRole || "faculty")
-        }));
+    // 2. Safe merge logic: update existing and insert new records, while preserving records from other divisions/subjects
+    if (payload.students && typeof payload.students === "object") {
+      update.students = { ...(existingStore?.students || {}), ...payload.students };
+    }
+
+    if (Array.isArray(payload.notices)) {
+      const sanitizedNotices = payload.notices.map(n => ({
+        ...n,
+        authorRole: req.user.role === "faculty" && n.authorRole === "admin" ? "faculty" : (n.authorRole || (req.user.role === "admin" ? "admin" : "faculty"))
+      }));
+      const noticeMap = new Map();
+      (existingStore?.notices || []).forEach(n => {
+        if (n) noticeMap.set(n.id || n.noticeId || n.title, n);
+      });
+      sanitizedNotices.forEach(n => {
+        if (n) noticeMap.set(n.id || n.noticeId || n.title, n);
+      });
+      if (Array.isArray(payload.deletedNotices)) {
+        payload.deletedNotices.forEach(delId => noticeMap.delete(delId));
       }
-      if (Array.isArray(payload.assignments)) update.assignments = payload.assignments;
-      if (Array.isArray(payload.notes)) update.notes = payload.notes;
-      if (Array.isArray(payload.deletedAssignments)) update.deletedAssignments = payload.deletedAssignments;
-      if (Array.isArray(payload.dailyAttendance)) update.dailyAttendance = payload.dailyAttendance;
-      if (payload.subjectMarksConfig && typeof payload.subjectMarksConfig === "object") update.subjectMarksConfig = payload.subjectMarksConfig;
-    } else {
-      // Admin full sync
-      if (payload.students && typeof payload.students === "object") update.students = payload.students;
-      if (Array.isArray(payload.notices)) update.notices = payload.notices;
-      if (Array.isArray(payload.timetable)) update.timetable = payload.timetable;
-      if (payload.timetableHeader && typeof payload.timetableHeader === "object") update.timetableHeader = payload.timetableHeader;
-      if (payload.customBreakRows && typeof payload.customBreakRows === "object") update.customBreakRows = payload.customBreakRows;
-      if (Array.isArray(payload.assignments)) update.assignments = payload.assignments;
-      if (Array.isArray(payload.notes)) update.notes = payload.notes;
-      if (Array.isArray(payload.deletedAssignments)) update.deletedAssignments = payload.deletedAssignments;
-      if (Array.isArray(payload.dailyAttendance)) update.dailyAttendance = payload.dailyAttendance;
-      if (payload.subjectMarksConfig && typeof payload.subjectMarksConfig === "object") update.subjectMarksConfig = payload.subjectMarksConfig;
+      update.notices = Array.from(noticeMap.values());
+    }
+
+    if (Array.isArray(payload.dailyAttendance)) {
+      const attMap = new Map();
+      (existingStore?.dailyAttendance || []).forEach(a => {
+        if (a && (a.id || a.attendanceId)) attMap.set(a.id || a.attendanceId, a);
+      });
+      payload.dailyAttendance.forEach(a => {
+        if (a && (a.id || a.attendanceId)) attMap.set(a.id || a.attendanceId, a);
+      });
+      update.dailyAttendance = Array.from(attMap.values());
+    }
+
+    if (Array.isArray(payload.assignments)) {
+      const asgnMap = new Map();
+      (existingStore?.assignments || []).forEach(a => {
+        if (a && a.id) asgnMap.set(`${a.id}_${a.student || ""}`, a);
+      });
+      payload.assignments.forEach(a => {
+        if (a && a.id) asgnMap.set(`${a.id}_${a.student || ""}`, a);
+      });
+      update.assignments = Array.from(asgnMap.values());
+    }
+
+    if (Array.isArray(payload.notes)) {
+      const noteMap = new Map();
+      (existingStore?.notes || []).forEach(n => {
+        if (n && n.id) noteMap.set(n.id, n);
+      });
+      payload.notes.forEach(n => {
+        if (n && n.id) noteMap.set(n.id, n);
+      });
+      if (Array.isArray(payload.deletedNotes)) {
+        payload.deletedNotes.forEach(delId => noteMap.delete(delId));
+      }
+      update.notes = Array.from(noteMap.values());
+    }
+
+    if (Array.isArray(payload.deletedAssignments)) {
+      const combinedDel = new Set([...(existingStore?.deletedAssignments || []), ...payload.deletedAssignments]);
+      update.deletedAssignments = Array.from(combinedDel);
+    }
+
+    if (payload.subjectMarksConfig && typeof payload.subjectMarksConfig === "object") {
+      update.subjectMarksConfig = { ...(existingStore?.subjectMarksConfig || {}), ...payload.subjectMarksConfig };
+    }
+
+    // Privileged admin-only structural synchronizations
+    if (req.user.role === "admin") {
+      if (Array.isArray(payload.timetable)) {
+        const ttMap = new Map();
+        (existingStore?.timetable || []).forEach(t => {
+          if (t && t.division && t.day && t.time) ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
+        });
+        payload.timetable.forEach(t => {
+          if (t && t.division && t.day && t.time) ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
+        });
+        update.timetable = Array.from(ttMap.values());
+      }
+      if (payload.timetableHeader && typeof payload.timetableHeader === "object") {
+        update.timetableHeader = { ...(existingStore?.timetableHeader || {}), ...payload.timetableHeader };
+      }
+      if (payload.customBreakRows && typeof payload.customBreakRows === "object") {
+        update.customBreakRows = { ...(existingStore?.customBreakRows || {}), ...payload.customBreakRows };
+      }
       if (Array.isArray(payload.subjects)) update.subjects = payload.subjects;
       if (payload.divisions) update.divisions = normalizeStoreDivisions(payload.divisions);
     }
@@ -1267,7 +1576,7 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    // Synchronize dedicated MongoDB collections in real-time
+    // Synchronize dedicated MongoDB collections in real-time via safe bulkWrite
     await syncCollectionsFromAcademicData(payload);
 
     res.json({ success: true, message: "Academic data permanently saved to MongoDB!" });

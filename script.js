@@ -777,6 +777,8 @@ const DEFAULT_ACADEMIC = {
   assignments: [],
   notes: [],
   deletedAssignments: [],
+  deletedNotices: [],
+  deletedNotes: [],
   dailyAttendance: [],
   subjectMarksConfig: {},
   subjects: [],
@@ -815,6 +817,8 @@ function normalizeAcademicData(parsed) {
     assignments: Array.isArray(parsed.assignments) ? parsed.assignments : [],
     notes: Array.isArray(parsed.notes) ? parsed.notes : [],
     deletedAssignments: Array.isArray(parsed.deletedAssignments) ? parsed.deletedAssignments : [],
+    deletedNotices: Array.isArray(parsed.deletedNotices) ? parsed.deletedNotices : [],
+    deletedNotes: Array.isArray(parsed.deletedNotes) ? parsed.deletedNotes : [],
     dailyAttendance: Array.isArray(parsed.dailyAttendance) ? parsed.dailyAttendance : [],
     subjectMarksConfig: parsed.subjectMarksConfig && typeof parsed.subjectMarksConfig === "object" ? parsed.subjectMarksConfig : {},
     subjects: Array.isArray(parsed.subjects) ? parsed.subjects : [],
@@ -6067,6 +6071,8 @@ function initNotesPage() {
             if (card) card.remove();
 
             ACADEMIC.notes = ACADEMIC.notes.filter(n => n.id !== noteId);
+            if (!Array.isArray(ACADEMIC.deletedNotes)) ACADEMIC.deletedNotes = [];
+            if (!ACADEMIC.deletedNotes.includes(noteId)) ACADEMIC.deletedNotes.push(noteId);
             saveAcademicData();
             updateNotesBadges();
           }
@@ -6183,6 +6189,11 @@ function initNoticesPage() {
               const originalIdx = ACADEMIC.notices.indexOf(targetNotice);
               if (originalIdx !== -1) {
                 ACADEMIC.notices.splice(originalIdx, 1);
+                if (!Array.isArray(ACADEMIC.deletedNotices)) ACADEMIC.deletedNotices = [];
+                const delId = targetNotice.id || targetNotice.noticeId;
+                if (delId && !ACADEMIC.deletedNotices.includes(delId)) {
+                  ACADEMIC.deletedNotices.push(delId);
+                }
                 saveAcademicData();
                 updateNoticeBadges();
               }

@@ -45,4 +45,6 @@ const timetableSchema = new mongoose.Schema(
   }
 );
 
+timetableSchema.index({ division: 1, semester: 1, day: 1, time: 1 }, { unique: true });
+
 module.exports = mongoose.model("Timetable", timetableSchema);
