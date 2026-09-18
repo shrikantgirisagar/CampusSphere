@@ -177,8 +177,8 @@ async function run() {
     // Test 6: Invalid Timetable Payload Rejection
     const t6_null = await request('POST', '/api/timetable/sync', { Authorization: `Bearer ${facultyToken}` }, { timetable: "invalid_string" });
     const t6_malformed = await request('POST', '/api/timetable/sync', { Authorization: `Bearer ${facultyToken}` }, { timetable: [{ division: testDivA, day: 'InvalidDay' }] });
-    const countAfterInvalid = await Timetable.countDocuments();
-    assertTest(t6_null.status === 400 && t6_malformed.status === 200 && countAfterInvalid === baselineTtCount + 4, 'Invalid Timetable Payload Rejected/Filtered before write, DB unharmed');
+    const testSlotsCount = await Timetable.countDocuments({ division: { $in: [testDivA, testDivB] } });
+    assertTest(t6_null.status === 400 && t6_malformed.status === 200 && testSlotsCount === 4, 'Invalid Timetable Payload Rejected/Filtered before write, DB unharmed');
 
     // Test 7: Concurrent Timetable Sync
     const concurrent1 = request('POST', '/api/timetable/sync', { Authorization: `Bearer ${facultyToken}` }, {

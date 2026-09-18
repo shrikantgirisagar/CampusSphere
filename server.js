@@ -101,12 +101,28 @@ app.get("/animated-background.js", (req, res) => {
 
 const scryptAsync = promisify(crypto.scrypt);
 
-function sanitizeUser(user) {
+function hasMongoOperators(obj) {
+  if (!obj || typeof obj !== "object") return false;
+  for (const key of Object.keys(obj)) {
+    if (key.startsWith("$")) return true;
+    if (typeof obj[key] === "object" && obj[key] !== null) {
+      if (hasMongoOperators(obj[key])) return true;
+    }
+  }
+  return false;
+}
+
+function sanitizeUser(user, options = {}) {
   if (!user) return null;
   const doc = typeof user.toPublicJSON === "function" ? user.toPublicJSON() : (user.toObject ? user.toObject() : { ...user });
   delete doc.passwordHash;
+  delete doc.password;
+  delete doc.authToken;
+  delete doc.sessionToken;
+  delete doc.resetToken;
   delete doc.__v;
   delete doc._id;
+
   if (doc.role === "faculty") {
     if (Array.isArray(doc.subjects)) {
       doc.subjects = doc.subjects.map(s => String(s).trim()).filter(Boolean);
@@ -126,6 +142,11 @@ function sanitizeUser(user) {
       doc.subjectDivisions = {};
     }
   }
+
+  if (options.redactSensitive) {
+    delete doc.email;
+  }
+
   return doc;
 }
 
@@ -499,12 +520,40 @@ app.get(["/api/students/count", "/api/users/count"], async (req, res) => {
 app.get("/api/users/public", async (req, res) => {
   try {
     if (req.user) {
-      const users = await User.find({});
-      return res.json({
-        success: true,
-        users: users.map(sanitizeUser)
-      });
+      if (req.user.role === "admin") {
+        const users = await User.find({});
+        return res.json({
+          success: true,
+          users: users.map(u => sanitizeUser(u))
+        });
+      }
+
+      if (req.user.role === "faculty") {
+        // Faculty receives students (with email redacted for student privacy) and their own faculty profile
+        const students = await User.find({ role: "student" });
+        const facultySelf = await User.findOne({ id: req.user.id, role: "faculty" });
+        const otherFaculty = await User.find({ role: "faculty", id: { $ne: req.user.id } });
+
+        const safeStudents = students.map(s => sanitizeUser(s, { redactSensitive: true }));
+        const safeSelf = facultySelf ? [sanitizeUser(facultySelf)] : [sanitizeUser(req.user)];
+        const safeOtherFaculty = otherFaculty.map(f => sanitizeUser(f, { redactSensitive: true }));
+
+        return res.json({
+          success: true,
+          users: [...safeStudents, ...safeSelf, ...safeOtherFaculty]
+        });
+      }
+
+      if (req.user.role === "student") {
+        // Students only receive their own profile. No directory of other students, faculty, or admin is exposed.
+        const selfUser = await User.findOne({ id: req.user.id, role: "student" });
+        return res.json({
+          success: true,
+          users: [sanitizeUser(selfUser || req.user)]
+        });
+      }
     }
+
     // Unauthenticated public request: return empty list to protect directory privacy
     res.json({
       success: true,
@@ -519,18 +568,42 @@ app.get("/api/users/public", async (req, res) => {
 app.get("/api/users/:role/:username", requireAuth(), async (req, res) => {
   try {
     const { role, username } = req.params;
-    const decodedUsername = normalizeUsername(decodeURIComponent(username));
-    const isSelf = req.user.username.toLowerCase() === decodedUsername.toLowerCase() && req.user.role === role;
-    const isStaffOrAdmin = req.user.role === "admin" || req.user.role === "faculty";
-    if (!isSelf && !isStaffOrAdmin) {
-      return res.status(403).json({ success: false, message: "Forbidden: You are not authorized to view this user profile." });
+    const targetRole = String(role || "").trim().toLowerCase();
+    if (!validRole(targetRole)) {
+      return res.status(400).json({ success: false, message: "Invalid account role." });
     }
+
+    const decodedUsername = normalizeUsername(decodeURIComponent(username || ""));
+    if (!decodedUsername || !/^[A-Za-z0-9_.-]{1,50}$/.test(decodedUsername)) {
+      return res.status(400).json({ success: false, message: "Invalid username format." });
+    }
+
+    const isSelf = req.user.username.toLowerCase() === decodedUsername.toLowerCase() && req.user.role === targetRole;
+    const isAdmin = req.user.role === "admin";
+    const isFaculty = req.user.role === "faculty";
+
+    // Strict RBAC and IDOR protection:
+    // 1. Students can ONLY view their own profile.
+    if (req.user.role === "student" && !isSelf) {
+      return res.status(403).json({ success: false, message: "Forbidden: Students may only view their own profile." });
+    }
+
+    // 2. Faculty can view their own profile and students, but NEVER other faculty or admin accounts.
+    if (isFaculty && !isSelf) {
+      if (targetRole !== "student") {
+        return res.status(403).json({ success: false, message: `Forbidden: Faculty cannot access ${targetRole} profiles.` });
+      }
+    }
+
     const user = await User.findOne({
-      role: String(role).toLowerCase(),
+      role: targetRole,
       username: new RegExp(`^${escapeRegex(decodedUsername)}$`, "i")
     });
     if (!user) return res.status(404).json({ success: false, message: "User not found." });
-    res.json({ success: true, user: sanitizeUser(user) });
+
+    // Privacy protection: Redact email if faculty viewing a student
+    const redactSensitive = !isSelf && !isAdmin;
+    res.json({ success: true, user: sanitizeUser(user, { redactSensitive }) });
   } catch (error) {
     console.error("Get single user error:", error);
     res.status(500).json({ success: false, message: "Unable to fetch user." });
@@ -539,8 +612,11 @@ app.get("/api/users/:role/:username", requireAuth(), async (req, res) => {
 
 app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
   try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "Invalid request: MongoDB operators not allowed." });
+    }
     const incoming = req.body?.users;
-    if (!incoming || typeof incoming !== "object") {
+    if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
       return res.status(400).json({ success: false, message: "Invalid migration data." });
     }
 
@@ -633,8 +709,15 @@ app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
 
 app.post("/api/users", async (req, res) => {
   try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "Invalid request: MongoDB operators not allowed." });
+    }
     const { name, username, password, email, role, subject, subjects, subjectDivisions, department, division, semester, courseYear, course, languageChoice, mathChoice, profilePic } = req.body || {};
     
+    if (typeof name !== "string" || typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).json({ success: false, message: "Full name, username, and password must be string values." });
+    }
+
     const targetRole = String(role || "student").trim().toLowerCase();
 
     // Privileged accounts (admin and faculty) can strictly only be created by an authenticated administrator.
@@ -704,8 +787,19 @@ app.post("/api/users", async (req, res) => {
 
 app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
   try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "Invalid request: MongoDB operators not allowed." });
+    }
+
     const targetRole = String(req.params.role || "").trim().toLowerCase();
+    if (!validRole(targetRole)) {
+      return res.status(400).json({ success: false, message: "Invalid account role." });
+    }
+
     const targetUsername = normalizeUsername(decodeURIComponent(req.params.username || ""));
+    if (!targetUsername || !/^[A-Za-z0-9_.-]{1,50}$/.test(targetUsername)) {
+      return res.status(400).json({ success: false, message: "Invalid username format." });
+    }
 
     const isAdmin = req.user.role === "admin";
     const isOwner = req.user.role === targetRole && req.user.username.toLowerCase() === targetUsername.toLowerCase();
@@ -714,7 +808,20 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
       return res.status(403).json({ success: false, message: "Forbidden: You are not authorized to modify another user's account." });
     }
 
+    // Role immutability & privilege escalation prevention
+    if (req.body?.role !== undefined && String(req.body.role).toLowerCase() !== targetRole) {
+      if (!isAdmin) {
+        return res.status(403).json({ success: false, message: "Forbidden: You cannot change account roles." });
+      }
+    }
+
     const { id, name, newUsername, password, currentPassword, email, subject, subjects, subjectDivisions, department, division, semester, courseYear, course, languageChoice, mathChoice, profilePic } = req.body || {};
+
+    if (name !== undefined && typeof name !== "string") return res.status(400).json({ success: false, message: "Name must be a string." });
+    if (newUsername !== undefined && typeof newUsername !== "string") return res.status(400).json({ success: false, message: "Username must be a string." });
+    if (email !== undefined && typeof email !== "string") return res.status(400).json({ success: false, message: "Email must be a string." });
+    if (password !== undefined && typeof password !== "string") return res.status(400).json({ success: false, message: "Password must be a string." });
+    if (currentPassword !== undefined && typeof currentPassword !== "string") return res.status(400).json({ success: false, message: "Current password must be a string." });
 
     let user;
     if (isAdmin) {
@@ -776,32 +883,38 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
       if (takenEmail) return res.status(409).json({ success: false, message: "That email address is already in use." });
     }
 
+    // Role-based strict field allowlists
     user.name = String(name || user.name).trim();
     user.username = nextUsername;
     if (role !== "admin" || email !== undefined) user.email = nextEmail;
     if (profilePic !== undefined) user.profilePic = String(profilePic);
 
     if (role === "faculty") {
-      if (subjects !== undefined && Array.isArray(subjects)) {
-        user.subjects = subjects.map(s => String(s).trim()).filter(Boolean);
-        if (subject !== undefined && String(subject).trim()) {
-          user.subject = String(subject).trim();
-        } else if (!user.subjects.includes(user.subject) && user.subjects.length > 0) {
-          user.subject = user.subjects[0];
-        }
-      } else if (subject !== undefined) {
-        user.subject = String(subject).trim();
-        if (!Array.isArray(user.subjects) || !user.subjects.includes(user.subject)) {
-          user.subjects = user.subject ? [user.subject] : [];
-        }
-      }
-      if (subjectDivisions !== undefined && typeof subjectDivisions === "object") {
-        user.subjectDivisions = subjectDivisions;
-        user.markModified("subjectDivisions");
-      }
       if (department !== undefined) user.department = String(department).trim();
       if (division !== undefined) user.division = String(division).trim();
+
+      // Only administrators can assign subjects and divisions to faculty
+      if (isAdmin) {
+        if (subjects !== undefined && Array.isArray(subjects)) {
+          user.subjects = subjects.map(s => String(s).trim()).filter(Boolean);
+          if (subject !== undefined && String(subject).trim()) {
+            user.subject = String(subject).trim();
+          } else if (!user.subjects.includes(user.subject) && user.subjects.length > 0) {
+            user.subject = user.subjects[0];
+          }
+        } else if (subject !== undefined) {
+          user.subject = String(subject).trim();
+          if (!Array.isArray(user.subjects) || !user.subjects.includes(user.subject)) {
+            user.subjects = user.subject ? [user.subject] : [];
+          }
+        }
+        if (subjectDivisions !== undefined && typeof subjectDivisions === "object") {
+          user.subjectDivisions = subjectDivisions;
+          user.markModified("subjectDivisions");
+        }
+      }
     }
+
     if (role === "student") {
       if (division !== undefined) user.division = String(division).trim();
       if (semester !== undefined) user.semester = String(semester).trim();
@@ -810,6 +923,7 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
       if (languageChoice !== undefined) user.languageChoice = String(languageChoice).trim();
       if (mathChoice !== undefined) user.mathChoice = String(mathChoice).trim();
     }
+
     if (password) {
       if (String(password).length < 6) return res.status(400).json({ success: false, message: "Password must contain at least 6 characters." });
       // Non-admin users must verify currentPassword before changing password
@@ -835,10 +949,19 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
 app.delete("/api/users/:role/:username", requireAuth(["admin"]), async (req, res) => {
   try {
     const { role, username } = req.params;
-    if (role === "admin") return res.status(403).json({ success: false, message: "Admin accounts cannot be deleted here." });
-
     const targetRole = String(role || "").trim().toLowerCase();
-    const targetUsername = normalizeUsername(decodeURIComponent(username));
+    if (!validRole(targetRole)) {
+      return res.status(400).json({ success: false, message: "Invalid account role." });
+    }
+
+    if (targetRole === "admin") {
+      return res.status(403).json({ success: false, message: "Admin accounts cannot be deleted here." });
+    }
+
+    const targetUsername = normalizeUsername(decodeURIComponent(username || ""));
+    if (!targetUsername || !/^[A-Za-z0-9_.-]{1,50}$/.test(targetUsername)) {
+      return res.status(400).json({ success: false, message: "Invalid username format." });
+    }
 
     const result = await User.deleteOne({
       role: targetRole,
@@ -858,7 +981,7 @@ app.delete("/api/users/:role/:username", requireAuth(["admin"]), async (req, res
             store.markModified("students");
           }
           if (Array.isArray(store.assignments)) {
-            store.assignments = store.assignments.filter(a => (a.student || "").toLowerCase() !== targetUsername.toLowerCase());
+            store.assignments.filter(a => (a.student || "").toLowerCase() !== targetUsername.toLowerCase());
           }
           if (Array.isArray(store.deletedAssignments)) {
             store.deletedAssignments = store.deletedAssignments.filter(k => !String(k || "").toLowerCase().startsWith(`${targetUsername.toLowerCase()}___`));
@@ -880,8 +1003,18 @@ app.delete("/api/users/:role/:username", requireAuth(["admin"]), async (req, res
 
 app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
   try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "Invalid request: MongoDB operators not allowed." });
+    }
+
     const { role, username, password } = req.body || {};
-    if (!validRole(role) || !username || !password) return res.status(400).json({ success: false, message: "Role, username and password are required." });
+    if (typeof role !== "string" || typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).json({ success: false, message: "Invalid input types: expected string values." });
+    }
+
+    if (!validRole(role) || !username.trim() || !password) {
+      return res.status(400).json({ success: false, message: "Role, username and password are required." });
+    }
 
     const user = await User.findOne({
       role,

@@ -92,7 +92,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    strict: false
+    strict: true
   }
 );
 
@@ -100,6 +100,7 @@ const userSchema = new mongoose.Schema(
 userSchema.methods.toPublicJSON = function () {
   const obj = this.toObject();
   delete obj.passwordHash;
+  delete obj.password;
   delete obj.__v;
   if (obj.subjectDivisions instanceof Map) {
     obj.subjectDivisions = Object.fromEntries(obj.subjectDivisions);
