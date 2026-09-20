@@ -28,34 +28,137 @@ app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-XSS-Protection", "0");
+  res.setHeader("Permissions-Policy", "geolocation=(), camera=(), microphone=()");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+
+  if (req.secure || req.headers["x-forwarded-proto"] === "https") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
   next();
 });
 
-app.use(cors());
-app.use(express.json({ limit: "50mb" }));
+const defaultAllowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:3099",
+  "http://127.0.0.1:3099"
+];
 
-// In-memory rate limiter for authentication endpoints
-const loginAttempts = new Map();
-function rateLimitLogin(req, res, next) {
-  const ip = req.ip || req.socket?.remoteAddress || "unknown";
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 mins
-  const maxAttempts = 25;
-  let record = loginAttempts.get(ip);
-  if (!record || now - record.startTime > windowMs) {
-    record = { count: 1, startTime: now };
-    loginAttempts.set(ip, record);
-    return next();
-  }
-  record.count++;
-  if (record.count > maxAttempts) {
-    return res.status(429).json({
-      success: false,
-      message: "Too many login attempts. Please try again after 15 minutes."
+const configuredOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map(o => o.trim()).filter(Boolean)
+  : defaultAllowedOrigins;
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow non-browser or same-origin requests with no origin header (e.g. mobile, curl, Postman)
+    if (!origin) return callback(null, true);
+    const normalized = origin.toLowerCase();
+    const isAllowed = configuredOrigins.some(allowed => {
+      const a = allowed.toLowerCase();
+      return a === "*" || a === normalized;
     });
-  }
-  next();
+    if (isAllowed) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-auth-token", "x-test-rate-limit"],
+  exposedHeaders: ["Retry-After", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset"]
+};
+
+app.use(cors(corsOptions));
+
+// Higher body limit specifically for academic sync (allows base64 documents/notes)
+app.use("/api/academic/sync", express.json({ limit: "15mb" }));
+
+// Standard body limit for all other routes
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+// In-memory rate limiter factory with sliding window and automatic cleanup
+function createRateLimiter({ windowMs = 15 * 60 * 1000, maxRequests = 100, message = "Too many requests. Please try again later.", bypassInTest = false }) {
+  const hits = new Map();
+
+  const cleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [ip, record] of hits.entries()) {
+      if (now - record.startTime > windowMs) {
+        hits.delete(ip);
+      }
+    }
+  }, Math.min(windowMs, 60000));
+  if (cleanupTimer.unref) cleanupTimer.unref();
+
+  return function rateLimiter(req, res, next) {
+    if (bypassInTest && process.env.NODE_ENV === "test" && !req.headers["x-test-rate-limit"]) {
+      return next();
+    }
+
+    const ip = req.ip || req.socket?.remoteAddress || "unknown";
+    const now = Date.now();
+    let record = hits.get(ip);
+
+    if (!record || now - record.startTime > windowMs) {
+      record = { count: 1, startTime: now };
+      hits.set(ip, record);
+    } else {
+      record.count++;
+    }
+
+    const remaining = Math.max(0, maxRequests - record.count);
+    const resetSeconds = Math.ceil((record.startTime + windowMs - now) / 1000);
+
+    res.setHeader("RateLimit-Limit", maxRequests);
+    res.setHeader("RateLimit-Remaining", remaining);
+    res.setHeader("RateLimit-Reset", resetSeconds);
+
+    if (record.count > maxRequests) {
+      res.setHeader("Retry-After", resetSeconds);
+      return res.status(429).json({
+        success: false,
+        message
+      });
+    }
+    next();
+  };
 }
+
+// 1. Auth Login Rate Limiter (25 requests per 15 min per IP)
+const rateLimitLogin = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 25,
+  message: "Too many login attempts. Please try again after 15 minutes."
+});
+
+// 2. User Registration Rate Limiter (30 requests per 15 min per IP)
+const rateLimitRegistration = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 30,
+  message: "Too many registration attempts. Please try again later.",
+  bypassInTest: true
+});
+
+// 3. Heavy / Expensive Operations Rate Limiter (60 requests per 15 min per IP)
+const rateLimitExpensive = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 60,
+  message: "Too many synchronization requests. Please try again later.",
+  bypassInTest: true
+});
+
+// 4. General API Rate Limiter (300 requests per 15 min per IP)
+const rateLimitApi = createRateLimiter({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
+  maxRequests: Number(process.env.RATE_LIMIT_MAX || 300),
+  message: "Too many requests to the API. Please try again later.",
+  bypassInTest: true
+});
 
 // Favicon handler with safe fallback to logo if favicon.ico is not found
 app.get("/favicon.ico", (req, res) => {
@@ -64,6 +167,51 @@ app.get("/favicon.ico", (req, res) => {
     return res.sendFile(icoPath);
   }
   return res.sendFile(path.join(__dirname, "CampusSphere-logo.png"));
+});
+
+// Protect server-side code, configuration, database, and system files from static serving
+const BLOCKED_STATIC_FILES = new Set([
+  "server.js",
+  "package.json",
+  "package-lock.json",
+  ".env",
+  ".env.example",
+  ".gitignore",
+  "readme.md",
+  "start_campussphere.bat",
+  "stop_campussphere.bat"
+]);
+
+const BLOCKED_STATIC_DIRS = new Set([
+  "models",
+  "scripts",
+  "node_modules",
+  "data",
+  ".vscode",
+  ".git",
+  ".system_generated",
+  "brain"
+]);
+
+app.use((req, res, next) => {
+  const reqPath = decodeURIComponent(req.path).replace(/^\/+/, "");
+  const segments = reqPath.split(/[/\\]/);
+  const firstSegment = (segments[0] || "").toLowerCase();
+  const filename = (segments[segments.length - 1] || "").toLowerCase();
+
+  if (BLOCKED_STATIC_DIRS.has(firstSegment)) {
+    return res.status(404).json({ success: false, message: "Resource not found." });
+  }
+
+  if (BLOCKED_STATIC_FILES.has(filename) || filename.startsWith(".")) {
+    return res.status(404).json({ success: false, message: "Resource not found." });
+  }
+
+  if (/\.(json|bat|md|env|lock|log|yml|yaml)$/i.test(filename)) {
+    return res.status(404).json({ success: false, message: "Resource not found." });
+  }
+
+  next();
 });
 
 // Serve static assets from project root
@@ -440,6 +588,9 @@ initDatabase();
 
 // --- API Endpoints ---
 
+// General API rate limiter for all /api endpoints
+app.use("/api", rateLimitApi);
+
 app.use("/api", async (req, res, next) => {
   if (req.path === "/status" || req.path === "/health") return next();
   if (mongoose.connection.readyState !== 1) {
@@ -632,7 +783,7 @@ app.get("/api/users/:role/:username", requireAuth(), async (req, res) => {
   }
 });
 
-app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
+app.post("/api/users/migrate", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
   try {
     if (hasMongoOperators(req.body)) {
       return res.status(400).json({ success: false, message: "Invalid request: MongoDB operators not allowed." });
@@ -640,6 +791,11 @@ app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
     const incoming = req.body?.users;
     if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
       return res.status(400).json({ success: false, message: "Invalid migration data." });
+    }
+
+    const totalIncoming = ["student", "faculty", "admin"].reduce((sum, r) => sum + (Array.isArray(incoming[r]) ? incoming[r].length : 0), 0);
+    if (totalIncoming > 1000) {
+      return res.status(400).json({ success: false, message: "Migration batch exceeds maximum allowed limit of 1000 users." });
     }
 
     let added = 0;
@@ -729,7 +885,7 @@ app.post("/api/users/migrate", requireAuth(["admin"]), async (req, res) => {
   }
 });
 
-app.post("/api/users", async (req, res) => {
+app.post("/api/users", rateLimitRegistration, async (req, res) => {
   try {
     if (hasMongoOperators(req.body)) {
       return res.status(400).json({ success: false, message: "Invalid request: MongoDB operators not allowed." });
@@ -1108,11 +1264,14 @@ app.get("/api/timetable", requireAuth(), async (req, res) => {
   }
 });
 
-app.post("/api/timetable/sync", requireAuth(["faculty", "admin"]), async (req, res) => {
+app.post("/api/timetable/sync", rateLimitExpensive, requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
     const { timetable } = req.body || {};
     if (!timetable || !Array.isArray(timetable)) {
       return res.status(400).json({ success: false, message: "Timetable must be an array of schedule entries." });
+    }
+    if (timetable.length > 1000) {
+      return res.status(400).json({ success: false, message: "Timetable exceeds maximum allowed limit of 1000 entries." });
     }
 
     const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -1637,7 +1796,7 @@ async function syncCollectionsFromAcademicData(payload = {}) {
   });
 }
 
-app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, res) => {
+app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
     const payload = req.body?.data || req.body || {};
 
@@ -1662,6 +1821,32 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
     }
     if (payload.timetable !== undefined && !Array.isArray(payload.timetable)) {
       return res.status(400).json({ success: false, message: "Invalid timetable payload format: Expected an array." });
+    }
+
+    // Input bounds validation to prevent memory exhaustion
+    const MAX_LIMITS = {
+      notices: 500,
+      dailyAttendance: 5000,
+      assignments: 1000,
+      notes: 1000,
+      timetable: 1000,
+      deletedNotices: 500,
+      deletedAssignments: 1000,
+      deletedNotes: 1000
+    };
+    for (const [key, max] of Object.entries(MAX_LIMITS)) {
+      if (Array.isArray(payload[key]) && payload[key].length > max) {
+        return res.status(400).json({
+          success: false,
+          message: `Academic sync payload exceeds maximum allowed items for ${key} (max ${max}).`
+        });
+      }
+    }
+    if (payload.students && typeof payload.students === "object" && Object.keys(payload.students).length > 2000) {
+      return res.status(400).json({
+        success: false,
+        message: "Academic sync payload exceeds maximum allowed students (max 2000)."
+      });
     }
 
     const existingStore = await AcademicStore.findOne({ storeKey: "default_academic_store" });
@@ -1823,12 +2008,53 @@ app.post("/api/academic/sync", requireAuth(["faculty", "admin"]), async (req, re
   }
 });
 
+// Catch-all for unhandled API routes across all HTTP methods
+app.use("/api", (req, res) => {
+  res.status(404).json({ success: false, message: "API endpoint not found." });
+});
+
 // SPA fallback: any non-API GET request serves index.html
 app.get(/.*/, (req, res) => {
-  if (req.path.startsWith("/api")) {
-    return res.status(404).json({ success: false, message: "Endpoint not found." });
-  }
   res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  // Handle payload too large (413)
+  if (err.type === "entity.too.large" || err.status === 413) {
+    return res.status(413).json({
+      success: false,
+      message: "Payload too large. Maximum allowed size is 1MB (15MB for academic sync)."
+    });
+  }
+
+  // Handle malformed JSON body (400)
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid JSON format in request body."
+    });
+  }
+
+  // Handle CORS blocked origin (403)
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({
+      success: false,
+      message: "CORS request blocked: origin not allowed."
+    });
+  }
+
+  // Generic internal server error (500)
+  console.error("Unhandled server error:", err);
+  const isProd = process.env.NODE_ENV === "production";
+  return res.status(500).json({
+    success: false,
+    message: isProd ? "Internal server error." : (err.message || "Internal server error.")
+  });
 });
 
 app.listen(PORT, "0.0.0.0", () => {
@@ -1843,3 +2069,6 @@ process.on("unhandledRejection", (reason, promise) => {
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
 });
+
+module.exports = app;
+
