@@ -5,12 +5,14 @@ const timetableSchema = new mongoose.Schema(
     division: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     semester: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     day: {
       type: String,
@@ -20,27 +22,31 @@ const timetableSchema = new mongoose.Schema(
     time: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     subject: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 100
     },
     subjectText: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 200
     },
     faculty: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 100
     }
   },
   {
     timestamps: true,
-    strict: false,
+    strict: true,
     versionKey: false
   }
 );

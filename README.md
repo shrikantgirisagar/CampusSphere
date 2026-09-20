@@ -89,13 +89,16 @@ npm test
 
 ---
 
-## 🔑 Starter Demo Accounts
+## 🔑 Starter Demo Accounts (Development Mode Only)
 
-When connecting to a new database, the server automatically seeds the administrator account:
+In development/test environments (`NODE_ENV !== "production"`), when connecting to an empty database, the server seeds a development administrator account:
 
 | Role | Username | Default Password |
 | :--- | :--- | :--- |
 | **Admin** | `admin` | `admin@123` |
+
+> [!WARNING]
+> Default administrator accounts are **strictly disabled in production** (`NODE_ENV=production`). For production deployments, configure `SESSION_SECRET` (min 32 characters) and use `ADMIN_BOOTSTRAP_PASSWORD` for one-time initialization.
 
 Students and faculty can self-register via the signup buttons on the login screen, or be provisioned by the Administrator.
 
@@ -103,4 +106,5 @@ Students and faculty can self-register via the signup buttons on the login scree
 
 ## 🛡️ Security Notes
 - Keep `.env` secure and never commit it to public version control.
+- In production (`NODE_ENV=production`), `SESSION_SECRET` is strictly required and must be at least 32 characters.
 - Ensure database access credentials are safe and whitelisted.

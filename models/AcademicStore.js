@@ -63,7 +63,7 @@ const academicStoreSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    strict: false,
+    strict: true,
     versionKey: false
   }
 );

@@ -385,8 +385,52 @@ async function verifyPassword(password, stored) {
   }
 }
 
-// Session Token Creation & Verification
-const AUTH_SECRET = process.env.SESSION_SECRET || "campussphere_session_secret_key_2026_secure";
+// Session Token Secret Management & Production Validation
+const KNOWN_PLACEHOLDER_SECRETS = new Set([
+  "your_super_secret_session_key_replace_in_production",
+  "campussphere_session_secret_key_2026_secure",
+  "campussphere_dev_session_secret_2026_insecure",
+  "secret",
+  "password",
+  "123456",
+  "change_me",
+  "session_secret"
+]);
+
+function validateAuthConfig(env = process.env) {
+  const isProd = env.NODE_ENV === "production";
+  const secret = env.SESSION_SECRET;
+
+  if (isProd) {
+    if (!secret || typeof secret !== "string" || !secret.trim()) {
+      return {
+        valid: false,
+        error: "In production (NODE_ENV=production), SESSION_SECRET must be configured with a cryptographically secure key of at least 32 characters."
+      };
+    }
+    const trimmed = secret.trim();
+    if (KNOWN_PLACEHOLDER_SECRETS.has(trimmed.toLowerCase()) || trimmed.length < 32) {
+      return {
+        valid: false,
+        error: "In production (NODE_ENV=production), SESSION_SECRET must contain at least 32 characters and cannot be a common placeholder."
+      };
+    }
+    return { valid: true, secret: trimmed };
+  }
+
+  if (secret && typeof secret === "string" && secret.trim()) {
+    return { valid: true, secret: secret.trim() };
+  }
+  return { valid: true, secret: "campussphere_dev_session_secret_2026_insecure" };
+}
+
+const authConfigResult = validateAuthConfig();
+if (!authConfigResult.valid) {
+  console.error(`[FATAL] ${authConfigResult.error}`);
+  process.exit(1);
+}
+
+const AUTH_SECRET = authConfigResult.secret;
 
 function generateAuthToken(user) {
   if (!user) return "";
@@ -533,10 +577,14 @@ async function initDatabase() {
           console.error("Auto-migration error:", e.message);
         }
       }
+    }
 
-      // Ensure admin account exists
-      const adminExists = await User.findOne({ role: "admin", username: "admin" });
-      if (!adminExists) {
+    // Ensure administrator account exists or provision securely
+    const adminExists = await User.findOne({ role: "admin" });
+    if (!adminExists) {
+      const isProd = process.env.NODE_ENV === "production";
+      if (!isProd) {
+        // Development/Test mode: seed development admin account for local workflows and testing
         const adminPasswordHash = await hashPassword("admin@123");
         await User.create({
           id: "admin-001",
@@ -546,22 +594,31 @@ async function initDatabase() {
           email: "admin@smartportal.edu",
           passwordHash: adminPasswordHash
         });
-        console.log("Default admin account created in MongoDB (admin / admin@123).");
-      }
-    } else {
-      // Ensure admin account exists regardless
-      const adminExists = await User.findOne({ role: "admin" });
-      if (!adminExists) {
-        const adminPasswordHash = await hashPassword("admin@123");
-        await User.create({
-          id: "admin-001",
-          role: "admin",
-          name: "Administrator",
-          username: "admin",
-          email: "admin@smartportal.edu",
-          passwordHash: adminPasswordHash
-        });
-        console.log("Default admin account created in MongoDB (admin / admin@123).");
+        console.log("Default development admin account created in MongoDB (admin / admin@123).");
+      } else {
+        // Production mode: NEVER create a default account with admin@123
+        const bootstrapPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD;
+        if (bootstrapPassword && typeof bootstrapPassword === "string" && bootstrapPassword.trim()) {
+          const trimmedPass = bootstrapPassword.trim();
+          if (trimmedPass.length < 12 || trimmedPass === "admin@123" || trimmedPass.toLowerCase() === "password") {
+            console.error("[FATAL] In production, ADMIN_BOOTSTRAP_PASSWORD must contain at least 12 characters and cannot be a common placeholder.");
+            process.exit(1);
+          }
+          const bootstrapUsername = (process.env.ADMIN_BOOTSTRAP_USERNAME || "admin").trim();
+          const bootstrapEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL || "admin@campussphere.edu").trim();
+          const adminPasswordHash = await hashPassword(trimmedPass);
+          await User.create({
+            id: `admin-${crypto.randomBytes(4).toString("hex")}`,
+            role: "admin",
+            name: "Production Administrator",
+            username: bootstrapUsername,
+            email: bootstrapEmail,
+            passwordHash: adminPasswordHash
+          });
+          console.log("[SECURITY] Initial production administrator account provisioned from ADMIN_BOOTSTRAP_PASSWORD. Please remove ADMIN_BOOTSTRAP_PASSWORD from your environment once initial access is verified.");
+        } else {
+          console.warn("[SECURITY WARNING] No administrator account found in MongoDB. In production, configure ADMIN_BOOTSTRAP_PASSWORD to initialize the administrator, or seed an admin account via a secure administrative script.");
+        }
       }
     }
 
@@ -694,7 +751,7 @@ app.get("/api/users/public", async (req, res) => {
   try {
     if (req.user) {
       if (req.user.role === "admin") {
-        const users = await User.find({});
+        const users = await User.find({}).select("-passwordHash -__v").limit(500);
         return res.json({
           success: true,
           users: users.map(u => sanitizeUser(u))
@@ -703,9 +760,9 @@ app.get("/api/users/public", async (req, res) => {
 
       if (req.user.role === "faculty") {
         // Faculty receives students (with email redacted for student privacy) and their own faculty profile
-        const students = await User.find({ role: "student" });
-        const facultySelf = await User.findOne({ id: req.user.id, role: "faculty" });
-        const otherFaculty = await User.find({ role: "faculty", id: { $ne: req.user.id } });
+        const students = await User.find({ role: "student" }).select("-passwordHash -__v").limit(500);
+        const facultySelf = await User.findOne({ id: req.user.id, role: "faculty" }).select("-passwordHash -__v");
+        const otherFaculty = await User.find({ role: "faculty", id: { $ne: req.user.id } }).select("-passwordHash -__v").limit(100);
 
         const safeStudents = students.map(s => sanitizeUser(s, { redactSensitive: true }));
         const safeSelf = facultySelf ? [sanitizeUser(facultySelf)] : [sanitizeUser(req.user)];
@@ -974,6 +1031,10 @@ app.post("/api/users", rateLimitRegistration, async (req, res) => {
     const token = generateAuthToken(createdUser);
     res.status(201).json({ success: true, token, user: sanitizeUser(createdUser) });
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {})[0] || "username or email";
+      return res.status(409).json({ success: false, message: `That ${field} is already in use.` });
+    }
     console.error("Create user error:", error);
     res.status(500).json({ success: false, message: "Unable to save the user." });
   }
@@ -1009,10 +1070,12 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
       }
     }
 
-    const { id, name, newUsername, password, currentPassword, email, subject, subjects, subjectDivisions, department, division, semester, courseYear, course, languageChoice, mathChoice, profilePic } = req.body || {};
+    const { id, name, username: incomingUser, newUsername, password, currentPassword, email, subject, subjects, subjectDivisions, department, division, semester, courseYear, course, languageChoice, mathChoice, profilePic } = req.body || {};
+
+    const chosenNewUsername = newUsername !== undefined ? newUsername : incomingUser;
 
     if (name !== undefined && typeof name !== "string") return res.status(400).json({ success: false, message: "Name must be a string." });
-    if (newUsername !== undefined && typeof newUsername !== "string") return res.status(400).json({ success: false, message: "Username must be a string." });
+    if (chosenNewUsername !== undefined && typeof chosenNewUsername !== "string") return res.status(400).json({ success: false, message: "Username must be a string." });
     if (email !== undefined && typeof email !== "string") return res.status(400).json({ success: false, message: "Email must be a string." });
     if (password !== undefined && typeof password !== "string") return res.status(400).json({ success: false, message: "Password must be a string." });
     if (currentPassword !== undefined && typeof currentPassword !== "string") return res.status(400).json({ success: false, message: "Current password must be a string." });
@@ -1033,7 +1096,7 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: "Account not found." });
 
     const role = user.role;
-    const nextUsername = normalizeUsername(newUsername || user.username);
+    const nextUsername = normalizeUsername(chosenNewUsername || user.username);
     const nextEmail = email !== undefined ? normalizeEmail(email) : user.email;
     const validation = validateUserFields({
       name: name || user.name,
@@ -1065,7 +1128,7 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
       const takenUser = await User.findOne({ username: new RegExp(`^${escapeRegex(nextUsername)}$`, "i"), id: { $ne: user.id } });
       if (takenUser) return res.status(409).json({ success: false, message: "That username is already in use." });
 
-      // Synchronize AcademicStore keys so student marks, attendance, and assignments are preserved
+      // Synchronize AcademicStore keys and dedicated collections so student marks, attendance, and assignments are preserved
       try {
         const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
         if (store) {
@@ -1083,6 +1146,9 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
           }
           await store.save();
         }
+        await Attendance.updateMany({ studentUsername: user.username }, { $set: { studentUsername: nextUsername } });
+        await Mark.updateMany({ studentUsername: user.username }, { $set: { studentUsername: nextUsername } });
+        await Assignment.updateMany({ student: user.username }, { $set: { student: nextUsername } });
       } catch (e) {
         console.warn("Academic username sync warning:", e.message);
       }
@@ -1151,6 +1217,10 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
     await user.save();
     res.json({ success: true, user: sanitizeUser(user) });
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {})[0] || "username or email";
+      return res.status(409).json({ success: false, message: `That ${field} is already in use.` });
+    }
     console.error("Update user error:", error);
     res.status(500).json({ success: false, message: "Unable to update the user." });
   }
@@ -1256,7 +1326,7 @@ app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
 
 app.get("/api/timetable", requireAuth(), async (req, res) => {
   try {
-    const entries = await Timetable.find({});
+    const entries = await Timetable.find({}).select("-__v").limit(1000);
     res.json({ success: true, timetable: entries });
   } catch (error) {
     console.error("Fetch timetable error:", error);
@@ -2069,6 +2139,8 @@ process.on("unhandledRejection", (reason, promise) => {
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
 });
+
+app.validateAuthConfig = validateAuthConfig;
 
 module.exports = app;
 

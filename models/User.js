@@ -17,19 +17,23 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 100
     },
     username: {
       type: String,
       required: true,
       unique: true,
       trim: true,
+      minlength: 2,
+      maxlength: 50,
       index: true
     },
     email: {
       type: String,
       trim: true,
       lowercase: true,
+      maxlength: 100,
       default: ""
     },
     passwordHash: {
@@ -39,7 +43,8 @@ const userSchema = new mongoose.Schema(
     subject: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 100
     },
     subjects: {
       type: [String],
@@ -53,37 +58,44 @@ const userSchema = new mongoose.Schema(
     department: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 100
     },
     division: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     semester: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     courseYear: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     course: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 100
     },
     languageChoice: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     mathChoice: {
       type: String,
       default: "",
-      trim: true
+      trim: true,
+      maxlength: 50
     },
     profilePic: {
       type: String,
@@ -94,6 +106,15 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
     strict: true
   }
+);
+
+// Compound index for role-scoped username lookups and queries
+userSchema.index({ role: 1, username: 1 });
+
+// Partial unique index on email: guarantees uniqueness among non-empty emails while permitting multiple empty strings
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: "string", $gt: "" } } }
 );
 
 // Method to remove sensitive fields

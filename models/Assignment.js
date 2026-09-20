@@ -14,15 +14,22 @@ const submissionSchema = new mongoose.Schema(
 
 const assignmentSchema = new mongoose.Schema(
   {
+    id: {
+      type: String,
+      default: ""
+    },
     assignmentId: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      trim: true,
+      maxlength: 100
     },
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 300
     },
     description: {
       type: String,
@@ -30,15 +37,21 @@ const assignmentSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      default: ""
+      default: "",
+      trim: true,
+      maxlength: 100
     },
     student: {
       type: String,
-      default: ""
+      default: "",
+      trim: true,
+      maxlength: 50
     },
     targetDivision: {
       type: String,
-      default: ""
+      default: "",
+      trim: true,
+      maxlength: 50
     },
     fileName: {
       type: String,
@@ -50,30 +63,41 @@ const assignmentSchema = new mongoose.Schema(
     },
     due: {
       type: String,
-      default: ""
+      default: "",
+      trim: true,
+      maxlength: 50
     },
     dueDate: {
       type: Date
     },
     status: {
       type: String,
-      default: "Pending"
+      default: "Pending",
+      trim: true,
+      maxlength: 50
     },
     submittedDate: {
       type: String,
-      default: ""
+      default: "",
+      trim: true,
+      maxlength: 50
     },
     facultyUsername: {
       type: String,
-      default: ""
+      default: "",
+      trim: true,
+      maxlength: 50
     },
     submissions: [submissionSchema]
   },
   {
     timestamps: true,
-    strict: false,
+    strict: true,
     versionKey: false
   }
 );
+
+// Compound index for filtering assignments by subject and division
+assignmentSchema.index({ subject: 1, targetDivision: 1 });
 
 module.exports = mongoose.model("Assignment", assignmentSchema);

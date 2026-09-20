@@ -2,15 +2,22 @@ const mongoose = require("mongoose");
 
 const noticeSchema = new mongoose.Schema(
   {
+    id: {
+      type: String,
+      default: ""
+    },
     noticeId: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      trim: true,
+      maxlength: 100
     },
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 300
     },
     text: {
       type: String,
@@ -71,9 +78,12 @@ const noticeSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    strict: false,
+    strict: true,
     versionKey: false
   }
 );
+
+// Index for chronological notice feeds
+noticeSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Notice", noticeSchema);
