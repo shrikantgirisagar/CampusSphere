@@ -355,9 +355,20 @@ async function main() {
   }
   assert(reg429, "Registration rate limiter triggers HTTP 429 on spam account creation");
 
-  // Clean up test admin user
+  // Clean up test admin user and test notes
   await User.deleteMany({ username: adminUser });
-  console.log("✓ Cleaned up test admin user");
+  const Note = require("../models/Note");
+  const AcademicStore = require("../models/AcademicStore");
+  await Note.deleteMany({ title: "Large Syllabus" });
+  try {
+    const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+    if (store && Array.isArray(store.notes)) {
+      store.notes = store.notes.filter(n => n.title !== "Large Syllabus");
+      store.markModified("notes");
+      await store.save();
+    }
+  } catch (_) {}
+  console.log("✓ Cleaned up test admin user and temporary test note artifacts");
 }
 
 main()

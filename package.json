@@ -9,7 +9,8 @@
     "dev": "node --watch server.js",
     "test": "node scripts/test-mongodb-users.js && node scripts/test-academic-mongodb.js",
     "test:prompt14": "node scripts/test-prompt14-e2e-workflows.js",
-    "test:all": "node scripts/test-prompt14-e2e-workflows.js && node scripts/test-prompt11-production-readiness.js && node scripts/test-production-auth-config.js && node scripts/test-mongodb-integrity.js && node scripts/test-api-hardening.js && node scripts/test-xss-security.js && node scripts/test-user-api-security.js && node scripts/test-academic-security.js && node scripts/test-sync-safety.js && npm test"
+    "test:prompt15": "node scripts/test-prompt15-performance-reliability.js",
+    "test:all": "node scripts/test-prompt15-performance-reliability.js && node scripts/test-prompt14-e2e-workflows.js && node scripts/test-prompt11-production-readiness.js && node scripts/test-production-auth-config.js && node scripts/test-mongodb-integrity.js && node scripts/test-api-hardening.js && node scripts/test-xss-security.js && node scripts/test-user-api-security.js && node scripts/test-academic-security.js && node scripts/test-sync-safety.js && npm test"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -527,7 +527,7 @@ async function authenticateRequest(req, res, next) {
       id: result.id,
       role: result.role,
       username: new RegExp(`^${escapeRegex(result.username)}$`, "i")
-    });
+    }).lean();
     if (!dbUser) {
       if (req.path === "/auth/login" || req.path === "/login") {
         req.user = null;
@@ -755,7 +755,7 @@ app.get("/api/users/public", async (req, res) => {
   try {
     if (req.user) {
       if (req.user.role === "admin") {
-        const users = await User.find({}).select("-passwordHash -__v").limit(500);
+        const users = await User.find({}).select("-passwordHash -__v").limit(500).lean();
         return res.json({
           success: true,
           users: users.map(u => sanitizeUser(u))
@@ -763,10 +763,12 @@ app.get("/api/users/public", async (req, res) => {
       }
 
       if (req.user.role === "faculty") {
-        // Faculty receives students (with email redacted for student privacy) and their own faculty profile
-        const students = await User.find({ role: "student" }).select("-passwordHash -__v").limit(500);
-        const facultySelf = await User.findOne({ id: req.user.id, role: "faculty" }).select("-passwordHash -__v");
-        const otherFaculty = await User.find({ role: "faculty", id: { $ne: req.user.id } }).select("-passwordHash -__v").limit(100);
+        // Faculty receives students (with email redacted for student privacy) and their own faculty profile concurrently
+        const [students, facultySelf, otherFaculty] = await Promise.all([
+          User.find({ role: "student" }).select("-passwordHash -__v").limit(500).lean(),
+          User.findOne({ id: req.user.id, role: "faculty" }).select("-passwordHash -__v").lean(),
+          User.find({ role: "faculty", id: { $ne: req.user.id } }).select("-passwordHash -__v").limit(100).lean()
+        ]);
 
         const safeStudents = students.map(s => sanitizeUser(s, { redactSensitive: true }));
         const safeSelf = facultySelf ? [sanitizeUser(facultySelf)] : [sanitizeUser(req.user)];
@@ -780,7 +782,7 @@ app.get("/api/users/public", async (req, res) => {
 
       if (req.user.role === "student") {
         // Students only receive their own profile. No directory of other students, faculty, or admin is exposed.
-        const selfUser = await User.findOne({ id: req.user.id, role: "student" });
+        const selfUser = await User.findOne({ id: req.user.id, role: "student" }).lean();
         return res.json({
           success: true,
           users: [sanitizeUser(selfUser || req.user)]
@@ -1330,7 +1332,7 @@ app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
 
 app.get("/api/timetable", requireAuth(), async (req, res) => {
   try {
-    const entries = await Timetable.find({}).select("-__v").limit(1000);
+    const entries = await Timetable.find({}).select("-__v").limit(1000).lean();
     res.json({ success: true, timetable: entries });
   } catch (error) {
     console.error("Fetch timetable error:", error);
@@ -1464,9 +1466,10 @@ function normalizeStoreDivisions(divisions) {
 
 app.get("/api/academic/data", requireAuth(), async (req, res) => {
   try {
-    let store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+    let store = await AcademicStore.findOne({ storeKey: "default_academic_store" }).lean();
     if (!store) {
-      store = await AcademicStore.create({ storeKey: "default_academic_store" });
+      const created = await AcademicStore.create({ storeKey: "default_academic_store" });
+      store = created.toObject ? created.toObject() : created;
     }
 
     // Student role: SCOPE academic data so student only receives their own private records
@@ -2070,7 +2073,7 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
     await AcademicStore.findOneAndUpdate(
       { storeKey: "default_academic_store" },
       { $set: update },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
 
     // Synchronize dedicated MongoDB collections in real-time via safe bulkWrite
