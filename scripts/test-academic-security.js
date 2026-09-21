@@ -253,7 +253,8 @@ async function run() {
 
     const hasAliceStudent = !!d10.students?.[aliceUser];
     const hasBobStudent = !!d10.students?.[bobUser];
-    const attendanceRecords = d10.dailyAttendance?.[0]?.records || {};
+    const targetAtt = (d10.dailyAttendance || []).find(a => a && a.id === `att-${timeTag}`) || d10.dailyAttendance?.[0] || {};
+    const attendanceRecords = targetAtt.records || {};
     const hasAliceAttendance = attendanceRecords[aliceUser] === 'present';
     const hasBobAttendance = attendanceRecords[bobUser] !== undefined;
 
@@ -289,7 +290,8 @@ async function run() {
     // Test 11: IDOR Attack Prevention: Alice tries to fetch Bob's data via query param
     const t11 = await request('GET', `/api/academic/data?username=${bobUser}&studentId=${bobUser}&role=admin`, { Authorization: `Bearer ${aliceToken}` });
     const d11 = t11.body?.data || {};
-    const idorPrevented = !d11.students?.[bobUser] && !!d11.students?.[aliceUser] && d11.dailyAttendance?.[0]?.records?.[bobUser] === undefined;
+    const targetAtt11 = (d11.dailyAttendance || []).find(a => a && a.id === `att-${timeTag}`) || d11.dailyAttendance?.[0] || {};
+    const idorPrevented = !d11.students?.[bobUser] && !!d11.students?.[aliceUser] && targetAtt11.records?.[bobUser] === undefined;
     assertTest(idorPrevented, 'IDOR attack blocked: Client query parameters (?username=bob) completely ignored');
 
     // Test 12: GET /api/academic/data with faculty token -> full operational data
@@ -351,19 +353,19 @@ async function run() {
           store.markModified('dailyAttendance');
         }
         if (store.assignments) {
-          store.assignments = store.assignments.filter(a => !a.id.includes(String(timeTag)));
+          store.assignments = store.assignments.filter(a => a && a.id && String(a.id).includes(String(timeTag)) === false);
           store.markModified('assignments');
         }
         if (store.deletedAssignments) {
-          store.deletedAssignments = store.deletedAssignments.filter(k => !k.includes(aliceUser) && !k.includes(bobUser));
+          store.deletedAssignments = store.deletedAssignments.filter(k => k && String(k).includes(aliceUser) === false && String(k).includes(bobUser) === false);
           store.markModified('deletedAssignments');
         }
         if (store.notes) {
-          store.notes = store.notes.filter(n => !n.id.includes(String(timeTag)));
+          store.notes = store.notes.filter(n => n && n.id && String(n.id).includes(String(timeTag)) === false);
           store.markModified('notes');
         }
         if (store.notices) {
-          store.notices = store.notices.filter(n => !n.id.includes(String(timeTag)));
+          store.notices = store.notices.filter(n => n && n.id && String(n.id).includes(String(timeTag)) === false);
           store.markModified('notices');
         }
         await store.save();

@@ -214,9 +214,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve static assets from project root
-app.use(express.static(__dirname, { index: false }));
-
 // Serve static portal assets and SPA entry with no-cache headers
 app.get(["/", "/index.html", "/login", "/login.html", "/signup", "/signup.html"], (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -245,6 +242,9 @@ app.get("/animated-background.js", (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(__dirname, "animated-background.js"));
 });
+
+// Serve remaining static assets from project root
+app.use(express.static(__dirname, { index: false }));
 
 
 const scryptAsync = promisify(crypto.scrypt);
@@ -345,8 +345,8 @@ function validateUserFields({ name, username, email, role, subject, subjects }) 
   if (/<[a-z\/!?[\]]/i.test(String(name || ""))) return "Full name cannot contain HTML or script tags.";
   if (String(name).trim().length > 100) return "Full name cannot exceed 100 characters.";
   if (!/^[A-Za-z0-9_.-]{4,30}$/.test(username || "")) return "Username must be 4–30 letters, numbers, dot, dash or underscore.";
-  if (role !== "admin" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email))) return "Enter a valid email address.";
-  if (role === "admin" && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email))) return "Enter a valid email address.";
+  if (role !== "admin" && !isValidEmailAddress(normalizeEmail(email))) return "Enter a valid email address.";
+  if (role === "admin" && email && !isValidEmailAddress(normalizeEmail(email))) return "Enter a valid email address.";
   if (role === "faculty") {
     const hasSub = (Array.isArray(subjects) && subjects.length > 0) || Boolean(subject);
     if (!hasSub) return "Please select at least one faculty subject.";
@@ -456,7 +456,9 @@ function verifyAuthToken(token) {
       const [payload, sig] = parts;
       if (!payload || !sig) return { error: "malformed" };
       const expected = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
-      if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return { error: "invalid" };
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return { error: "invalid" };
       let data;
       try {
         data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
@@ -482,7 +484,9 @@ function verifyAuthToken(token) {
     if (!expiresAt || expiresAt < Date.now()) return { error: "expired" };
     const payload = `${id}:${role}:${username}:${expiresAt}`;
     const expected = crypto.createHmac("sha256", AUTH_SECRET).update(payload).digest("base64url");
-    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return { error: "invalid" };
+    const sigBuf = Buffer.from(sig);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return { error: "invalid" };
     return { id, role, username, expiresAt };
   } catch {
     return { error: "malformed" };
@@ -1479,10 +1483,11 @@ app.get("/api/academic/data", requireAuth(), async (req, res) => {
         }
       }
       const studentDiv = req.user.division || "";
-      
+      const isUniversalDiv = (d) => !d || d === "all" || d === "All Divisions" || d === "Both Divisions";
+
       const scopedNotices = (store.notices || []).filter(n => {
         if (!n.target || n.target === "all" || n.target === "student") {
-          if (n.targetDivision && n.targetDivision !== "all" && n.targetDivision !== "All Divisions" && studentDiv && n.targetDivision !== studentDiv) return false;
+          if (!isUniversalDiv(n.targetDivision) && studentDiv && n.targetDivision !== studentDiv) return false;
           return true;
         }
         return false;
@@ -1491,14 +1496,14 @@ app.get("/api/academic/data", requireAuth(), async (req, res) => {
       const scopedAssignments = (store.assignments || []).filter(a => {
         if (a.student && a.student.toLowerCase() === normUsername) return true;
         if (a.student === "all") {
-          if (a.targetDivision && studentDiv && a.targetDivision !== "All Divisions" && a.targetDivision !== studentDiv) return false;
+          if (!isUniversalDiv(a.targetDivision) && studentDiv && a.targetDivision !== studentDiv) return false;
           return true;
         }
         return false;
       });
 
       const scopedNotes = (store.notes || []).filter(n => {
-        if (!n.division || n.division === "All Divisions" || (studentDiv && n.division === studentDiv)) return true;
+        if (isUniversalDiv(n.division) || (studentDiv && n.division === studentDiv)) return true;
         return false;
       });
 
@@ -2069,7 +2074,10 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
     );
 
     // Synchronize dedicated MongoDB collections in real-time via safe bulkWrite
-    await syncCollectionsFromAcademicData(payload);
+    await syncCollectionsFromAcademicData({
+      ...payload,
+      ...(update.notices ? { notices: update.notices } : {})
+    });
 
     res.json({ success: true, message: "Academic data permanently saved to MongoDB!" });
   } catch (error) {
