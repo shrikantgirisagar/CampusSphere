@@ -9816,3 +9816,329 @@ body.courses-page-body {
 .dark .student-stat-label {
   color: #94a3b8 !important;
 }
+
+/* =========================================================
+   PROMPT 17: COMPLETE DYNAMIC TIMETABLE BUILDER STYLES
+   Using CampusSphere Homepage Design Tokens (#1459d9, #0A2540, etc.)
+   ========================================================= */
+
+.timetable-builder-container {
+  background: var(--campus-surface, #ffffff);
+  border: 1px solid var(--campus-border, #e5ebf5);
+  border-radius: var(--radius-lg, 20px);
+  padding: 20px;
+  box-shadow: var(--campus-shadow-sm, 0 2px 8px rgba(12, 35, 64, 0.04));
+  margin-top: 14px;
+}
+
+.timetable-toolbar-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--campus-background, #f6f8fd);
+  border: 1px solid var(--campus-border, #e5ebf5);
+  border-radius: var(--radius-md, 12px);
+  margin-bottom: 14px;
+}
+
+.timetable-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.timetable-toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--campus-border-strong, #cbd8f0);
+  margin: 0 4px;
+}
+
+.timetable-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid var(--campus-border-strong, #cbd8f0);
+  color: var(--campus-text, #20283d);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.timetable-btn:hover {
+  background: var(--campus-primary-soft, #eaf2ff);
+  color: var(--campus-primary, #1459d9);
+  border-color: var(--campus-primary, #1459d9);
+}
+
+.timetable-btn.active {
+  background: var(--campus-primary, #1459d9) !important;
+  color: #ffffff !important;
+  border-color: var(--campus-primary-dark, #0d2b67) !important;
+  box-shadow: 0 2px 8px rgba(20, 89, 217, 0.3);
+}
+
+.timetable-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timetable-select {
+  background: #ffffff;
+  border: 1px solid var(--campus-border-strong, #cbd8f0);
+  color: var(--campus-text, #20283d);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  outline: none;
+}
+
+.timetable-select:focus {
+  border-color: var(--campus-primary, #1459d9);
+  box-shadow: 0 0 0 2px rgba(20, 89, 217, 0.2);
+}
+
+.timetable-matrix-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--campus-border-strong, #cbd8f0);
+  border-radius: var(--radius-md, 12px);
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(12, 35, 64, 0.04);
+}
+
+.timetable-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+.timetable-matrix-table th {
+  background: var(--campus-primary, #1459d9);
+  color: #ffffff;
+  font-family: var(--campus-font-heading, Outfit, sans-serif);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 8px 6px;
+  border: 1px solid #0d46b2;
+  position: relative;
+}
+
+.timetable-matrix-table th.col-time {
+  width: 120px;
+  min-width: 100px;
+  background: var(--campus-navy, #0A2540);
+  border-color: #06182a;
+}
+
+.timetable-matrix-table th .th-label-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.timetable-matrix-table td {
+  border: 1px solid var(--campus-border, #e5ebf5);
+  text-align: center;
+  vertical-align: middle;
+  padding: 4px;
+  position: relative;
+  transition: background 0.15s ease;
+  min-height: 48px;
+  height: 52px;
+}
+
+.timetable-matrix-table td.time-cell {
+  background: var(--campus-primary-soft, #eaf2ff);
+  color: var(--campus-primary-dark, #0d2b67);
+  font-weight: 800;
+  font-size: 12px;
+  text-align: center;
+  width: 120px;
+  min-width: 100px;
+}
+
+.timetable-matrix-table td.grid-cell {
+  cursor: pointer;
+  user-select: none;
+}
+
+.timetable-matrix-table td.grid-cell:hover {
+  background: rgba(20, 89, 217, 0.04);
+}
+
+.timetable-matrix-table td.grid-cell.selected {
+  outline: 2px solid var(--campus-primary, #1459d9) !important;
+  outline-offset: -2px;
+  background: rgba(20, 89, 217, 0.1) !important;
+}
+
+.timetable-cell-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 38px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm, 8px);
+  box-sizing: border-box;
+}
+
+.timetable-cell-box.has-subject {
+  background: #ffffff;
+  border: 1px solid var(--campus-border-strong, #cbd8f0);
+  box-shadow: 0 1px 3px rgba(10, 37, 64, 0.06);
+}
+
+.timetable-cell-input {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: inherit;
+  color: inherit;
+  outline: none;
+  padding: 4px 6px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.timetable-cell-input:focus {
+  border-color: var(--campus-primary, #1459d9);
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(20, 89, 217, 0.15);
+}
+
+.timetable-header-inline-edit {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: center;
+  border-radius: 4px;
+  padding: 2px 4px;
+  width: 85%;
+  outline: none;
+}
+
+.timetable-header-inline-edit:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+}
+
+.timetable-time-inline-edit {
+  background: transparent;
+  border: 1px dashed var(--campus-border-strong, #cbd8f0);
+  color: var(--campus-primary-dark, #0d2b67);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: center;
+  border-radius: 4px;
+  padding: 2px 4px;
+  width: 90%;
+  outline: none;
+}
+
+.timetable-time-inline-edit:focus {
+  background: #ffffff;
+  border-color: var(--campus-primary, #1459d9);
+}
+
+.btn-delete-col,
+.btn-delete-row {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 5px;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.btn-delete-col:hover,
+.btn-delete-row:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.timetable-grid-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.division-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--campus-primary-soft, #eaf2ff);
+  border: 1px solid var(--campus-sky-border, #d4e8fc);
+  color: var(--campus-primary, #1459d9);
+  font-weight: 800;
+  font-size: 11.5px;
+  border-radius: 12px;
+  padding: 3px 10px;
+  margin-top: 4px;
+}
+
+.timetable-matrix-table td.time-col {
+  background: var(--campus-primary-soft, #eaf2ff);
+  color: var(--campus-primary-dark, #0d2b67);
+  font-weight: 800;
+  font-size: 12px;
+  text-align: center;
+  width: 130px;
+  min-width: 110px;
+  border-right: 2px solid var(--campus-primary, #1459d9);
+}
+
+.timetable-matrix-table .matrix-time-chip {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--campus-primary-dark, #0d2b67);
+  padding: 2px 6px;
+}
+
+.timetable-matrix-table .matrix-subject-chip {
+  display: inline-block;
+  background: var(--campus-primary-soft, #eaf2ff);
+  color: var(--campus-primary, #1459d9);
+  border: 1px solid var(--campus-sky-border, #d4e8fc);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12.5px;
+  box-shadow: 0 1px 2px rgba(20, 89, 217, 0.08);
+}
+
+

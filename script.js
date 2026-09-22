@@ -556,6 +556,53 @@ async function authenticatedFetch(url, options = {}) {
   return response;
 }
 
+async function apiRequest(endpoint, options = {}) {
+  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+  const response = await authenticatedFetch(url, options);
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = null;
+  }
+  if (!data) {
+    data = {
+      success: response.ok,
+      message: response.ok ? "Success" : `Request failed with status ${response.status}`
+    };
+  }
+  return data;
+}
+
+function showToast(message, type = "info") {
+  let container = $("notifToastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "notifToastContainer";
+    container.className = "notif-toast-container";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  toast.className = `notif-toast notif-toast-floating notif-toast-${type}`;
+  const icon = type === "success" ? "✅" : type === "error" ? "⚠️" : type === "warning" ? "⚡" : "ℹ️";
+  toast.innerHTML = `
+    <span style="font-size:18px; flex-shrink:0;">${icon}</span>
+    <div class="notif-toast-body" style="flex:1;">
+      <div class="notif-toast-text" style="font-weight:600; color:#0f172a; margin:0; font-size:13px;">${escapeHtml(String(message || ""))}</div>
+    </div>
+    <button type="button" class="notif-toast-close" title="Dismiss" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer; padding:0 4px;">&times;</button>
+  `;
+  const closeBtn = toast.querySelector(".notif-toast-close");
+  if (closeBtn) {
+    closeBtn.onclick = () => toast.remove();
+  }
+  container.appendChild(toast);
+  setTimeout(() => {
+    try { toast.remove(); } catch (_) {}
+  }, 3500);
+}
+
+
 function syncUsersToServer(data) {
   if (!data) return;
   if (!currentUser || currentUser.role !== "admin") return;
@@ -944,6 +991,11 @@ let editingTimetableIndex = -1;
 let activeTimetableDivision = "";
 let activeTimetableSemester = "";
 let isTimetableEditMode = false;
+let currentTimetableDoc = null;
+let selectedTimetableCells = [];
+let timetableActiveViewMode = "grid"; // "grid" | "faculty-subject"
+let facultySubjectViewData = [];
+let isTimetableLoading = false;
 
 function resetAttendanceFilters() {
   if (currentUser && currentUser.role === "faculty") {
@@ -6357,40 +6409,74 @@ function downloadTimetableCSV(division = activeTimetableDivision) {
 }
 
 function printColorTimetablePDF(division) {
-  const targetDivision = (currentUser && currentUser.role === "student")
-    ? (currentUser.division || "Div A")
-    : (division || activeTimetableDivision || "Div A");
-
-  const rows = getTimetableEntries(targetDivision);
-
-  const DAYS_HEADER = [
-    { short: "Mon", full: "Monday" },
-    { short: "Tue", full: "Tuesday" },
-    { short: "Wed", full: "Wednesday" },
-    { short: "Thu", full: "Thursday" },
-    { short: "Fri", full: "Friday" },
-    { short: "Sat", full: "Saturday" }
-  ];
-
-  const BASE_TIMES = [
-    "9:00-10:00", "10:00-11:00", "11:00-11:15", "11:15-12:15",
-    "12:15-1:15", "1:15-2:00", "2:00-3:00", "3:00-4:00", "4:00-5:00"
-  ];
-  const combinedTimes = Array.from(new Set([...BASE_TIMES, ...rows.map(r => r.time)]));
-  const rowTimings = sortTimingsSerialwise(combinedTimes);
-
-  const storedHeader = (ACADEMIC.timetableHeader && ACADEMIC.timetableHeader[targetDivision]) || {};
-  const headerTitle = storedHeader.title || "BHARATESH COLLEGE OF COMPUTER APPLICATIONS 2026";
-  const headerSubtitle = storedHeader.subtitle || `Time Table - ${targetDivision}`;
+  const isStudent = currentUser && currentUser.role === "student";
+  const displayDivision = isStudent ? (currentUser.division || "Div A") : (division || activeTimetableDivision || "Div A");
+  const displaySemester = isStudent ? (currentUser.semester || "1st Semester") : (activeTimetableSemester || "1st Semester");
 
   const printWin = window.open('', '_blank');
   if (!printWin) return;
+
+  const headerTitle = "BHARATESH COLLEGE OF COMPUTER APPLICATIONS 2026";
+  const headerSubtitle = `${displaySemester} — ${displayDivision} Timetable`;
+
+  let tableHtml = "";
+
+  if (currentTimetableDoc && Array.isArray(currentTimetableDoc.days) && currentTimetableDoc.days.length && Array.isArray(currentTimetableDoc.timeSlots) && currentTimetableDoc.timeSlots.length) {
+    const days = currentTimetableDoc.days;
+    const slots = currentTimetableDoc.timeSlots;
+    const cells = currentTimetableDoc.cells || [];
+
+    tableHtml = `
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 120px;">Timing</th>
+            ${days.map(d => `<th>${escapeHtml(d.label)}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${slots.map(slot => {
+            return `
+              <tr>
+                <td class="time-col">${escapeHtml(slot.label)}</td>
+                ${days.map(d => {
+                  const cell = cells.find(c => c.dayIndex === d.dayIndex && c.slotIndex === slot.slotIndex);
+                  if (cell && cell.mergedInto) {
+                    return ''; // Hidden because spanned by origin
+                  }
+                  const rSpan = (cell && cell.rowSpan) || 1;
+                  const cSpan = (cell && cell.colSpan) || 1;
+                  const isBold = cell && cell.bold;
+                  const fFamily = (cell && cell.fontFamily) || "Inter";
+                  const fSize = (cell && cell.fontSize) || "13px";
+                  const tAlign = (cell && cell.textAlign) || "center";
+                  const subText = (cell && cell.subject) ? cell.subject : "-";
+                  const isFilled = subText && subText !== "-";
+
+                  return `<td rowspan="${rSpan}" colspan="${cSpan}" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFamily)}; font-size:${escapeHtml(fSize)}; text-align:${escapeHtml(tAlign)}; padding:8px 6px;">
+                    ${isFilled ? `<span class="subject-chip" style="font-weight:${isBold ? 'bold' : 'normal'};">${escapeHtml(subText)}</span>` : '-'}
+                  </td>`;
+                }).join('')}
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  } else {
+    tableHtml = `
+      <table>
+        <thead><tr><th>Time</th><th>Subject</th></tr></thead>
+        <tbody><tr><td colspan="2">No timetable entries available.</td></tr></tbody>
+      </table>
+    `;
+  }
 
   printWin.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${escapeHtml(headerTitle)} - ${escapeHtml(targetDivision)}</title>
+      <title>${escapeHtml(headerTitle)} - ${escapeHtml(displayDivision)}</title>
       <style>
         * {
           box-sizing: border-box;
@@ -6402,27 +6488,27 @@ function printColorTimetablePDF(division) {
           font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
           padding: 24px;
           margin: 0;
-          color: #1e293b;
+          color: #0A2540;
           background: #ffffff;
         }
         .banner {
           text-align: center;
           margin-bottom: 20px;
           padding-bottom: 12px;
-          border-bottom: 3px double #c084fc;
+          border-bottom: 3px double #1459d9;
         }
         .banner h1 {
-          font-size: 22px;
+          font-size: 20px;
           font-weight: 800;
           margin: 0 0 6px 0;
-          color: #1e293b;
+          color: #0A2540;
           letter-spacing: 0.5px;
           text-transform: uppercase;
         }
         .banner p {
-          font-size: 15px;
+          font-size: 14px;
           font-weight: 700;
-          color: #475569;
+          color: #1459d9;
           margin: 0;
         }
         table {
@@ -6430,50 +6516,40 @@ function printColorTimetablePDF(division) {
           border-collapse: collapse;
           text-align: center;
           font-size: 13px;
-          border: 2px solid #7c3aed;
+          border: 2px solid #1459d9;
           border-radius: 8px;
           overflow: hidden;
         }
         th {
-          background: #7c3aed !important;
+          background: #1459d9 !important;
           color: #ffffff !important;
-          padding: 10px 6px;
-          border: 1px solid #6d28d9;
+          padding: 10px 8px;
+          border: 1px solid #0d42a6;
           font-weight: 800;
           font-size: 13px;
           letter-spacing: 0.5px;
           text-transform: uppercase;
         }
         td {
-          border: 1px solid #e9d5ff;
+          border: 1px solid #cbd8f0;
           padding: 8px 6px;
           vertical-align: middle;
           background: #ffffff;
         }
         .time-col {
           font-weight: 800;
-          background: #f3e8ff !important;
-          color: #581c87 !important;
+          background: #f6f8fd !important;
+          color: #0A2540 !important;
           white-space: nowrap;
-          border-right: 2px solid #c084fc;
-        }
-        .break-row td, .lunch-row td {
-          background: #f3e8ff !important;
-          color: #581c87 !important;
-          font-weight: 800 !important;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          border-top: 1px solid #d8b4fe;
-          border-bottom: 1px solid #d8b4fe;
+          border-right: 2px solid #1459d9;
         }
         .subject-chip {
-          display: block;
-          background: #faf5ff !important;
-          color: #3b0764 !important;
-          font-weight: 700;
-          padding: 4px 6px;
+          display: inline-block;
+          background: #eaf2ff !important;
+          color: #1459d9 !important;
+          padding: 4px 8px;
           border-radius: 6px;
-          border: 1px solid #c084fc;
+          border: 1px solid #b8d5fb;
         }
         @media print {
           @page {
@@ -6491,65 +6567,618 @@ function printColorTimetablePDF(division) {
         <h1>${escapeHtml(headerTitle)}</h1>
         <p>${escapeHtml(headerSubtitle)}</p>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 110px;">Timing</th>
-            ${DAYS_HEADER.map(d => `<th>${d.short}</th>`).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          ${rowTimings.map(timeVal => {
-    const customBreaks = (ACADEMIC.customBreakRows && ACADEMIC.customBreakRows[targetDivision]) || {};
-    const cBreakTime = customBreaks.breakTime || "11:00-11:15";
-    const cBreakLabel = customBreaks.breakLabel || "Break Time";
-    const cLunchTime = customBreaks.lunchTime || "1:15-2:00";
-    const cLunchLabel = customBreaks.lunchLabel || "Lunch Break";
-
-    const normT = (timeVal || "").replace(/\s+/g, "").toLowerCase();
-    const isBreak = normT.includes("11:00-11:15") || normT.includes("11-11:15") || normT === cBreakTime.replace(/\s+/g, "").toLowerCase();
-    const isLunch = normT.includes("1:15-2:00") || normT === cLunchTime.replace(/\s+/g, "").toLowerCase();
-
-    if (isBreak) {
-      return `<tr class="break-row"><td class="time-col">${escapeHtml(cBreakTime)}</td><td colspan="6">${escapeHtml(cBreakLabel)}</td></tr>`;
-    }
-    if (isLunch) {
-      return `<tr class="lunch-row"><td class="time-col">${escapeHtml(cLunchTime)}</td><td colspan="6">${escapeHtml(cLunchLabel)}</td></tr>`;
-    }
-    return `<tr>
-              <td class="time-col">${escapeHtml(timeVal)}</td>
-              ${DAYS_HEADER.map(d => {
-      const cellEntries = rows.filter(e => (e.time || "").replace(/\s+/g, "").toLowerCase() === (timeVal || "").replace(/\s+/g, "").toLowerCase() && e.day === d.full);
-      const ownEntries = cellEntries.filter(e => isFacultyOwnEntry(e, currentUser));
-      const subjectText = currentUser.role === "faculty"
-        ? (ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : "")
-        : Array.from(new Set(cellEntries.map(e => e.subjectText || (subjectById(e.subject) ? subjectById(e.subject).short || subjectById(e.subject).name : e.subject)).filter(Boolean))).join(" / ");
-      return `<td>${subjectText ? `<span class="subject-chip">${escapeHtml(subjectText)}</span>` : '-'}</td>`;
-    }).join('')}
-            </tr>`;
-  }).join('')}
-        </tbody>
-      </table>
+      ${tableHtml}
       <script>
         window.onload = function() {
           setTimeout(function() {
             window.print();
           }, 300);
         };
-      </script>
+      <\/script>
     </body>
     </html>
   `);
   printWin.document.close();
 }
 
+const TIMETABLE_DEFAULT_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const TIMETABLE_DEFAULT_SLOTS = [
+  "9:00 - 10:00", "10:00 - 11:00", "11:00 - 11:15", "11:15 - 12:15",
+  "12:15 - 1:15", "1:15 - 2:00", "2:00 - 3:00", "3:00 - 4:00", "4:00 - 5:00"
+];
+
+function createDefaultTimetableDoc(semester, division) {
+  const days = TIMETABLE_DEFAULT_DAYS.map((d, i) => ({ dayIndex: i, label: d }));
+  const timeSlots = TIMETABLE_DEFAULT_SLOTS.map((s, i) => ({ slotIndex: i, label: s }));
+  const cells = [];
+  for (let s = 0; s < timeSlots.length; s++) {
+    for (let d = 0; d < days.length; d++) {
+      cells.push({
+        dayIndex: d,
+        slotIndex: s,
+        subject: "",
+        bold: false,
+        fontFamily: "Inter",
+        fontSize: "13px",
+        textAlign: "center",
+        rowSpan: 1,
+        colSpan: 1,
+        mergedInto: null
+      });
+    }
+  }
+  return { semester, division, days, timeSlots, cells };
+}
+
+function normalizeTimetableDoc(rawDoc, semester, division) {
+  if (!rawDoc || typeof rawDoc !== "object") {
+    return createDefaultTimetableDoc(semester, division);
+  }
+  const rawDays = Array.isArray(rawDoc.days) && rawDoc.days.length ? rawDoc.days : TIMETABLE_DEFAULT_DAYS;
+  const rawSlots = Array.isArray(rawDoc.timeSlots) && rawDoc.timeSlots.length ? rawDoc.timeSlots : TIMETABLE_DEFAULT_SLOTS;
+
+  const days = rawDays.map((d, idx) => {
+    if (typeof d === "object" && d !== null) {
+      return { dayIndex: typeof d.dayIndex === "number" ? d.dayIndex : idx, label: String(d.label || d.name || "Day").trim() };
+    }
+    return { dayIndex: idx, label: String(d || "").trim() };
+  });
+
+  const timeSlots = rawSlots.map((s, idx) => {
+    if (typeof s === "object" && s !== null) {
+      return { slotIndex: typeof s.slotIndex === "number" ? s.slotIndex : idx, label: String(s.label || s.time || s.name || "Slot").trim() };
+    }
+    return { slotIndex: idx, label: String(s || "").trim() };
+  });
+
+  const cells = Array.isArray(rawDoc.cells) ? rawDoc.cells.map(c => ({
+    dayIndex: Number(c.dayIndex),
+    slotIndex: Number(c.slotIndex),
+    subject: String(c.subject || "").trim(),
+    bold: Boolean(c.bold),
+    fontFamily: String(c.fontFamily || "Inter"),
+    fontSize: String(c.fontSize || "13px"),
+    textAlign: "center",
+    rowSpan: Math.max(1, Number(c.rowSpan) || 1),
+    colSpan: Math.max(1, Number(c.colSpan) || 1),
+    mergedInto: c.mergedInto ? { dayIndex: Number(c.mergedInto.dayIndex), slotIndex: Number(c.mergedInto.slotIndex) } : null
+  })) : [];
+
+  for (let s = 0; s < timeSlots.length; s++) {
+    for (let d = 0; d < days.length; d++) {
+      const found = cells.some(c => c.dayIndex === d && c.slotIndex === s);
+      if (!found) {
+        cells.push({
+          dayIndex: d,
+          slotIndex: s,
+          subject: "",
+          bold: false,
+          fontFamily: "Inter",
+          fontSize: "13px",
+          textAlign: "center",
+          rowSpan: 1,
+          colSpan: 1,
+          mergedInto: null
+        });
+      }
+    }
+  }
+
+  return {
+    _id: rawDoc._id,
+    semester: rawDoc.semester || semester,
+    division: rawDoc.division || division,
+    days,
+    timeSlots,
+    cells
+  };
+}
+
+function getTimetableCell(doc, dayIdx, slotIdx) {
+  if (!doc || !Array.isArray(doc.cells)) return null;
+  let cell = doc.cells.find(c => c.dayIndex === dayIdx && c.slotIndex === slotIdx);
+  if (!cell) {
+    cell = {
+      dayIndex: dayIdx,
+      slotIndex: slotIdx,
+      subject: "",
+      bold: false,
+      fontFamily: "Inter",
+      fontSize: "13px",
+      textAlign: "center",
+      rowSpan: 1,
+      colSpan: 1,
+      mergedInto: null
+    };
+    doc.cells.push(cell);
+  }
+  return cell;
+}
+
+let loadedTimetableCacheKey = "";
+
+async function loadTimetableDoc(semester, division, forceReload = false) {
+  const cacheKey = `${semester}__${division}`;
+  if (!forceReload && currentTimetableDoc && loadedTimetableCacheKey === cacheKey) {
+    return;
+  }
+  isTimetableLoading = true;
+  try {
+    const res = await apiRequest(`/api/timetable?semester=${encodeURIComponent(semester)}&division=${encodeURIComponent(division)}`);
+    if (res && res.success && res.timetable && (Array.isArray(res.timetable.days) || Array.isArray(res.timetable.cells))) {
+      currentTimetableDoc = normalizeTimetableDoc(res.timetable, semester, division);
+    } else {
+      currentTimetableDoc = createDefaultTimetableDoc(semester, division);
+    }
+    loadedTimetableCacheKey = cacheKey;
+  } catch (err) {
+    console.error("Failed to load timetable:", err);
+    currentTimetableDoc = createDefaultTimetableDoc(semester, division);
+    loadedTimetableCacheKey = cacheKey;
+  } finally {
+    isTimetableLoading = false;
+    render();
+  }
+}
+
+async function loadFacultySubjectView(forceReload = false) {
+  try {
+    const res = await apiRequest("/api/timetable/faculty-view");
+    if (res && res.success && Array.isArray(res.facultyView)) {
+      facultySubjectViewData = res.facultyView;
+    } else {
+      facultySubjectViewData = [];
+    }
+  } catch (err) {
+    console.error("Failed to load faculty view:", err);
+    facultySubjectViewData = [];
+  } finally {
+    render();
+  }
+}
+
+function handleTimetableCellSelect(dayIdx, slotIdx, isShift, isCtrl) {
+  if (!isTimetableEditMode || !currentTimetableDoc) return;
+
+  if (isShift && selectedTimetableCells.length > 0) {
+    const anchor = selectedTimetableCells[0];
+    const minD = Math.min(anchor.dayIndex, dayIdx);
+    const maxD = Math.max(anchor.dayIndex, dayIdx);
+    const minS = Math.min(anchor.slotIndex, slotIdx);
+    const maxS = Math.max(anchor.slotIndex, slotIdx);
+
+    const newSel = [];
+    for (let s = minS; s <= maxS; s++) {
+      for (let d = minD; d <= maxD; d++) {
+        newSel.push({ dayIndex: d, slotIndex: s });
+      }
+    }
+    selectedTimetableCells = newSel;
+  } else if (isCtrl) {
+    const existsIdx = selectedTimetableCells.findIndex(c => c.dayIndex === dayIdx && c.slotIndex === slotIdx);
+    if (existsIdx >= 0) {
+      selectedTimetableCells.splice(existsIdx, 1);
+    } else {
+      selectedTimetableCells.push({ dayIndex: dayIdx, slotIndex: slotIdx });
+    }
+  } else {
+    selectedTimetableCells = [{ dayIndex: dayIdx, slotIndex: slotIdx }];
+  }
+
+  updateTimetableSelectionUI();
+}
+
+function updateTimetableSelectionUI() {
+  document.querySelectorAll(".timetable-matrix-table td.grid-cell").forEach(el => {
+    const dIdx = Number(el.dataset.dayIdx);
+    const sIdx = Number(el.dataset.slotIdx);
+    const isSelected = selectedTimetableCells.some(c => c.dayIndex === dIdx && c.slotIndex === sIdx);
+    if (isSelected) {
+      el.classList.add("selected");
+    } else {
+      el.classList.remove("selected");
+    }
+  });
+
+  const mergeBtn = $("tbBtnMerge");
+  const boldBtn = $("tbBtnBold");
+  const fontFamSel = $("tbSelectFontFamily");
+  const fontSzSel = $("tbSelectFontSize");
+
+  if (mergeBtn) {
+    mergeBtn.disabled = selectedTimetableCells.length < 2;
+  }
+
+  if (selectedTimetableCells.length > 0 && currentTimetableDoc) {
+    const firstSel = selectedTimetableCells[0];
+    const cell = getTimetableCell(currentTimetableDoc, firstSel.dayIndex, firstSel.slotIndex);
+    if (cell) {
+      if (boldBtn) {
+        if (cell.bold) boldBtn.classList.add("active");
+        else boldBtn.classList.remove("active");
+      }
+      if (fontFamSel && cell.fontFamily) {
+        fontFamSel.value = cell.fontFamily;
+      }
+      if (fontSzSel && cell.fontSize) {
+        fontSzSel.value = cell.fontSize;
+      }
+    }
+  }
+}
+
+function commitTimetableDomInputs() {
+  if (!currentTimetableDoc) return;
+  document.querySelectorAll(".timetable-matrix-table .direct-cell-input").forEach(input => {
+    const dIdx = Number(input.dataset.dayIdx);
+    const sIdx = Number(input.dataset.slotIdx);
+    const cell = getTimetableCell(currentTimetableDoc, dIdx, sIdx);
+    if (cell) {
+      cell.subject = input.value.trim();
+    }
+  });
+
+  document.querySelectorAll(".timetable-time-inline-edit").forEach(input => {
+    const sIdx = Number(input.dataset.slotIdx);
+    if (currentTimetableDoc && currentTimetableDoc.timeSlots && currentTimetableDoc.timeSlots[sIdx]) {
+      currentTimetableDoc.timeSlots[sIdx].label = input.value.trim();
+    }
+  });
+}
+
+function mergeSelectedCells() {
+  if (!currentTimetableDoc || selectedTimetableCells.length < 2) return;
+  commitTimetableDomInputs();
+  const minD = Math.min(...selectedTimetableCells.map(c => c.dayIndex));
+  const maxD = Math.max(...selectedTimetableCells.map(c => c.dayIndex));
+  const minS = Math.min(...selectedTimetableCells.map(c => c.slotIndex));
+  const maxS = Math.max(...selectedTimetableCells.map(c => c.slotIndex));
+
+  const totalCells = (maxD - minD + 1) * (maxS - minS + 1);
+  if (selectedTimetableCells.length !== totalCells) {
+    if (typeof showToast === "function") {
+      showToast("Only contiguous rectangular selections can be merged.", "warning");
+    } else {
+      alert("Only contiguous rectangular selections can be merged.");
+    }
+    return;
+  }
+
+  const originCell = getTimetableCell(currentTimetableDoc, minD, minS);
+  originCell.colSpan = maxD - minD + 1;
+  originCell.rowSpan = maxS - minS + 1;
+  originCell.mergedInto = null;
+
+  if (!originCell.subject) {
+    for (const sel of selectedTimetableCells) {
+      const c = getTimetableCell(currentTimetableDoc, sel.dayIndex, sel.slotIndex);
+      if (c && c.subject) {
+        originCell.subject = c.subject;
+        break;
+      }
+    }
+  }
+
+  for (let s = minS; s <= maxS; s++) {
+    for (let d = minD; d <= maxD; d++) {
+      if (d === minD && s === minS) continue;
+      const c = getTimetableCell(currentTimetableDoc, d, s);
+      c.mergedInto = { dayIndex: minD, slotIndex: minS };
+      c.rowSpan = 1;
+      c.colSpan = 1;
+    }
+  }
+
+  selectedTimetableCells = [{ dayIndex: minD, slotIndex: minS }];
+  render();
+}
+
+function toggleBoldSelected() {
+  if (!currentTimetableDoc || !selectedTimetableCells.length) return;
+  const firstCell = getTimetableCell(currentTimetableDoc, selectedTimetableCells[0].dayIndex, selectedTimetableCells[0].slotIndex);
+  const targetBold = !firstCell.bold;
+  for (const sel of selectedTimetableCells) {
+    const c = getTimetableCell(currentTimetableDoc, sel.dayIndex, sel.slotIndex);
+    if (c) c.bold = targetBold;
+  }
+  render();
+}
+
+function setFontFamilySelected(fontFamily) {
+  if (!currentTimetableDoc || !selectedTimetableCells.length) return;
+  const allowed = ["Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New"];
+  if (!allowed.includes(fontFamily)) return;
+  for (const sel of selectedTimetableCells) {
+    const c = getTimetableCell(currentTimetableDoc, sel.dayIndex, sel.slotIndex);
+    if (c) c.fontFamily = fontFamily;
+  }
+  render();
+}
+
+function setFontSizeSelected(fontSize) {
+  if (!currentTimetableDoc || !selectedTimetableCells.length) return;
+  const allowed = ["11px", "12px", "13px", "14px", "16px", "18px"];
+  if (!allowed.includes(fontSize)) return;
+  for (const sel of selectedTimetableCells) {
+    const c = getTimetableCell(currentTimetableDoc, sel.dayIndex, sel.slotIndex);
+    if (c) c.fontSize = fontSize;
+  }
+  render();
+}
+
+function setTextAlignSelected(align) {
+  if (!currentTimetableDoc || !selectedTimetableCells.length) return;
+  const allowed = ["left", "center", "right"];
+  if (!allowed.includes(align)) return;
+  for (const sel of selectedTimetableCells) {
+    const c = getTimetableCell(currentTimetableDoc, sel.dayIndex, sel.slotIndex);
+    if (c) c.textAlign = align;
+  }
+  render();
+}
+
+function addTimetableDay() {
+  if (!currentTimetableDoc) return;
+  if (currentTimetableDoc.days.length >= 7) {
+    alert("Maximum 7 day columns allowed.");
+    return;
+  }
+  const dayName = prompt("Enter Day Name (e.g., Sunday):", "Sunday");
+  if (!dayName || !dayName.trim()) return;
+  const cleanDay = dayName.trim();
+  const newIdx = currentTimetableDoc.days.length;
+  currentTimetableDoc.days.push({ dayIndex: newIdx, label: cleanDay });
+  for (const slot of currentTimetableDoc.timeSlots) {
+    getTimetableCell(currentTimetableDoc, newIdx, slot.slotIndex);
+  }
+  render();
+}
+
+function deleteTimetableDay(dayIdx) {
+  if (!currentTimetableDoc) return;
+  if (currentTimetableDoc.days.length <= 1) {
+    alert("At least 1 day column must be present.");
+    return;
+  }
+  const dayObj = currentTimetableDoc.days.find(d => d.dayIndex === dayIdx);
+  const hasSubjects = currentTimetableDoc.cells.some(c => c.dayIndex === dayIdx && c.subject && c.subject.trim());
+  if (hasSubjects) {
+    const confirmed = confirm(`Day "${dayObj ? dayObj.label : 'Day ' + (dayIdx + 1)}" contains scheduled subjects. Are you sure you want to delete this entire day column?`);
+    if (!confirmed) return;
+  }
+
+  currentTimetableDoc.days = currentTimetableDoc.days.filter(d => d.dayIndex !== dayIdx);
+  currentTimetableDoc.cells = currentTimetableDoc.cells.filter(c => c.dayIndex !== dayIdx);
+
+  currentTimetableDoc.days.forEach((d, i) => { d.dayIndex = i; });
+  currentTimetableDoc.cells.forEach(c => {
+    if (c.dayIndex > dayIdx) {
+      c.dayIndex--;
+    }
+    if (c.mergedInto) {
+      if (c.mergedInto.dayIndex === dayIdx) {
+        c.mergedInto = null;
+        c.rowSpan = 1;
+        c.colSpan = 1;
+      } else if (c.mergedInto.dayIndex > dayIdx) {
+        c.mergedInto.dayIndex--;
+      }
+    }
+    if (c.colSpan > 1) {
+      c.colSpan = Math.max(1, Math.min(c.colSpan, currentTimetableDoc.days.length - c.dayIndex));
+    }
+  });
+
+  selectedTimetableCells = [];
+  render();
+}
+
+function addTimetableSlot() {
+  if (!currentTimetableDoc) return;
+  commitTimetableDomInputs();
+  if (currentTimetableDoc.timeSlots.length >= 25) {
+    alert("Maximum 25 time slot rows allowed.");
+    return;
+  }
+  const slotName = prompt("Enter Time Slot (e.g., 5:00 - 6:00):", "5:00 - 6:00");
+  if (!slotName || !slotName.trim()) return;
+  const cleanSlot = slotName.trim();
+  const newIdx = currentTimetableDoc.timeSlots.length;
+  currentTimetableDoc.timeSlots.push({ slotIndex: newIdx, label: cleanSlot });
+  for (const d of currentTimetableDoc.days) {
+    getTimetableCell(currentTimetableDoc, d.dayIndex, newIdx);
+  }
+  render();
+}
+
+function deleteTimetableSlot(slotIdx) {
+  if (!currentTimetableDoc) return;
+  commitTimetableDomInputs();
+  if (currentTimetableDoc.timeSlots.length <= 1) {
+    alert("At least 1 time slot row must be present.");
+    return;
+  }
+  const slotObj = currentTimetableDoc.timeSlots.find(s => s.slotIndex === slotIdx);
+  const hasSubjects = currentTimetableDoc.cells.some(c => c.slotIndex === slotIdx && c.subject && c.subject.trim());
+  if (hasSubjects) {
+    const confirmed = confirm(`Time slot "${slotObj ? slotObj.label : 'Slot ' + (slotIdx + 1)}" contains scheduled subjects. Are you sure you want to delete this entire time slot row?`);
+    if (!confirmed) return;
+  }
+
+  currentTimetableDoc.timeSlots = currentTimetableDoc.timeSlots.filter(s => s.slotIndex !== slotIdx);
+  currentTimetableDoc.cells = currentTimetableDoc.cells.filter(c => c.slotIndex !== slotIdx);
+
+  currentTimetableDoc.timeSlots.forEach((s, i) => { s.slotIndex = i; });
+  currentTimetableDoc.cells.forEach(c => {
+    if (c.slotIndex > slotIdx) {
+      c.slotIndex--;
+    }
+    if (c.mergedInto) {
+      if (c.mergedInto.slotIndex === slotIdx) {
+        c.mergedInto = null;
+        c.rowSpan = 1;
+        c.colSpan = 1;
+      } else if (c.mergedInto.slotIndex > slotIdx) {
+        c.mergedInto.slotIndex--;
+      }
+    }
+    if (c.rowSpan > 1) {
+      c.rowSpan = Math.max(1, Math.min(c.rowSpan, currentTimetableDoc.timeSlots.length - c.slotIndex));
+    }
+  });
+
+  selectedTimetableCells = [];
+  render();
+}
+
+async function saveTimetableDoc(e) {
+  if (e && typeof e.preventDefault === "function") e.preventDefault();
+  if (!currentTimetableDoc) return;
+
+  const msgElem = $("timetableSaveMsg");
+  const saveBtn = $("btnSaveTimetable");
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `<span>⏳ Saving...</span>`;
+  }
+  if (msgElem) {
+    msgElem.className = "message";
+    msgElem.textContent = "Saving timetable...";
+  }
+
+  try {
+    // 1. Commit active inputs from the DOM into memory before creating payload
+    commitTimetableDomInputs();
+
+    const cleanDays = (currentTimetableDoc.days || TIMETABLE_DEFAULT_DAYS).map((d, idx) => {
+      if (typeof d === "object" && d !== null) {
+        return String(d.label || d.name || "Day").trim();
+      }
+      return String(d || "").trim();
+    }).filter(Boolean);
+
+    const cleanTimeSlots = (currentTimetableDoc.timeSlots || TIMETABLE_DEFAULT_SLOTS).map((s, idx) => {
+      if (typeof s === "object" && s !== null) {
+        return String(s.label || s.time || "Time").trim();
+      }
+      return String(s || "").trim();
+    }).filter(Boolean);
+
+    const targetSemester = currentTimetableDoc.semester || activeTimetableSemester || "1st Semester";
+    const targetDivision = currentTimetableDoc.division || activeTimetableDivision || "Div A";
+
+    const payload = {
+      semester: targetSemester,
+      division: targetDivision,
+      days: cleanDays,
+      timeSlots: cleanTimeSlots,
+      cells: (currentTimetableDoc.cells || []).filter(c => {
+        const d = Number(c.dayIndex);
+        const s = Number(c.slotIndex);
+        return !isNaN(d) && !isNaN(s) && d >= 0 && d < cleanDays.length && s >= 0 && s < cleanTimeSlots.length;
+      }).map(c => ({
+        dayIndex: Number(c.dayIndex),
+        slotIndex: Number(c.slotIndex),
+        subject: String(c.subject || "").trim(),
+        bold: Boolean(c.bold),
+        fontFamily: c.fontFamily || "Inter",
+        fontSize: c.fontSize || "13px",
+        textAlign: "center",
+        rowSpan: Math.max(1, Math.min(20, Number(c.rowSpan) || 1)),
+        colSpan: Math.max(1, Math.min(20, Number(c.colSpan) || 1)),
+        mergedInto: (c.mergedInto && typeof c.mergedInto === "object" && !isNaN(Number(c.mergedInto.dayIndex)) && !isNaN(Number(c.mergedInto.slotIndex)))
+          ? { dayIndex: Number(c.mergedInto.dayIndex), slotIndex: Number(c.mergedInto.slotIndex) }
+          : null
+      }))
+    };
+
+    const res = await apiRequest("/api/timetable", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (res && res.success) {
+      if (msgElem) {
+        msgElem.className = "message success";
+        msgElem.textContent = "Timetable saved successfully!";
+      }
+      isTimetableEditMode = false;
+      if (res.timetable) {
+        currentTimetableDoc = normalizeTimetableDoc(res.timetable, targetSemester, targetDivision);
+        loadedTimetableCacheKey = `${targetSemester}__${targetDivision}`;
+      }
+      showToast("Timetable saved successfully!", "success");
+      setTimeout(() => {
+        render();
+      }, 300);
+    } else {
+      const errMsg = (res && res.message) || "Failed to save timetable.";
+      if (msgElem) {
+        msgElem.className = "message error";
+        msgElem.textContent = errMsg;
+      }
+      showToast(errMsg, "error");
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<span>💾 Save</span>`;
+      }
+    }
+  } catch (err) {
+    console.error("Save timetable error:", err);
+    const errMsg = err.message || "Failed to save timetable.";
+    if (msgElem) {
+      msgElem.className = "message error";
+      msgElem.textContent = errMsg;
+    }
+    showToast(errMsg, "error");
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `<span>💾 Save</span>`;
+    }
+  }
+}
+
 function initTimetablePage() {
+  const isStudent = currentUser && currentUser.role === "student";
+  const isFaculty = currentUser && currentUser.role === "faculty";
+  const isAdmin = currentUser && currentUser.role === "admin";
+
+  const targetSemester = isStudent ? (currentUser.semester || "1st Semester") : (activeTimetableSemester || "1st Semester");
+  const targetDivision = isStudent ? (currentUser.division || "Div A") : (activeTimetableDivision || "Div A");
+
+  // Initial doc fetch if cache key mismatch
+  const currentKey = `${targetSemester}__${targetDivision}`;
+  if (!currentTimetableDoc || loadedTimetableCacheKey !== currentKey) {
+    loadTimetableDoc(targetSemester, targetDivision);
+  }
+
+  // View switch buttons
+  const btnGridView = $("btnSwitchGridView");
+  if (btnGridView) {
+    btnGridView.addEventListener("click", () => {
+      timetableActiveViewMode = "grid";
+      render();
+    });
+  }
+
+  const btnFacultyView = $("btnSwitchFacultyView");
+  if (btnFacultyView) {
+    btnFacultyView.addEventListener("click", () => {
+      timetableActiveViewMode = "faculty-subject";
+      loadFacultySubjectView();
+    });
+  }
+
+  // Division & Semester filter changes
   const divSelect = $("timetableDivisionSelect");
   if (divSelect) {
     divSelect.addEventListener("change", () => {
       activeTimetableDivision = divSelect.value;
       isTimetableEditMode = false;
-      navigate("timetable");
+      selectedTimetableCells = [];
+      loadTimetableDoc(activeTimetableSemester || targetSemester, activeTimetableDivision);
     });
   }
 
@@ -6558,164 +7187,114 @@ function initTimetablePage() {
     semSelect.addEventListener("change", () => {
       activeTimetableSemester = semSelect.value;
       isTimetableEditMode = false;
-      navigate("timetable");
+      selectedTimetableCells = [];
+      loadTimetableDoc(activeTimetableSemester, activeTimetableDivision || targetDivision);
     });
   }
 
   const downloadBtn = $("btnDownloadTimetable");
   if (downloadBtn) {
     downloadBtn.addEventListener("click", () => {
-      const targetDiv = (currentUser && currentUser.role === "student")
-        ? (currentUser.division || "Div A")
-        : activeTimetableDivision;
-      printColorTimetablePDF(targetDiv);
+      printColorTimetablePDF(targetDivision);
     });
   }
 
-  // Auto-fit cell box size to text content as user types
-  document.querySelectorAll(".direct-cell-input, .direct-time-input").forEach(input => {
-    const autoResize = () => {
-      input.style.height = "auto";
-      input.style.height = Math.max(20, input.scrollHeight) + "px";
-    };
-    input.addEventListener("input", autoResize);
-    setTimeout(autoResize, 10);
-  });
-
-  if (currentUser.role !== "faculty") return;
-
+  // Edit / Cancel / Save controls
   const editModeBtn = $("btnEditTimetableMode");
   if (editModeBtn) {
-    editModeBtn.addEventListener("click", () => {
+    editModeBtn.onclick = (e) => {
+      if (e) e.preventDefault();
       isTimetableEditMode = true;
-      navigate("timetable");
-    });
+      selectedTimetableCells = [];
+      render();
+    };
   }
 
   const cancelEditBtn = $("btnCancelTimetableEdit");
   if (cancelEditBtn) {
-    cancelEditBtn.addEventListener("click", () => {
+    cancelEditBtn.onclick = (e) => {
+      if (e) e.preventDefault();
       isTimetableEditMode = false;
-      navigate("timetable");
-    });
+      selectedTimetableCells = [];
+      loadTimetableDoc(targetSemester, targetDivision, true);
+    };
   }
 
   const saveBtn = $("btnSaveTimetable");
   if (saveBtn) {
-    saveBtn.addEventListener("click", () => {
-      const msgElem = $("timetableSaveMsg");
-      const targetDivision = activeTimetableDivision;
+    saveBtn.onclick = (e) => {
+      if (e) e.preventDefault();
+      saveTimetableDoc(e);
+    };
+  }
 
-      // Preserve entries for other divisions, AND preserve entries for this division belonging to OTHER faculty members!
-      const targetDivNorm = (targetDivision || "Div A").replace("Section ", "Div ").replace("Division ", "Div ");
+  // Toolbar action listeners
+  const tbMerge = $("tbBtnMerge");
+  if (tbMerge) tbMerge.addEventListener("click", mergeSelectedCells);
 
-      ACADEMIC.timetable = ACADEMIC.timetable.filter(e => {
-        const entryDiv = (e.division || "Div A").replace("Section ", "Div ").replace("Division ", "Div ");
-        if (entryDiv !== targetDivNorm) return true;
-        return !isFacultyOwnEntry(e, currentUser);
-      });
 
-      const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      const timeInputs = document.querySelectorAll(".direct-time-input");
+  const tbBold = $("tbBtnBold");
+  if (tbBold) tbBold.addEventListener("click", toggleBoldSelected);
 
-      const titleInput = $("timetableHeaderTitleInput");
-      const subtitleInput = $("timetableHeaderSubtitleInput");
+  const tbFontFamily = $("tbSelectFontFamily");
+  if (tbFontFamily) {
+    tbFontFamily.addEventListener("change", () => {
+      setFontFamilySelected(tbFontFamily.value);
+    });
+  }
 
-      if (titleInput || subtitleInput) {
-        if (!ACADEMIC.timetableHeader) ACADEMIC.timetableHeader = {};
-        const titleVal = titleInput ? titleInput.value.trim() : "";
-        const subtitleVal = subtitleInput ? subtitleInput.value.trim() : "";
-        const headerKey = `${activeTimetableSemester}_${targetDivision}`;
+  const tbFontSize = $("tbSelectFontSize");
+  if (tbFontSize) {
+    tbFontSize.addEventListener("change", () => {
+      setFontSizeSelected(tbFontSize.value);
+    });
+  }
 
-        const headerObj = {
-          title: titleVal || "BHARATESH COLLEGE OF COMPUTER APPLICATIONS 2026",
-          subtitle: subtitleVal
-        };
-        ACADEMIC.timetableHeader[headerKey] = headerObj;
-        ACADEMIC.timetableHeader[targetDivision] = headerObj;
+  const btnAddRow = $("btnAddTimeRow");
+  if (btnAddRow) btnAddRow.addEventListener("click", addTimetableSlot);
+
+  // Time slot row actions (delete & edit)
+  document.querySelectorAll(".btn-delete-row").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const sIdx = Number(btn.dataset.slotIdx);
+      deleteTimetableSlot(sIdx);
+    });
+  });
+
+  document.querySelectorAll(".timetable-time-inline-edit").forEach(input => {
+    input.addEventListener("input", () => {
+      const sIdx = Number(input.dataset.slotIdx);
+      if (currentTimetableDoc && currentTimetableDoc.timeSlots[sIdx]) {
+        currentTimetableDoc.timeSlots[sIdx].label = input.value;
       }
+    });
+  });
 
-      const breakTimeInp = $("breakTimeInput");
-      const breakLabelInp = $("breakLabelInput");
-      const lunchTimeInp = $("lunchTimeInput");
-      const lunchLabelInp = $("lunchLabelInput");
+  // Cell inputs and clicks
+  document.querySelectorAll(".timetable-matrix-table td.grid-cell").forEach(td => {
+    td.addEventListener("click", (e) => {
+      // If clicking inside input, do not stop cell selection
+      const dIdx = Number(td.dataset.dayIdx);
+      const sIdx = Number(td.dataset.slotIdx);
+      handleTimetableCellSelect(dIdx, sIdx, e.shiftKey, e.ctrlKey || e.metaKey);
+    });
+  });
 
-      if (breakTimeInp || breakLabelInp || lunchTimeInp || lunchLabelInp) {
-        if (!ACADEMIC.customBreakRows) ACADEMIC.customBreakRows = {};
-        ACADEMIC.customBreakRows[targetDivision] = {
-          breakTime: breakTimeInp ? breakTimeInp.value.trim() : "11:00-11:15",
-          breakLabel: breakLabelInp ? breakLabelInp.value.trim() : "Break Time",
-          lunchTime: lunchTimeInp ? lunchTimeInp.value.trim() : "1:15-2:00",
-          lunchLabel: lunchLabelInp ? lunchLabelInp.value.trim() : "Lunch Break"
-        };
+  document.querySelectorAll(".timetable-matrix-table .direct-cell-input").forEach(input => {
+    input.addEventListener("input", () => {
+      const dIdx = Number(input.dataset.dayIdx);
+      const sIdx = Number(input.dataset.slotIdx);
+      if (currentTimetableDoc) {
+        const cell = getTimetableCell(currentTimetableDoc, dIdx, sIdx);
+        if (cell) {
+          cell.subject = input.value;
+        }
       }
-
-      timeInputs.forEach(timeInput => {
-        const rowIdx = timeInput.dataset.rowIdx;
-        const timeVal = timeInput.value.trim();
-        if (!timeVal) return;
-
-        days.forEach(day => {
-          const cellInput = document.querySelector(`.direct-cell-input[data-row-idx="${rowIdx}"][data-day="${day}"]`);
-          const cellVal = cellInput ? cellInput.value.trim() : "";
-          if (cellVal) {
-            ACADEMIC.timetable.push({
-              division: targetDivision,
-              day: day,
-              time: timeVal,
-              subject: currentUser.subject || "custom",
-              subjectText: cellVal,
-              faculty: currentUser.username
-            });
-          }
-        });
-      });
-
-      saveAcademicData();
-      isTimetableEditMode = false;
-      navigate("timetable");
     });
-  }
+  });
 
-  const addRowBtn = $("btnAddTimetableRow");
-  if (addRowBtn) {
-    addRowBtn.addEventListener("click", () => {
-      const tbody = document.querySelector(".college-timetable-table tbody");
-      if (!tbody) return;
-      const currentRows = tbody.querySelectorAll("tr");
-      const newRowIdx = currentRows.length;
-      const days = [
-        { short: "Mon", full: "Monday" },
-        { short: "Tue", full: "Tuesday" },
-        { short: "Wed", full: "Wednesday" },
-        { short: "Thu", full: "Thursday" },
-        { short: "Fri", full: "Friday" },
-        { short: "Sat", full: "Saturday" }
-      ];
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="time-col">
-          <textarea class="direct-time-input" data-row-idx="${newRowIdx}" rows="1" placeholder="e.g. 5:00-6:00"></textarea>
-        </td>
-        ${days.map(d => `
-          <td>
-            <textarea class="direct-cell-input" data-row-idx="${newRowIdx}" data-day="${d.full}" rows="1" placeholder="-"></textarea>
-          </td>
-        `).join("")}
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  if (!window.timetableSyncInitialized) {
-    window.timetableSyncInitialized = true;
-    window.addEventListener("academicDataUpdated", () => {
-      updateNoticeBadges();
-      updateNotesBadges();
-      render();
-    });
-  }
+  updateTimetableSelectionUI();
 }
 
 function subjectCards(type) {
@@ -8365,220 +8944,164 @@ const pages = {
     const isFaculty = currentUser.role === "faculty";
     const isStudent = currentUser.role === "student";
     const isAdmin = currentUser.role === "admin";
+    const canEditRole = isAdmin || isFaculty;
     const allFacultySubjects = isFaculty ? getFacultyEligibleSubjects(currentUser) : [];
 
+    let displaySemester = activeTimetableSemester;
+    let displayDivision = activeTimetableDivision;
+
     if (isStudent) {
-      if (currentUser.division) activeTimetableDivision = currentUser.division;
-      if (currentUser.semester) activeTimetableSemester = currentUser.semester;
-    } else if (isFaculty && currentUser.subject) {
-      if (!activeTimetableSemester) activeTimetableSemester = getSemesterForSubject(currentUser.subject);
+      displaySemester = currentUser.semester || "1st Semester";
+      displayDivision = currentUser.division || "Div A";
+      activeTimetableSemester = displaySemester;
+      activeTimetableDivision = displayDivision;
+    } else if (isFaculty) {
+      if (!displaySemester) {
+        displaySemester = currentUser.subject ? getSemesterForSubject(currentUser.subject) : "1st Semester";
+        activeTimetableSemester = displaySemester;
+      }
+      if (!displayDivision) {
+        displayDivision = (currentUser.subjectDivisions && currentUser.subjectDivisions[0]) || (currentUser.division || "Div A");
+        activeTimetableDivision = displayDivision;
+      }
+    } else { // admin
+      if (!displaySemester) {
+        displaySemester = "1st Semester";
+        activeTimetableSemester = displaySemester;
+      }
+      if (!displayDivision) {
+        displayDivision = "Div A";
+        activeTimetableDivision = displayDivision;
+      }
     }
 
-    const displayDivision = activeTimetableDivision || (isStudent ? (currentUser.division || "Div A") : "");
-    const displaySemester = activeTimetableSemester || (isStudent ? (currentUser.semester || "1st Semester") : (isFaculty && currentUser.subject ? getSemesterForSubject(currentUser.subject) : ""));
+    if (!currentTimetableDoc || currentTimetableDoc.semester !== displaySemester || currentTimetableDoc.division !== displayDivision) {
+      currentTimetableDoc = createDefaultTimetableDoc(displaySemester, displayDivision);
+    }
 
-    const rows = (displayDivision && displaySemester) ? getTimetableEntries(displayDivision, displaySemester) : [];
-    const canEdit = isFaculty && isTimetableEditMode;
+    const doc = currentTimetableDoc;
+    const canEdit = canEditRole && isTimetableEditMode;
 
-    const DAYS_HEADER = [
-      { short: "Mon", full: "Monday" },
-      { short: "Tue", full: "Tuesday" },
-      { short: "Wed", full: "Wednesday" },
-      { short: "Thu", full: "Thursday" },
-      { short: "Fri", full: "Friday" },
-      { short: "Sat", full: "Saturday" }
-    ];
-
-    const BASE_TIMES = [
-      "9:00-10:00",
-      "10:00-11:00",
-      "11:00-11:15",
-      "11:15-12:15",
-      "12:15-1:15",
-      "1:15-2:00",
-      "2:00-3:00",
-      "3:00-4:00",
-      "4:00-5:00"
-    ];
-
-    const combinedTimes = Array.from(new Set([...BASE_TIMES, ...rows.map(r => r.time)]));
-    const rowTimings = sortTimingsSerialwise(combinedTimes);
-
-    const defaultHeaderTitle = "BHARATESH COLLEGE OF COMPUTER APPLICATIONS 2026";
-    const headerKey = `${displaySemester}_${displayDivision}`;
-    const storedHeader = (ACADEMIC.timetableHeader && (ACADEMIC.timetableHeader[headerKey] || ACADEMIC.timetableHeader[displayDivision])) || {};
-    const headerTitle = storedHeader.title || defaultHeaderTitle;
-    const headerSubtitle = (typeof storedHeader.subtitle === "string") ? storedHeader.subtitle : "";
-
-    const renderMatrixTable = () => {
-      if (!displaySemester || !displayDivision) {
-        return `
-          <div class="empty-state" style="padding:45px 20px; text-align:center; background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; margin-top:10px;">
-            <div style="font-size:36px; margin-bottom:10px;">🗓️</div>
-            <h3 style="margin:0 0 6px 0; color:#1e293b; font-size:16px; font-weight:700;">Please Select Semester & Division</h3>
-            <p style="margin:0; color:#64748b; font-size:13px;">Choose a Semester (1st to 6th) and Division (Div A / Div B) above to view or manage the timetable.</p>
-          </div>
-        `;
-      }
-
-      return `
-        <div class="college-timetable-container">
-          <div class="college-header-banner" style="text-align:center; margin-bottom: 8px;">
-            ${canEdit ? `
-              <input id="timetableHeaderTitleInput" type="text" class="direct-cell-input" value="${escapeHtml(headerTitle || '')}" placeholder="College Title (e.g. BHARATESH COLLEGE OF COMPUTER APPLICATIONS 2026)" style="text-align:center; font-weight:800; font-size:17px; color:#1e293b; border:1px solid #c084fc; background:#ffffff; padding:4px 8px; border-radius:4px; margin-bottom:4px; width:100%; box-sizing:border-box;">
-              <input id="timetableHeaderSubtitleInput" type="text" class="direct-cell-input" value="${escapeHtml(headerSubtitle || '')}" placeholder="Enter Timetable Subtitle here..." style="text-align:center; font-weight:700; font-size:13.5px; color:#475569; border:1px solid #c084fc; background:#ffffff; padding:3px 8px; border-radius:4px; width:100%; box-sizing:border-box;">
-            ` : `
-              <h2 style="text-align:center; margin:0 0 3px 0; font-size:17px; font-weight:800; color:#1e293b;">${escapeHtml(headerTitle)}</h2>
-              ${headerSubtitle ? `
-                <div class="timetable-subtitle" style="text-align:center; font-size:13.5px; font-weight:700; color:#475569;">
-                  ${escapeHtml(headerSubtitle)}
-                </div>
-              ` : ''}
-            `}
-          </div>
-
-          ${canEdit ? `
-            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-              <button id="btnAddTimetableRow" type="button" class="btn-assign-status" style="height:32px; padding:0 12px; font-size:11.5px; font-weight:700; border:1px solid #cbd5e1; background:#ffffff; cursor:pointer; border-radius:6px;">
-                <span>+ Add Row</span>
-              </button>
-            </div>
-          ` : ''}
-
-          <div class="timetable-matrix-wrap">
-            <table class="college-timetable-table">
-              <thead>
-                <tr>
-                  <th class="time-header" style="text-align:center;">Timing</th>
-                  ${DAYS_HEADER.map(d => `<th class="day-header">${d.short}</th>`).join("")}
-                </tr>
-              </thead>
-              <tbody>
-                ${rowTimings.map((timeVal, rowIdx) => {
-        const customBreaks = (ACADEMIC.customBreakRows && ACADEMIC.customBreakRows[displayDivision]) || {};
-        const breakTimeVal = customBreaks.breakTime || "11:00-11:15";
-        const breakLabelVal = customBreaks.breakLabel || "Break Time";
-        const lunchTimeVal = customBreaks.lunchTime || "1:15-2:00";
-        const lunchLabelVal = customBreaks.lunchLabel || "Lunch Break";
-
-        const normT = (timeVal || "").replace(/\s+/g, "").toLowerCase();
-        const isBreak = normT.includes("11:00-11:15") || normT.includes("11-11:15") || normT === "11-11:15" || normT === "11:00-11:15" || normT === breakTimeVal.replace(/\s+/g, "").toLowerCase();
-        const isLunch = normT.includes("1:15-2:00") || normT === "1:15-2:00" || normT === lunchTimeVal.replace(/\s+/g, "").toLowerCase();
-
-        if (isBreak) {
-          return `
-                      <tr class="break-row">
-                        <td class="time-col" style="text-align:center; vertical-align:middle; padding:2px 1px;">
-                          ${canEdit ? `
-                            <textarea id="breakTimeInput" class="direct-time-input" data-row-idx="${rowIdx}" rows="1" style="text-align:center; padding:0; resize:none; border:none; background:transparent;">${escapeHtml(breakTimeVal)}</textarea>
-                          ` : `
-                            <span class="matrix-time-chip">${escapeHtml(breakTimeVal)}</span>
-                          `}
-                        </td>
-                        <td colspan="6" style="text-align:center; vertical-align:middle; font-weight:700; letter-spacing:0.5px; background:#f3e8ff; color:#581c87; text-transform:uppercase; padding:2px 1px;">
-                          ${canEdit ? `
-                            <input id="breakLabelInput" type="text" class="direct-cell-input" value="${escapeHtml(breakLabelVal)}" style="text-align:center; font-weight:700; background:#f3e8ff; border:1px solid #c084fc; color:#581c87; text-transform:uppercase; font-size:11px; padding:2px 4px; width:100%; border-radius:4px;" placeholder="Break Time label...">
-                          ` : `
-                            ${escapeHtml(breakLabelVal)}
-                          `}
-                        </td>
-                      </tr>
-                    `;
-        }
-
-        if (isLunch) {
-          return `
-                      <tr class="lunch-row">
-                        <td class="time-col" style="text-align:center; vertical-align:middle; padding:2px 1px;">
-                          ${canEdit ? `
-                            <textarea id="lunchTimeInput" class="direct-time-input" data-row-idx="${rowIdx}" rows="1" style="text-align:center; padding:0; resize:none; border:none; background:transparent;">${escapeHtml(lunchTimeVal)}</textarea>
-                          ` : `
-                            <span class="matrix-time-chip">${escapeHtml(lunchTimeVal)}</span>
-                          `}
-                        </td>
-                        <td colspan="6" style="text-align:center; vertical-align:middle; font-weight:700; letter-spacing:0.5px; background:#f3e8ff; color:#581c87; text-transform:uppercase; padding:2px 1px;">
-                          ${canEdit ? `
-                            <input id="lunchLabelInput" type="text" class="direct-cell-input" value="${escapeHtml(lunchLabelVal)}" style="text-align:center; font-weight:700; background:#f3e8ff; border:1px solid #c084fc; color:#581c87; text-transform:uppercase; font-size:11px; padding:2px 4px; width:100%; border-radius:4px;" placeholder="Lunch Break label...">
-                          ` : `
-                            ${escapeHtml(lunchLabelVal)}
-                          `}
-                        </td>
-                      </tr>
-                    `;
-        }
-
-        return `
-                    <tr>
-                      <td class="time-col" style="text-align:center; vertical-align:middle;">
-                        ${canEdit ? `
-                          <textarea class="direct-time-input"
-                                    data-row-idx="${rowIdx}"
-                                    rows="1"
-                                    style="text-align:center;"
-                                    placeholder="Timing...">${escapeHtml(timeVal || '')}</textarea>
-                        ` : `
-                          <span class="matrix-time-chip">${escapeHtml(timeVal || '-')}</span>
-                        `}
-                      </td>
-                      ${DAYS_HEADER.map(d => {
-          const cellEntries = rows.filter(e => (e.time || "").replace(/\s+/g, "").toLowerCase() === (timeVal || "").replace(/\s+/g, "").toLowerCase() && e.day === d.full);
-          const ownEntries = cellEntries.filter(e => isFacultyOwnEntry(e, currentUser));
-          const otherEntries = cellEntries.filter(e => !isFacultyOwnEntry(e, currentUser) && (e.subjectText || e.subject));
-
-          const masterText = Array.from(new Set(cellEntries.map(e => e.subjectText || (subjectById(e.subject) ? subjectById(e.subject).short || subjectById(e.subject).name : e.subject)).filter(Boolean))).join("\n");
-
-          return `
-                          <td>
-                            ${canEdit ? `
-                              ${otherEntries.length > 0 ? `
-                                <div class="matrix-occupied-chip" title="Timing booked by another faculty: ${escapeHtml(otherEntries[0].subjectText || '')}">
-                                  Occupied
-                                </div>
-                              ` : `
-                                <textarea class="direct-cell-input"
-                                          data-row-idx="${rowIdx}"
-                                          data-day="${d.full}"
-                                          rows="1"
-                                          placeholder="-">${escapeHtml(ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : '')}</textarea>
-                              `}
-                            ` : `
-                              <span class="matrix-subject-chip">${escapeHtml((isFaculty ? (ownEntries.length ? (ownEntries[0].subjectText || (subjectById(ownEntries[0].subject) ? subjectById(ownEntries[0].subject).short || subjectById(ownEntries[0].subject).name : ownEntries[0].subject)) : '-') : masterText) || '-')}</span>
-                            `}
-                          </td>
-                        `;
-        }).join("")}
-                    </tr>
-                  `;
-      }).join("")}
-              </tbody>
-            </table>
-          </div>
-
-          ${canEdit ? `
-            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-top:20px; gap:10px; text-align:center;">
-              <div style="display:flex; gap:10px; align-items:center;">
-                <button id="btnSaveTimetable" class="primary-btn" type="button" style="height:36px; padding:0 22px; font-size:13px; font-weight:700;">
-                  <span>💾 Save Timetable</span>
-                </button>
-              </div>
-              <p id="timetableSaveMsg" class="message" style="margin:0; font-weight:600; text-align:center;"></p>
-            </div>
-          ` : ''}
+    if (isFaculty && allFacultySubjects.length === 0) {
+      return `<section class="panel">
+        <div class="empty-state" style="padding:45px 20px; text-align:center; background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; margin-top:14px;">
+          <div style="font-size:36px; margin-bottom:10px;">📋</div>
+          <h3 style="margin:0 0 6px 0; color:#1e293b; font-size:16px; font-weight:700;">No Assigned Subjects</h3>
+          <p style="margin:0; color:#64748b; font-size:13px;">You have not been assigned any teaching subjects yet. Please contact the administrator to configure your subject assignments.</p>
         </div>
-      `;
-    };
+      </section>`;
+    }
+
+    if (timetableActiveViewMode === "faculty-subject") {
+      const groupedBySubject = {};
+      (facultySubjectViewData || []).forEach(item => {
+        if (!groupedBySubject[item.subject]) {
+          groupedBySubject[item.subject] = {
+            subject: item.subject,
+            semester: item.semester,
+            slots: []
+          };
+        }
+        groupedBySubject[item.subject].slots.push(item);
+      });
+
+      const subjectKeys = Object.keys(groupedBySubject);
+
+      return `<section class="panel">
+        <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="margin:0; white-space:nowrap; display:flex; align-items:center; gap:8px;">
+              Faculty Subject Schedule
+              <span class="badge" style="background:#eaf2ff; color:#1459d9; font-size:11px;">Aggregated</span>
+            </h3>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div style="display:inline-flex; background:#f1f5f9; padding:2px; border-radius:8px; gap:2px;">
+              <button type="button" id="btnSwitchGridView" class="timetable-btn" style="height:28px; padding:0 12px; font-size:11.5px;">📊 Grid View</button>
+              <button type="button" id="btnSwitchFacultyView" class="timetable-btn timetable-btn-primary" style="height:28px; padding:0 12px; font-size:11.5px;">📋 Faculty Subject View</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          ${subjectKeys.length === 0 ? `
+            <div class="empty-state" style="padding:45px 20px; text-align:center; background:#ffffff; border-radius:16px; border:1px solid #e2e8f0;">
+              <div style="font-size:36px; margin-bottom:10px;">📋</div>
+              <h3 style="margin:0 0 6px 0; color:#1e293b; font-size:16px; font-weight:700;">No Scheduled Lectures Found</h3>
+              <p style="margin:0; color:#64748b; font-size:13px;">No timetable slots have been scheduled for your assigned subjects yet across divisions.</p>
+            </div>
+          ` : `
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+              ${subjectKeys.map(subKey => {
+                const group = groupedBySubject[subKey];
+                const allDivs = Array.from(new Set(group.slots.flatMap(s => s.divisions || []))).sort();
+                const divBadgeText = allDivs.join(" + ");
+
+                return `
+                  <div class="card" style="border:1px solid #cbd8f0; border-radius:12px; padding:16px; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                      <div>
+                        <h4 style="margin:0 0 4px 0; font-size:16px; font-weight:800; color:#0A2540;">${escapeHtml(group.subject)}</h4>
+                        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; font-weight:700;">${escapeHtml(group.semester || 'All Semesters')}</span>
+                      </div>
+                      <span class="division-badge-pill" title="Taught across: ${escapeHtml(divBadgeText)}">
+                        ${escapeHtml(divBadgeText || 'All Divisions')}
+                      </span>
+                    </div>
+
+                    <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px;">
+                      Weekly Lecture Timings (${group.slots.length} ${group.slots.length === 1 ? 'Slot' : 'Slots'}):
+                    </div>
+
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                      <thead>
+                        <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; text-align:left;">
+                          <th style="padding:6px 8px; color:#475569;">Day</th>
+                          <th style="padding:6px 8px; color:#475569;">Timing</th>
+                          <th style="padding:6px 8px; color:#475569;">Divisions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${group.slots.map(slot => `
+                          <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:6px 8px; font-weight:700; color:#0A2540;">${escapeHtml(slot.day)}</td>
+                            <td style="padding:6px 8px; color:#334155;">${escapeHtml(slot.time)}</td>
+                            <td style="padding:6px 8px;">
+                              <span class="division-badge-pill" style="font-size:10.5px; padding:2px 8px;">
+                                ${escapeHtml(slot.divisionLabel || (slot.divisions ? slot.divisions.join(" + ") : ''))}
+                              </span>
+                            </td>
+                          </tr>
+                        `).join("")}
+                      </tbody>
+                    </table>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `}
+        </div>
+      </section>`;
+    }
 
     return `<section class="panel">
       <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <h3 style="margin:0; white-space:nowrap;">Daily Timetable</h3>
+          <h3 style="margin:0; white-space:nowrap; display:flex; align-items:center; gap:8px;">
+            Daily Timetable
+            <span class="badge" style="background:#eaf2ff; color:#1459d9; font-size:11px;">Dynamic Grid</span>
+          </h3>
         </div>
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; white-space:nowrap;">
-          ${!isStudent ? `
+          ${canEditRole ? `
+            <div style="display:inline-flex; background:#f1f5f9; padding:2px; border-radius:8px; gap:2px;">
+              <button type="button" id="btnSwitchGridView" class="timetable-btn timetable-btn-primary" style="height:28px; padding:0 12px; font-size:11.5px;">📊 Grid View</button>
+              <button type="button" id="btnSwitchFacultyView" class="timetable-btn" style="height:28px; padding:0 12px; font-size:11.5px;">📋 Faculty Subject View</button>
+            </div>
+
             <div style="display:flex; align-items:center; gap:6px;">
               <label style="font-size:12px; font-weight:700; color:#475569;">Semester:</label>
               <select id="timetableSemesterSelect" class="filter-select" style="padding:4px 10px; font-size:12px; font-weight:700; border-radius:8px;">
-                <option value="" ${!displaySemester ? "selected" : ""}>-- Select Semester --</option>
                 <option value="1st Semester" ${displaySemester === "1st Semester" ? "selected" : ""}>1st Semester</option>
                 <option value="2nd Semester" ${displaySemester === "2nd Semester" ? "selected" : ""}>2nd Semester</option>
                 <option value="3rd Semester" ${displaySemester === "3rd Semester" ? "selected" : ""}>3rd Semester</option>
@@ -8591,44 +9114,167 @@ const pages = {
             <div style="display:flex; align-items:center; gap:6px;">
               <label style="font-size:12px; font-weight:700; color:#475569;">Division:</label>
               <select id="timetableDivisionSelect" class="filter-select" style="padding:4px 10px; font-size:12px; font-weight:700; border-radius:8px;">
-                <option value="" ${!displayDivision ? "selected" : ""}>-- Select Division --</option>
                 ${renderDivisionSelectOptions(displayDivision)}
               </select>
             </div>
           ` : `
-            <span class="badge" style="background:#f1f5f9; color:#334155; padding:6px 14px; font-size:12px; font-weight:700; border-radius:20px;">${displayDivision} • ${currentUser.semester || '3rd Semester'}</span>
+            <span class="badge" style="background:#f1f5f9; color:#0A2540; padding:6px 14px; font-size:12px; font-weight:700; border-radius:20px;">
+              ${escapeHtml(displayDivision)} • ${escapeHtml(displaySemester)}
+            </span>
           `}
 
-          ${!isAdmin ? `
-            <button id="btnDownloadTimetable" type="button" class="btn-download-timetable" title="Download Timetable PDF">
-              <span>📥 Download Timetable (PDF)</span>
-            </button>
-          ` : ''}
+          <button id="btnDownloadTimetable" type="button" class="btn-download-timetable" title="Download Timetable PDF">
+            <span>📥 Download Timetable (PDF)</span>
+          </button>
 
-          ${isFaculty ? `
+          ${canEditRole ? `
             ${!isTimetableEditMode ? `
               <button id="btnEditTimetableMode" type="button" class="primary-btn timetable-edit-btn" style="width:auto !important; min-width:60px; height:30px; padding:0 12px; font-size:12px; font-weight:700; white-space:nowrap; margin-top:0;">
-                <span>Edit</span>
+                <span>✏️ Edit</span>
               </button>
             ` : `
               <button id="btnCancelTimetableEdit" type="button" class="primary-btn timetable-edit-btn" style="width:auto !important; min-width:65px; height:30px; padding:0 12px; font-size:12px; font-weight:700; background:#64748b; white-space:nowrap; margin-top:0;">
                 <span>Cancel</span>
               </button>
+              <button id="btnSaveTimetable" type="button" class="primary-btn timetable-edit-btn" style="width:auto !important; min-width:65px; height:30px; padding:0 12px; font-size:12px; font-weight:700; white-space:nowrap; margin-top:0;">
+                <span>💾 Save</span>
+              </button>
             `}
           ` : ''}
         </div>
       </div>
+
       ${isFaculty && allFacultySubjects.length > 1 ? `
         <div class="faculty-timetable-class-pills" style="display:flex; align-items:center; gap:8px; margin: 12px 0 16px 0; flex-wrap:wrap; background:#f8fafc; padding:10px 14px; border-radius:10px; border:1px solid #e2e8f0;">
           <span style="font-size:12px; font-weight:700; color:#64748b;">Quick Semester Switch:</span>
           ${allFacultySubjects.map(s => {
             const sSem = s.semester || getSemesterForSubject(s.id);
             const isCurrent = (displaySemester === sSem);
-            return `<button type="button" onclick="activeTimetableSemester='${escapeHtml(sSem)}'; navigate('timetable');" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#4f46e5' : '#cbd5e1'}; background:${isCurrent ? '#4f46e5' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${escapeHtml(s.icon || '📚')} ${escapeHtml(s.short || s.name)} (${escapeHtml(sSem)})</button>`;
+            return `<button type="button" onclick="activeTimetableSemester='${escapeHtml(sSem)}'; navigate('timetable');" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#1459d9' : '#cbd5e1'}; background:${isCurrent ? '#1459d9' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${escapeHtml(s.icon || '📚')} ${escapeHtml(s.short || s.name)} (${escapeHtml(sSem)})</button>`;
           }).join("")}
         </div>
       ` : ''}
-      ${renderMatrixTable()}
+
+      <div class="timetable-builder-container" style="margin-top:14px;">
+        ${canEdit ? `
+          <div class="timetable-toolbar-wrapper">
+            <!-- 1. Merge Cells -->
+            <div class="timetable-tb-group">
+              <button type="button" id="tbBtnMerge" class="timetable-btn" title="Merge Selected Cells">⊞ Merge Cells</button>
+            </div>
+
+            <!-- 2. Bold -->
+            <div class="timetable-tb-group">
+              <button type="button" id="tbBtnBold" class="timetable-btn" title="Toggle Bold"><b>B</b></button>
+            </div>
+
+            <!-- 3. Font Family (allowlist) -->
+            <div class="timetable-tb-group">
+              <select id="tbSelectFontFamily" class="timetable-select" title="Font Family">
+                <option value="Arial">Arial</option>
+                <option value="Inter" selected>Inter</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+
+            <!-- 4. Font Size (allowlist) -->
+            <div class="timetable-tb-group">
+              <select id="tbSelectFontSize" class="timetable-select" title="Font Size">
+                <option value="11px">11px</option>
+                <option value="12px">12px</option>
+                <option value="13px" selected>13px</option>
+                <option value="14px">14px</option>
+                <option value="16px">16px</option>
+                <option value="18px">18px</option>
+              </select>
+            </div>
+
+            <!-- 5. Dynamic Time Slot Structural Action -->
+            <div class="timetable-tb-group" style="margin-left:auto;">
+              <button type="button" id="btnAddTimeRow" class="timetable-btn timetable-btn-primary" title="Add Time Slot Row">+ Add Time Slot</button>
+            </div>
+
+            <datalist id="eligibleSubjectsList">
+              ${(isFaculty ? allFacultySubjects : Object.keys(SUBJECT_SEMESTER_CATALOGUE)).map(s => {
+                const sName = typeof s === 'object' ? (s.name || s.id) : s;
+                return `<option value="${escapeHtml(sName)}">`;
+              }).join("")}
+            </datalist>
+          </div>
+        ` : ''}
+
+        <div class="timetable-matrix-wrap">
+          <table class="timetable-matrix-table">
+            <thead>
+              <tr>
+                <th class="time-col-header" style="width:130px; text-align:center;">Timing</th>
+                ${(doc.days || []).map(d => {
+                  return `
+                    <th style="min-width:130px; text-align:center;">
+                      ${escapeHtml(d.label)}
+                    </th>
+                  `;
+                }).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${(doc.timeSlots || []).map(slot => {
+                return `
+                  <tr>
+                    <td class="time-col" style="text-align:center; vertical-align:middle;">
+                      ${canEdit ? `
+                        <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+                          <input type="text" class="timetable-time-inline-edit" data-slot-idx="${slot.slotIndex}" value="${escapeHtml(slot.label)}">
+                          <button type="button" class="btn-delete-row" data-slot-idx="${slot.slotIndex}" title="Delete Time Slot Row">✕</button>
+                        </div>
+                      ` : `
+                        <span class="matrix-time-chip">${escapeHtml(slot.label)}</span>
+                      `}
+                    </td>
+                    ${(doc.days || []).map(d => {
+                      const cell = getTimetableCell(doc, d.dayIndex, slot.slotIndex);
+                      if (cell && cell.mergedInto) {
+                        return ''; // Spanned by origin
+                      }
+                      const isSelected = selectedTimetableCells.some(c => c.dayIndex === d.dayIndex && c.slotIndex === slot.slotIndex);
+                      const rSpan = (cell && cell.rowSpan) || 1;
+                      const cSpan = (cell && cell.colSpan) || 1;
+                      const isBold = cell && cell.bold;
+                      const fFam = (cell && cell.fontFamily) || "Inter";
+                      const fSz = (cell && cell.fontSize) || "13px";
+                      const tAl = (cell && cell.textAlign) || "center";
+                      const subText = (cell && cell.subject) || "";
+
+                      if (canEdit) {
+                        return `
+                          <td rowspan="${rSpan}" colspan="${cSpan}" class="grid-cell ${isSelected ? 'selected' : ''}" data-day-idx="${d.dayIndex}" data-slot-idx="${slot.slotIndex}" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)}; cursor:pointer; vertical-align:middle;">
+                            <input type="text" list="eligibleSubjectsList" class="direct-cell-input" data-day-idx="${d.dayIndex}" data-slot-idx="${slot.slotIndex}" value="${escapeHtml(subText)}" placeholder="Subject..." style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)}; width:100%; border:none; background:transparent; outline:none;">
+                          </td>
+                        `;
+                      } else {
+                        return `
+                          <td rowspan="${rSpan}" colspan="${cSpan}" class="grid-cell" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)}; padding:8px 6px; vertical-align:middle;">
+                            ${subText ? `<span class="matrix-subject-chip" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)};">${escapeHtml(subText)}</span>` : '<span style="color:#94a3b8;">-</span>'}
+                          </td>
+                        `;
+                      }
+                    }).join("")}
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        ${canEdit ? `
+          <div class="timetable-grid-footer" style="display:flex; justify-content:center; align-items:center; flex-direction:column; gap:8px; margin-top:16px;">
+            <p id="timetableSaveMsg" class="message" style="margin:0;"></p>
+          </div>
+        ` : ''}
+      </div>
     </section>`;
   },
   notices() {

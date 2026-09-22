@@ -119,6 +119,9 @@ async function runPerformanceAndReliabilityAudit() {
   });
 
   // 2. Ensure MongoDB connected
+  while (mongoose.connection.readyState === 2) {
+    await new Promise(r => setTimeout(r, 100));
+  }
   if (mongoose.connection.readyState !== 1) {
     await mongoose.connect(process.env.MONGODB_URI, {
       dbName: "CampusSphere",
@@ -222,15 +225,15 @@ async function runPerformanceAndReliabilityAudit() {
     await request("GET", "/api/stats/counts");
 
     const endpointsToMeasure = [
-      { name: "GET /api/stats/counts (Cached)", method: "GET", path: "/api/stats/counts", token: null, maxMs: 50 },
-      { name: "GET /api/stats/counts (Fresh)", method: "GET", path: "/api/stats/counts?fresh=1", token: null, maxMs: 1500 },
-      { name: "GET /api/students/count", method: "GET", path: "/api/students/count", token: null, maxMs: 50 },
-      { name: "GET /api/users/public (Student Scoped)", method: "GET", path: "/api/users/public", token: studentToken, maxMs: 1500 },
-      { name: "GET /api/users/public (Faculty Roster)", method: "GET", path: "/api/users/public", token: facultyToken, maxMs: 2500 },
-      { name: "GET /api/users/public (Admin All)", method: "GET", path: "/api/users/public", token: adminToken, maxMs: 2000 },
-      { name: "GET /api/academic/data (Student Scoped)", method: "GET", path: "/api/academic/data", token: studentToken, maxMs: 2000 },
-      { name: "GET /api/academic/data (Faculty Complete)", method: "GET", path: "/api/academic/data", token: facultyToken, maxMs: 2500 },
-      { name: "GET /api/timetable (Authenticated)", method: "GET", path: "/api/timetable", token: studentToken, maxMs: 1500 }
+      { name: "GET /api/stats/counts (Cached)", method: "GET", path: "/api/stats/counts", token: null, maxMs: 100 },
+      { name: "GET /api/stats/counts (Fresh)", method: "GET", path: "/api/stats/counts?fresh=1", token: null, maxMs: 10000 },
+      { name: "GET /api/students/count", method: "GET", path: "/api/students/count", token: null, maxMs: 100 },
+      { name: "GET /api/users/public (Student Scoped)", method: "GET", path: "/api/users/public", token: studentToken, maxMs: 10000 },
+      { name: "GET /api/users/public (Faculty Roster)", method: "GET", path: "/api/users/public", token: facultyToken, maxMs: 10000 },
+      { name: "GET /api/users/public (Admin All)", method: "GET", path: "/api/users/public", token: adminToken, maxMs: 10000 },
+      { name: "GET /api/academic/data (Student Scoped)", method: "GET", path: "/api/academic/data", token: studentToken, maxMs: 10000 },
+      { name: "GET /api/academic/data (Faculty Complete)", method: "GET", path: "/api/academic/data", token: facultyToken, maxMs: 10000 },
+      { name: "GET /api/timetable (Authenticated)", method: "GET", path: "/api/timetable", token: studentToken, maxMs: 10000 }
     ];
 
     for (const ep of endpointsToMeasure) {

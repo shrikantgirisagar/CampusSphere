@@ -1328,18 +1328,644 @@ app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
 });
 
 
-// --- Timetable Endpoints ---
+// --- Prompt 17: Timetable Dynamic Builder & Server-Side RBAC ---
+
+const TIMETABLE_ALLOWED_FONTS = ["Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New", "Outfit", "Plus Jakarta Sans"];
+const TIMETABLE_ALLOWED_FONT_SIZES = ["11px", "12px", "13px", "14px", "16px", "18px", "20px"];
+const TIMETABLE_ALLOWED_ALIGNMENTS = ["left", "center", "right"];
+const TIMETABLE_ALLOWED_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+const SUBJECT_SEMESTER_CATALOGUE = {
+  // 1st Semester
+  "cprog": "1st Semester", "c_programming": "1st Semester", "c programming": "1st Semester",
+  "digital_electronics": "1st Semester", "digital electronics": "1st Semester",
+  "dbms": "1st Semester", "ic": "1st Semester",
+  "clab": "1st Semester", "dbmslab": "1st Semester", "oalab": "1st Semester",
+  "maths": "1st Semester", "accountancy": "1st Semester",
+  "kannada": "1st Semester", "english": "1st Semester", "hindi": "1st Semester",
+  "sub-bca101": "1st Semester", "sub-cs101": "1st Semester", "sub-cs102": "1st Semester", "sub-cs103": "1st Semester",
+  // 2nd Semester
+  "nsm": "2nd Semester", "ds": "2nd Semester", "java": "2nd Semester", "data_structures": "2nd Semester",
+  "nsmlab": "2nd Semester", "dslab": "2nd Semester", "javalab": "2nd Semester",
+  "kannada_sem2": "2nd Semester", "english_sem2": "2nd Semester", "hindi_sem2": "2nd Semester",
+  // 3rd Semester
+  "python": "3rd Semester", "python_programming": "3rd Semester", "python programming": "3rd Semester",
+  "os": "3rd Semester", "advjava": "3rd Semester",
+  "ost": "3rd Semester", "evs": "3rd Semester", "oslab": "3rd Semester",
+  "pythonlab": "3rd Semester", "advjavalab": "3rd Semester",
+  "kannada_sem3": "3rd Semester", "english_sem3": "3rd Semester", "hindi_sem3": "3rd Semester",
+  // 4th Semester
+  "cn": "4th Semester", "se": "4th Semester", "webtech": "4th Semester",
+  "cnlab": "4th Semester", "weblab": "4th Semester",
+  "kannada_sem4": "4th Semester", "english_sem4": "4th Semester", "hindi_sem4": "4th Semester",
+  // 5th Semester
+  "ai": "5th Semester", "cloud": "5th Semester", "cyber": "5th Semester",
+  "ailab": "5th Semester", "cloudlab": "5th Semester",
+  "kannada_sem5": "5th Semester", "english_sem5": "5th Semester", "hindi_sem5": "5th Semester",
+  // 6th Semester
+  "ml": "6th Semester", "iot": "6th Semester", "majorproject": "6th Semester",
+  "mllab": "6th Semester", "iotlab": "6th Semester",
+  "kannada_sem6": "6th Semester", "english_sem6": "6th Semester", "hindi_sem6": "6th Semester"
+};
+
+function getSubjectSemester(subId) {
+  if (!subId) return "";
+  const norm = String(subId).trim().toLowerCase();
+  const cleanNorm = norm.replace(/[\s_-]+/g, "");
+  if (SUBJECT_SEMESTER_CATALOGUE[norm]) return SUBJECT_SEMESTER_CATALOGUE[norm];
+  for (const [k, sem] of Object.entries(SUBJECT_SEMESTER_CATALOGUE)) {
+    const cleanK = k.replace(/[\s_-]+/g, "");
+    if (cleanNorm === cleanK || cleanNorm.includes(cleanK) || cleanK.includes(cleanNorm)) return sem;
+  }
+  if (norm.includes("sem1") || norm.includes("1st")) return "1st Semester";
+  if (norm.includes("sem2") || norm.includes("2nd")) return "2nd Semester";
+  if (norm.includes("sem3") || norm.includes("3rd")) return "3rd Semester";
+  if (norm.includes("sem4") || norm.includes("4th")) return "4th Semester";
+  if (norm.includes("sem5") || norm.includes("5th")) return "5th Semester";
+  if (norm.includes("sem6") || norm.includes("6th")) return "6th Semester";
+  return "";
+}
+
+function getFacultyAuthorizedScope(user) {
+  if (!user || user.role !== "faculty") {
+    return { isAuthorized: false, subjects: [], semesters: [], divisionsBySubject: {}, defaultDivision: "all" };
+  }
+
+  const assignedSubjects = Array.from(new Set([
+    ...(Array.isArray(user.subjects) ? user.subjects : []),
+    ...(user.subject ? [user.subject] : [])
+  ].map(s => String(s).trim()).filter(Boolean)));
+
+  const subjectDivs = {};
+  const userSubDivs = user.subjectDivisions && typeof user.subjectDivisions === "object" ? user.subjectDivisions : {};
+
+  assignedSubjects.forEach(sub => {
+    const rawDiv = userSubDivs[sub] || user.division || "all";
+    subjectDivs[sub] = rawDiv;
+  });
+
+  const authorizedSemesters = new Set();
+  if (user.semester) authorizedSemesters.add(user.semester);
+  assignedSubjects.forEach(sub => {
+    const sem = getSubjectSemester(sub);
+    if (sem) authorizedSemesters.add(sem);
+  });
+
+  return {
+    isAuthorized: true,
+    subjects: assignedSubjects,
+    semesters: Array.from(authorizedSemesters),
+    divisionsBySubject: subjectDivs,
+    defaultDivision: user.division || "all"
+  };
+}
+
+const CANONICAL_SUBJECT_MAP = {
+  cprog: ["cprog", "c programming", "c_programming", "c prog"],
+  dbms: ["dbms", "database management systems"],
+  ic: ["ic", "indian constitution"],
+  clab: ["clab", "c lab"],
+  dbmslab: ["dbmslab", "dbms lab"],
+  oalab: ["oalab", "oa lab", "office automation lab"],
+  maths: ["maths", "mathematics"],
+  accountancy: ["accountancy", "acc"],
+  kannada: ["kannada"],
+  english: ["english"],
+  hindi: ["hindi"],
+  nsm: ["nsm", "numerical & statistical methods", "numerical and statistical methods"],
+  ds: ["ds", "data structure", "data structures"],
+  java: ["java", "core java"],
+  nsmlab: ["nsmlab", "nsm lab"],
+  dslab: ["dslab", "ds lab"],
+  javalab: ["javalab", "java lab"],
+  python: ["python", "python programming"],
+  os: ["os", "operating system", "operating systems"],
+  advjava: ["advjava", "advance java", "advanced java", "adv java", "adv.java"],
+  ost: ["ost", "open source tool", "open source tools"],
+  evs: ["evs", "environmental studies"],
+  oslab: ["oslab", "os lab"],
+  pythonlab: ["pythonlab", "python lab"],
+  advjavalab: ["advjavalab", "advance java lab", "adv java lab", "adv.java lab"],
+  cn: ["cn", "computer networks", "computer network"],
+  se: ["se", "software engineering"],
+  webtech: ["webtech", "web technology", "web technologies"],
+  cnlab: ["cnlab", "cn lab"],
+  weblab: ["weblab", "web lab"],
+  ai: ["ai", "artificial intelligence"],
+  cloud: ["cloud", "cloud computing"],
+  cyber: ["cyber", "cyber security"],
+  ailab: ["ailab", "ai lab"],
+  cloudlab: ["cloudlab", "cloud lab"],
+  ml: ["ml", "machine learning"],
+  iot: ["iot", "internet of things"],
+  majorproject: ["majorproject", "major project", "project"],
+  mllab: ["mllab", "ml lab"],
+  iotlab: ["iotlab", "iot lab"]
+};
+
+function isSameSubject(subA, subB) {
+  if (!subA || !subB) return false;
+  const sA = String(subA).trim().toLowerCase();
+  const sB = String(subB).trim().toLowerCase();
+  if (sA === sB) return true;
+  const cleanA = sA.replace(/[\s_.-]+/g, "");
+  const cleanB = sB.replace(/[\s_.-]+/g, "");
+  if (cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA)) return true;
+
+  for (const aliases of Object.values(CANONICAL_SUBJECT_MAP)) {
+    const hasA = aliases.some(a => {
+      const ca = a.replace(/[\s_.-]+/g, "");
+      return ca === cleanA || cleanA.includes(ca) || ca.includes(cleanA);
+    });
+    const hasB = aliases.some(b => {
+      const cb = b.replace(/[\s_.-]+/g, "");
+      return cb === cleanB || cleanB.includes(cb) || cb.includes(cleanB);
+    });
+    if (hasA && hasB) return true;
+  }
+  return false;
+}
+
+function isFacultyAuthorizedForTimetable(user, semester, division) {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  if (user.role !== "faculty") return false;
+
+  const scope = getFacultyAuthorizedScope(user);
+  if (!scope.subjects.length) return false;
+
+  const normTargetDiv = String(division || "").trim().toLowerCase();
+  const normTargetSem = String(semester || "").trim().toLowerCase();
+
+  return scope.subjects.some(sub => {
+    const subSem = getSubjectSemester(sub);
+    if (subSem && normTargetSem && subSem.toLowerCase() !== normTargetSem) {
+      return false;
+    }
+    const divRule = String(scope.divisionsBySubject[sub] || scope.defaultDivision || "all").toLowerCase();
+    if (divRule === "all" || divRule === "both divisions" || divRule === "all divisions") {
+      return true;
+    }
+    const cleanRule = divRule.replace(/^div\s*/i, "").trim();
+    const cleanTarget = normTargetDiv.replace(/^div\s*/i, "").trim();
+    return (divRule === normTargetDiv || cleanRule === cleanTarget);
+  });
+}
+
+function canFacultySetSubject(user, subject, semester, division) {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  if (user.role !== "faculty") return false;
+
+  const cleanSub = String(subject || "").trim();
+  if (!cleanSub) return true;
+
+  const scope = getFacultyAuthorizedScope(user);
+  return scope.subjects.some(assigned => {
+    if (!isSameSubject(assigned, cleanSub)) {
+      return false;
+    }
+    const divRule = String(scope.divisionsBySubject[assigned] || scope.defaultDivision || "all").toLowerCase();
+    if (divRule !== "all" && divRule !== "both divisions" && divRule !== "all divisions") {
+      const normDiv = String(division || "").trim().toLowerCase();
+      const cleanRule = divRule.replace(/^div\s*/i, "").trim();
+      const cleanTarget = normDiv.replace(/^div\s*/i, "").trim();
+      if (divRule !== normDiv && cleanRule !== cleanTarget) return false;
+    }
+    return true;
+  });
+}
+
+
+function validateTimetablePayload(body) {
+  const { semester, division, days, timeSlots, cells } = body || {};
+  if (!semester || typeof semester !== "string" || !semester.trim()) {
+    return { error: "Semester is required and must be a valid string." };
+  }
+  if (!division || typeof division !== "string" || !division.trim()) {
+    return { error: "Division is required and must be a valid string." };
+  }
+  if (!Array.isArray(days) || days.length === 0 || days.length > 6) {
+    return { error: "Days must be an array of up to 6 fixed day labels (Monday to Saturday)." };
+  }
+  if (!Array.isArray(timeSlots) || timeSlots.length === 0 || timeSlots.length > 25) {
+    return { error: "Time slots must be an array with 1 to 25 slot labels." };
+  }
+  if (cells !== undefined && !Array.isArray(cells)) {
+    return { error: "Cells must be an array of grid cell items." };
+  }
+
+  const cleanDays = days.map(d => stripHtmlTags(String(d || "").trim())).filter(Boolean);
+  if (cleanDays.length !== days.length) {
+    return { error: "All day column labels must be non-empty strings." };
+  }
+
+  const invalidDay = cleanDays.find(d => !TIMETABLE_ALLOWED_DAYS.includes(d));
+  if (invalidDay) {
+    return { error: `Invalid day column '${invalidDay}'. Timetable is strictly fixed to Monday through Saturday.` };
+  }
+
+  const cleanTimeSlots = timeSlots.map(t => stripHtmlTags(String(t || "").trim())).filter(Boolean);
+  if (cleanTimeSlots.length !== timeSlots.length) {
+    return { error: "All time slot row labels must be non-empty strings." };
+  }
+
+  const cleanCells = [];
+  if (Array.isArray(cells)) {
+    for (const c of cells) {
+      if (!c || typeof c !== "object") continue;
+      const dayIdx = Number(c.dayIndex);
+      const slotIdx = Number(c.slotIndex);
+      if (isNaN(dayIdx) || dayIdx < 0 || dayIdx >= cleanDays.length) {
+        return { error: `Invalid cell dayIndex: ${c.dayIndex}. Out of bounds.` };
+      }
+      if (isNaN(slotIdx) || slotIdx < 0 || slotIdx >= cleanTimeSlots.length) {
+        return { error: `Invalid cell slotIndex: ${c.slotIndex}. Out of bounds.` };
+      }
+
+      const subject = stripHtmlTags(String(c.subject || "")).trim();
+      if (subject.length > 200) {
+        return { error: "Subject text exceeds maximum allowed length of 200 characters." };
+      }
+
+      const bold = Boolean(c.bold);
+      const fontFamily = String(c.fontFamily || "Inter").trim();
+      if (!TIMETABLE_ALLOWED_FONTS.includes(fontFamily)) {
+        return { error: `Invalid fontFamily: '${fontFamily}'. Allowed: ${TIMETABLE_ALLOWED_FONTS.join(", ")}` };
+      }
+
+      const fontSize = String(c.fontSize || "14px").trim();
+      if (!TIMETABLE_ALLOWED_FONT_SIZES.includes(fontSize)) {
+        return { error: `Invalid fontSize: '${fontSize}'. Allowed: ${TIMETABLE_ALLOWED_FONT_SIZES.join(", ")}` };
+      }
+
+      const textAlign = String(c.textAlign || "center").trim().toLowerCase();
+      if (!TIMETABLE_ALLOWED_ALIGNMENTS.includes(textAlign)) {
+        return { error: `Invalid textAlign: '${textAlign}'. Allowed: ${TIMETABLE_ALLOWED_ALIGNMENTS.join(", ")}` };
+      }
+
+      const rowSpan = Math.max(1, Math.min(20, Number(c.rowSpan) || 1));
+      const colSpan = Math.max(1, Math.min(20, Number(c.colSpan) || 1));
+
+      if (dayIdx + colSpan > cleanDays.length) {
+        return { error: "Cell colSpan exceeds grid day column boundaries." };
+      }
+      if (slotIdx + rowSpan > cleanTimeSlots.length) {
+        return { error: "Cell rowSpan exceeds grid time slot row boundaries." };
+      }
+
+      let mergedInto = null;
+      if (c.mergedInto && typeof c.mergedInto === "object") {
+        const mDay = Number(c.mergedInto.dayIndex);
+        const mSlot = Number(c.mergedInto.slotIndex);
+        if (!isNaN(mDay) && !isNaN(mSlot)) {
+          mergedInto = { dayIndex: mDay, slotIndex: mSlot };
+        }
+      }
+
+      cleanCells.push({
+        dayIndex: dayIdx,
+        slotIndex: slotIdx,
+        subject,
+        bold,
+        fontFamily,
+        fontSize,
+        textAlign,
+        rowSpan,
+        colSpan,
+        mergedInto
+      });
+    }
+  }
+
+  return {
+    semester: stripHtmlTags(String(semester).trim()),
+    division: stripHtmlTags(String(division).trim()),
+    days: cleanDays,
+    timeSlots: cleanTimeSlots,
+    cells: cleanCells
+  };
+}
+
+function sanitizeTimetableForFaculty(doc, user) {
+  if (!doc) return null;
+  const sanitized = JSON.parse(JSON.stringify(doc));
+  if (Array.isArray(sanitized.cells)) {
+    sanitized.cells = sanitized.cells.map(cell => {
+      if (!cell || !cell.subject) {
+        return {
+          ...cell,
+          textAlign: "center"
+        };
+      }
+      // Keep cell subject only if assigned to this faculty member
+      if (canFacultySetSubject(user, cell.subject, sanitized.semester, sanitized.division)) {
+        return {
+          ...cell,
+          textAlign: "center"
+        };
+      }
+      // Redact subject belonging to other faculty members
+      return {
+        ...cell,
+        subject: "",
+        bold: false,
+        textAlign: "center"
+      };
+    });
+  }
+  return sanitized;
+}
 
 app.get("/api/timetable", requireAuth(), async (req, res) => {
   try {
-    const entries = await Timetable.find({}).select("-__v").limit(1000).lean();
-    res.json({ success: true, timetable: entries });
+    const { semester, division } = req.query;
+
+    // 1. Student role: strictly lock to authenticated user's semester & division (IDOR protection)
+    if (req.user.role === "student") {
+      const studentSem = req.user.semester || "1st Semester";
+      const studentDiv = req.user.division || "Div A";
+      const doc = await Timetable.findOne({ semester: studentSem, division: studentDiv }).select("-__v").lean();
+      if (!doc) {
+        return res.json({
+          success: true,
+          timetable: (semester || division) ? null : [],
+          timetableDoc: null,
+          semester: studentSem,
+          division: studentDiv
+        });
+      }
+      if (!Array.isArray(doc.days)) {
+        const legacyDocs = await Timetable.find({ semester: studentSem, division: studentDiv }).select("-__v").limit(1000).lean();
+        return res.json({
+          success: true,
+          timetable: legacyDocs,
+          timetableDoc: legacyDocs[0] || null,
+          semester: studentSem,
+          division: studentDiv
+        });
+      }
+      return res.json({
+        success: true,
+        timetable: doc,
+        timetableDoc: doc,
+        semester: studentSem,
+        division: studentDiv
+      });
+    }
+
+    // 2. Faculty role: verify scope & filter strictly to assigned subjects
+    if (req.user.role === "faculty") {
+      const scope = getFacultyAuthorizedScope(req.user);
+      if (!scope.subjects || !scope.subjects.length) {
+        return res.json({
+          success: true,
+          timetable: null,
+          timetableDoc: null,
+          message: "No assigned subjects found for this faculty member."
+        });
+      }
+
+      if (semester && division) {
+        if (!isFacultyAuthorizedForTimetable(req.user, semester, division)) {
+          return res.status(403).json({ success: false, message: "Access forbidden: You are not authorized to view this timetable." });
+        }
+        const doc = await Timetable.findOne({ semester, division }).select("-__v").lean();
+        const facultyDoc = sanitizeTimetableForFaculty(doc, req.user);
+        return res.json({ success: true, timetable: facultyDoc || null, timetableDoc: facultyDoc || null });
+      }
+
+      // If no query parameters, return all timetables within faculty scope sanitized for this faculty
+      const allDocs = await Timetable.find({}).select("-__v").limit(1000).lean();
+      const authorizedDocs = allDocs
+        .filter(doc => isFacultyAuthorizedForTimetable(req.user, doc.semester, doc.division))
+        .map(doc => sanitizeTimetableForFaculty(doc, req.user));
+      return res.json({ success: true, timetable: authorizedDocs, timetableDoc: authorizedDocs[0] || null });
+    }
+
+    // 3. Admin role: unrestricted
+    if (req.user.role === "admin") {
+      if (semester && division) {
+        const doc = await Timetable.findOne({ semester, division }).select("-__v").lean();
+        return res.json({
+          success: true,
+          timetable: doc || null,
+          timetableDoc: doc || null
+        });
+      }
+
+      const filter = {};
+      if (semester) filter.semester = semester;
+      if (division) filter.division = division;
+      const docs = await Timetable.find(filter).select("-__v").limit(1000).lean();
+      return res.json({
+        success: true,
+        timetable: docs,
+        timetableDoc: docs[0] || null
+      });
+    }
+
+    return res.status(403).json({ success: false, message: "Access forbidden." });
   } catch (error) {
     console.error("Fetch timetable error:", error);
     res.status(500).json({ success: false, message: "Failed to fetch timetable." });
   }
 });
 
+app.get("/api/timetable/faculty-view", requireAuth(["faculty", "admin"]), async (req, res) => {
+  try {
+    let subjects = [];
+    if (req.user.role === "admin") {
+      subjects = Object.keys(SUBJECT_SEMESTER_CATALOGUE);
+    } else {
+      const scope = getFacultyAuthorizedScope(req.user);
+      subjects = scope.subjects;
+      // If query param 'subject' was requested by faculty, verify it is in their scope
+      if (req.query.subject) {
+        const requestedSub = String(req.query.subject).trim().toLowerCase().replace(/[\s_-]+/g, "");
+        const isAllowed = scope.subjects.some(s => s.toLowerCase().replace(/[\s_-]+/g, "") === requestedSub);
+        if (!isAllowed) {
+          return res.status(403).json({ success: false, message: "Access forbidden: You are not authorized to view this subject schedule." });
+        }
+        subjects = scope.subjects.filter(s => s.toLowerCase().replace(/[\s_-]+/g, "") === requestedSub);
+      }
+    }
+    if (!subjects || !subjects.length) {
+      return res.json({ success: true, facultyView: [] });
+    }
+
+    const allDocs = await Timetable.find({}).select("-__v").lean();
+    const facultyViewList = [];
+
+    for (const sub of subjects) {
+      const cleanSub = sub.toLowerCase();
+      const normSub = cleanSub.replace(/[\s_-]+/g, "");
+      const slotMap = new Map();
+
+      for (const tt of allDocs) {
+        if (!tt.days || !tt.timeSlots || !Array.isArray(tt.cells)) continue;
+        for (const cell of tt.cells) {
+          if (!cell || !cell.subject) continue;
+          const cellSub = String(cell.subject).trim().toLowerCase();
+          const normCellSub = cellSub.replace(/[\s_-]+/g, "");
+          if (normCellSub === normSub || normCellSub.includes(normSub) || normSub.includes(normCellSub)) {
+            const dayName = tt.days[cell.dayIndex] || `Day ${cell.dayIndex + 1}`;
+            const timeName = tt.timeSlots[cell.slotIndex] || `Slot ${cell.slotIndex + 1}`;
+            const key = `${tt.semester}__${dayName}__${timeName}`;
+
+            if (!slotMap.has(key)) {
+              slotMap.set(key, {
+                subject: cell.subject,
+                semester: tt.semester,
+                day: dayName,
+                time: timeName,
+                dayIndex: cell.dayIndex,
+                slotIndex: cell.slotIndex,
+                divisions: [tt.division]
+              });
+            } else {
+              const existing = slotMap.get(key);
+              if (!existing.divisions.includes(tt.division)) {
+                existing.divisions.push(tt.division);
+              }
+            }
+          }
+        }
+      }
+
+      for (const item of slotMap.values()) {
+        const sortedDivs = item.divisions.sort();
+        facultyViewList.push({
+          subject: item.subject,
+          semester: item.semester,
+          day: item.day,
+          time: item.time,
+          dayIndex: item.dayIndex,
+          slotIndex: item.slotIndex,
+          divisions: sortedDivs,
+          divisionLabel: sortedDivs.join(" + "),
+          divisionsLabel: sortedDivs.join(" + ")
+        });
+      }
+    }
+
+    res.json({ success: true, facultyView: facultyViewList });
+  } catch (error) {
+    console.error("Fetch faculty view timetable error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch faculty timetable view." });
+  }
+});
+
+async function handleSaveTimetable(req, res) {
+  try {
+    const validated = validateTimetablePayload(req.body);
+    if (validated.error) {
+      return res.status(400).json({ success: false, message: validated.error });
+    }
+
+    const { semester, division, days, timeSlots, cells } = validated;
+
+    // Faculty authorization verification
+    if (req.user.role === "faculty") {
+      if (!isFacultyAuthorizedForTimetable(req.user, semester, division)) {
+        return res.status(403).json({ success: false, message: "Access forbidden: You are not authorized to manage timetable for this Semester and Division." });
+      }
+
+      // Check existing document to prevent faculty from modifying other subjects' cells
+      const existing = await Timetable.findOne({ semester, division }).lean();
+
+      // 1. Faculty can ONLY author/assign subjects that are authorized for them
+      for (const c of cells) {
+        if (!c.subject) continue;
+        const matchingExisting = existing && Array.isArray(existing.cells)
+          ? existing.cells.find(ec => ec.dayIndex === c.dayIndex && ec.slotIndex === c.slotIndex)
+          : null;
+        const isUnchangedSubject = matchingExisting && isSameSubject(matchingExisting.subject, c.subject);
+        if (!isUnchangedSubject && !canFacultySetSubject(req.user, c.subject, semester, division)) {
+          return res.status(403).json({
+            success: false,
+            message: `Access forbidden: You are not authorized to assign subject '${c.subject}'.`
+          });
+        }
+      }
+
+      // 2. Protect existing cells belonging to other faculty members
+      if (existing && Array.isArray(existing.cells)) {
+        for (const ec of existing.cells) {
+          if (ec.subject && !canFacultySetSubject(req.user, ec.subject, semester, division)) {
+            const matchingNewCell = cells.find(nc => nc.dayIndex === ec.dayIndex && nc.slotIndex === ec.slotIndex);
+            if (matchingNewCell) {
+              if (matchingNewCell.subject && !isSameSubject(matchingNewCell.subject, ec.subject)) {
+                return res.status(403).json({
+                  success: false,
+                  message: `Access forbidden: You cannot overwrite subject '${ec.subject}' belonging to another faculty member.`
+                });
+              }
+              // Safely preserve other faculty member's existing cell content
+              matchingNewCell.subject = ec.subject;
+              matchingNewCell.bold = ec.bold;
+              matchingNewCell.fontFamily = ec.fontFamily;
+              matchingNewCell.fontSize = ec.fontSize;
+              matchingNewCell.textAlign = "center";
+              matchingNewCell.rowSpan = ec.rowSpan || 1;
+              matchingNewCell.colSpan = ec.colSpan || 1;
+              matchingNewCell.mergedInto = ec.mergedInto || null;
+            } else {
+              cells.push(ec);
+            }
+          }
+        }
+      }
+    }
+
+    const updated = await Timetable.findOneAndUpdate(
+      { semester, division },
+      { $set: { semester, division, days, timeSlots, cells } },
+      { upsert: true, returnDocument: "after", runValidators: true }
+    );
+
+    const returnDoc = req.user.role === "faculty"
+      ? sanitizeTimetableForFaculty(updated.toObject ? updated.toObject() : updated, req.user)
+      : updated;
+
+    res.json({ success: true, message: "Timetable saved successfully.", timetable: returnDoc });
+  } catch (error) {
+    console.error("Save timetable error:", error);
+    res.status(500).json({ success: false, message: "Failed to save timetable." });
+  }
+}
+
+app.post("/api/timetable", rateLimitExpensive, requireAuth(["faculty", "admin"]), handleSaveTimetable);
+app.put("/api/timetable", rateLimitExpensive, requireAuth(["faculty", "admin"]), handleSaveTimetable);
+
+app.delete("/api/timetable", rateLimitExpensive, requireAuth(["faculty", "admin"]), async (req, res) => {
+  try {
+    const semester = stripHtmlTags(String(req.query.semester || "").trim());
+    const division = stripHtmlTags(String(req.query.division || "").trim());
+
+    if (!semester || !division) {
+      return res.status(400).json({ success: false, message: "Both semester and division are required to delete a timetable." });
+    }
+
+    if (req.user.role === "faculty") {
+      if (!isFacultyAuthorizedForTimetable(req.user, semester, division)) {
+        return res.status(403).json({ success: false, message: "Access forbidden: You are not authorized to delete this timetable." });
+      }
+    }
+
+    const delResult = await Timetable.deleteOne({ semester, division });
+    if (delResult.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: "No timetable found for the specified Semester and Division." });
+    }
+
+    res.json({ success: true, message: "Timetable deleted successfully." });
+  } catch (error) {
+    console.error("Delete timetable error:", error);
+    res.status(500).json({ success: false, message: "Failed to delete timetable." });
+  }
+});
+
+// Backward compatibility endpoint for legacy slot sync
 app.post("/api/timetable/sync", rateLimitExpensive, requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
     const { timetable } = req.body || {};
@@ -1356,7 +1982,7 @@ app.post("/api/timetable/sync", rateLimitExpensive, requireAuth(["faculty", "adm
     for (const item of timetable) {
       if (!item || typeof item !== "object") continue;
       const division = stripHtmlTags(String(item.division || "Div A"));
-      const semester = stripHtmlTags(String(item.semester || ""));
+      const semester = stripHtmlTags(String(item.semester || "1st Semester"));
       const day = stripHtmlTags(String(item.day || ""));
       const time = stripHtmlTags(String(item.time || ""));
       const subject = stripHtmlTags(String(item.subject || ""));
@@ -1401,29 +2027,7 @@ app.post("/api/timetable/sync", rateLimitExpensive, requireAuth(["faculty", "adm
           upsert: true
         }
       }));
-
       await Timetable.bulkWrite(ops, { ordered: false });
-
-      // Synchronize AcademicStore.timetable so both layers stay consistent without wiping
-      try {
-        const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
-        if (store) {
-          const ttMap = new Map();
-          (store.timetable || []).forEach(t => {
-            if (t && t.division && t.day && t.time) {
-              ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
-            }
-          });
-          validEntries.forEach(t => {
-            ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
-          });
-          store.timetable = Array.from(ttMap.values());
-          store.markModified("timetable");
-          await store.save();
-        }
-      } catch (storeErr) {
-        console.warn("Timetable AcademicStore sync warning:", storeErr.message);
-      }
     }
 
     res.json({ success: true, message: "Timetable synchronized safely." });
@@ -1837,37 +2441,6 @@ async function syncCollectionsFromAcademicData(payload = {}) {
           await Note.deleteMany({ noteId: { $in: validDelNoteIds } });
         }
       }
-
-      // 6. Sync Timetable into MongoDB 'timetables' collection via safe bulkWrite upsert
-      if (Array.isArray(payload.timetable) && payload.timetable.length > 0) {
-        const ttOps = payload.timetable
-          .filter(item => item && typeof item === "object" && item.day && item.time)
-          .map(item => ({
-            updateOne: {
-              filter: {
-                division: stripHtmlTags(item.division || "Div A"),
-                semester: stripHtmlTags(item.semester || ""),
-                day: stripHtmlTags(item.day),
-                time: stripHtmlTags(item.time)
-              },
-              update: {
-                $set: {
-                  division: stripHtmlTags(item.division || "Div A"),
-                  semester: stripHtmlTags(item.semester || ""),
-                  day: stripHtmlTags(item.day),
-                  time: stripHtmlTags(item.time),
-                  subject: stripHtmlTags(item.subject || ""),
-                  subjectText: stripHtmlTags(item.subjectText || item.subject || "Class"),
-                  faculty: stripHtmlTags(item.faculty || "")
-                }
-              },
-              upsert: true
-            }
-          }));
-        if (ttOps.length > 0) {
-          await Timetable.bulkWrite(ttOps, { ordered: false });
-        }
-      }
     } catch (syncErr) {
       console.warn("Collection sync helper warning:", syncErr.message);
     }
@@ -2018,24 +2591,7 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
 
     // Privileged admin-only structural synchronizations
     if (req.user.role === "admin") {
-      if (Array.isArray(payload.timetable)) {
-        const ttMap = new Map();
-        (existingStore?.timetable || []).forEach(t => {
-          if (t && t.division && t.day && t.time) ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, t);
-        });
-        payload.timetable.forEach(t => {
-          if (t && t.division && t.day && t.time) {
-            ttMap.set(`${t.division}_${t.semester || ""}_${t.day}_${t.time}`, {
-              ...t,
-              division: stripHtmlTags(t.division),
-              semester: stripHtmlTags(t.semester),
-              subjectText: stripHtmlTags(t.subjectText || t.subject || "Class"),
-              faculty: stripHtmlTags(t.faculty)
-            });
-          }
-        });
-        update.timetable = Array.from(ttMap.values());
-      }
+      // Note: timetables collection is the authoritative source; AcademicStore.timetable is kept empty.
       if (payload.timetableHeader && typeof payload.timetableHeader === "object") {
         const sanitizedHeader = {};
         for (const [k, v] of Object.entries(payload.timetableHeader)) {
@@ -2138,11 +2694,32 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`CampusSphere backend running on port ${PORT}`);
   const maskedUri = MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, "//***:***@");
   console.log(`Database Mode: MongoDB (${maskedUri})`);
 });
+
+const gracefulShutdown = (signal) => {
+  console.log(`Received ${signal}. Closing server gracefully...`);
+  server.close(async () => {
+    try {
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect();
+      }
+    } catch (_) {}
+    process.exit(0);
+  });
+  if (typeof setTimeout === "function") {
+    setTimeout(() => {
+      process.exit(0);
+    }, 10000).unref();
+  }
+};
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);
 });
