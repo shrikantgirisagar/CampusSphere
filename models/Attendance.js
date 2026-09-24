@@ -88,5 +88,8 @@ const attendanceSchema = new mongoose.Schema(
 
 // Compound index for student attendance lookups
 attendanceSchema.index({ studentUsername: 1, date: -1 });
+attendanceSchema.index({ subject: 1, division: 1, date: -1 });
+attendanceSchema.index({ subject: 1, date: -1 });
+attendanceSchema.index({ studentUsername: 1, subject: 1 });
 
 module.exports = mongoose.model("Attendance", attendanceSchema);

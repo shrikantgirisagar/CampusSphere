@@ -40,6 +40,10 @@ const academicStoreSchema = new mongoose.Schema(
       type: Array,
       default: []
     },
+    deletedDailyAttendance: {
+      type: Array,
+      default: []
+    },
     dailyAttendance: {
       type: Array,
       default: []

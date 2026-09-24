@@ -90,7 +90,8 @@
 }
 
 html {
-  scroll-behavior: smooth
+  scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -102,7 +103,7 @@ body {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   background: #f6f8fd;
   color: var(--text);
-  overflow-x: auto;
+  overflow-x: hidden;
   position: relative;
 }
 
@@ -1884,13 +1885,19 @@ animated-background,
 }
 
 /* Responsive collapse without any issues */
+/* Responsive collapse without any issues */
 @media (max-width: 900px) {
+  .login-objects {
+    display: none !important;
+  }
+
   .auth-card-horizontal {
     grid-template-columns: 1fr !important;
-    width: min(560px, 94vw) !important;
+    width: 100% !important;
     max-width: 560px !important;
     min-height: auto !important;
     border-radius: 24px !important;
+    box-sizing: border-box !important;
   }
 
   .auth-showcase-panel {
@@ -1910,13 +1917,10 @@ animated-background,
 }
 
 @media (max-width: 560px) {
-  .auth-input-grid {
-    grid-template-columns: 1fr !important;
-    gap: 10px;
-  }
-
+  .auth-input-grid,
   .signup-card .auth-input-grid {
-    gap: 8px !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
   }
 
   .auth-grid-full {
@@ -1924,25 +1928,25 @@ animated-background,
   }
 
   .auth-form-panel {
-    padding: 22px 18px;
+    padding: 20px 16px !important;
   }
 
   .signup-card .auth-form-panel {
-    padding: 14px 16px !important;
+    padding: 16px 14px !important;
   }
 
   .auth-showcase-panel {
-    padding: 22px 18px;
+    padding: 20px 16px !important;
   }
 
   .signup-card .auth-showcase-panel {
-    padding: 14px 16px !important;
+    padding: 16px 14px !important;
   }
 
   .showcase-logo-wrap {
-    width: 54px;
-    height: 54px;
-    margin-bottom: 12px;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 10px;
   }
 
   .showcase-brand-header h1 {
@@ -1951,6 +1955,95 @@ animated-background,
 
   .showcase-college-name {
     font-size: 11.5px;
+    word-break: break-word !important;
+  }
+
+  .showcase-motto-pill {
+    max-width: 100% !important;
+    flex-wrap: wrap !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  .login-creator-credit {
+    flex-wrap: wrap !important;
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-page {
+    padding: 14px 10px !important;
+  }
+
+  .auth-form-panel,
+  .auth-showcase-panel,
+  .signup-card .auth-form-panel,
+  .signup-card .auth-showcase-panel {
+    padding: 14px 12px !important;
+  }
+
+  .signup-card .year-pill-btn,
+  .signup-card .sem-pill-btn,
+  .signup-card .div-pill-btn,
+  .signup-card .lang-pill-btn {
+    font-size: 11px !important;
+    padding: 0 2px !important;
+  }
+
+  .role-tab {
+    min-height: 54px !important;
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Smartphone Landscape Screen-Fit Optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-page {
+    padding: 10px 14px !important;
+    justify-content: flex-start !important;
+  }
+
+  .auth-card-horizontal {
+    margin: 8px auto !important;
+  }
+
+  .auth-showcase-panel {
+    padding: 12px 16px !important;
+    gap: 8px !important;
+  }
+
+  .showcase-logo-wrap {
+    width: 40px !important;
+    height: 40px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .showcase-brand-header h1 {
+    font-size: 18px !important;
+  }
+
+  .showcase-college-name {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .showcase-college-sub {
+    margin-bottom: 4px !important;
+  }
+
+  .auth-form-panel {
+    padding: 14px 16px !important;
+  }
+
+  .role-tabs {
+    margin-bottom: 10px !important;
+  }
+
+  .role-tab {
+    min-height: 42px !important;
   }
 }
 
@@ -1969,7 +2062,8 @@ animated-background,
   animation: fadeIn .25s ease both;
 }
 
-.signup-modal {
+.signup-modal,
+.modal {
   position: relative;
   width: min(480px, 100%);
   max-height: 92vh;
@@ -1982,7 +2076,8 @@ animated-background,
   animation: modalIn .45s var(--ease) both;
 }
 
-.close-modal {
+.close-modal,
+.close-btn {
   position: absolute;
   top: 13px;
   right: 13px;
@@ -2776,7 +2871,9 @@ animated-background,
 
 .table-wrap {
   width: 100%;
-  overflow: auto;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -3299,7 +3396,13 @@ td small {
 
 @media(max-width: 540px) {
   .stat-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .subject-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
   }
 
   .topbar {
@@ -3314,6 +3417,84 @@ td small {
 
   .user-chip div {
     display: none;
+  }
+
+  .signup-modal,
+  .modal {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .ai-modal-container {
+    width: 95%;
+    max-width: 95vw;
+    margin: 12px auto;
+  }
+
+  .form-row-2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ai-charts-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .profile-column-grid,
+  .faculty-classes-grid,
+  .subject-manage-grid,
+  .admin-divisions-grid,
+  .admin-info-grid,
+  .admin-curriculum-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .assignment {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .assignment-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .close-modal,
+  .close-btn,
+  .ai-modal-close {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .signup-card .eye-btn {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .footer-col .footer-social-links a.social-icon-btn,
+  .social-icon-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .input-wrap input,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 
@@ -3581,7 +3762,10 @@ td small {
 }
 
 .student-att-list {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   margin-top: 10px;
@@ -5560,8 +5744,10 @@ td small {
 
 .crop-canvas-container {
   position: relative;
-  width: 320px;
-  height: 320px;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  height: auto;
   margin: 16px auto;
   background: #0f172a;
   border-radius: 20px;
@@ -5578,8 +5764,8 @@ td small {
 
 .crop-canvas-container canvas {
   display: block;
-  width: 320px;
-  height: 320px;
+  width: 100%;
+  height: 100%;
 }
 
 .crop-hud-hint {
@@ -9911,6 +10097,7 @@ body.courses-page-body {
 
 .timetable-matrix-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--campus-border-strong, #cbd8f0);
   border-radius: var(--radius-md, 12px);
   background: #ffffff;
@@ -9919,6 +10106,7 @@ body.courses-page-body {
 
 .timetable-matrix-table {
   width: 100%;
+  min-width: 680px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 13px;

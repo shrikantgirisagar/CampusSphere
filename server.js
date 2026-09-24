@@ -562,6 +562,9 @@ async function initDatabase() {
       serverSelectionTimeoutMS: 15000
     });
     console.log("Connected to MongoDB successfully.");
+    await Attendance.syncIndexes().catch(err => {
+      console.warn("Attendance index sync warning:", err.message);
+    });
 
     // Seed default admin or migrate local json if user count is zero
     const userCount = await User.countDocuments();
@@ -1463,6 +1466,25 @@ const CANONICAL_SUBJECT_MAP = {
   iotlab: ["iotlab", "iot lab"]
 };
 
+function resolveCanonicalSubjectKey(clean) {
+  if (!clean) return null;
+  for (const [key, aliases] of Object.entries(CANONICAL_SUBJECT_MAP)) {
+    if (clean === key) return key;
+    for (const a of aliases) {
+      const ca = a.replace(/[\s_.-]+/g, "");
+      if (clean === ca) return key;
+      if (ca.length <= 3) {
+        if (clean === ca) return key;
+      } else if (ca.length >= 5) {
+        if (clean === ca || clean.endsWith(ca) || clean.startsWith(ca)) {
+          return key;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function isSameSubject(subA, subB) {
   if (!subA || !subB) return false;
   const sA = String(subA).trim().toLowerCase();
@@ -1470,19 +1492,12 @@ function isSameSubject(subA, subB) {
   if (sA === sB) return true;
   const cleanA = sA.replace(/[\s_.-]+/g, "");
   const cleanB = sB.replace(/[\s_.-]+/g, "");
-  if (cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA)) return true;
+  if (cleanA === cleanB) return true;
 
-  for (const aliases of Object.values(CANONICAL_SUBJECT_MAP)) {
-    const hasA = aliases.some(a => {
-      const ca = a.replace(/[\s_.-]+/g, "");
-      return ca === cleanA || cleanA.includes(ca) || ca.includes(cleanA);
-    });
-    const hasB = aliases.some(b => {
-      const cb = b.replace(/[\s_.-]+/g, "");
-      return cb === cleanB || cleanB.includes(cb) || cb.includes(cleanB);
-    });
-    if (hasA && hasB) return true;
-  }
+  const keyA = resolveCanonicalSubjectKey(cleanA);
+  const keyB = resolveCanonicalSubjectKey(cleanB);
+  if (keyA && keyB && keyA === keyB) return true;
+
   return false;
 }
 
@@ -2039,6 +2054,515 @@ app.post("/api/timetable/sync", rateLimitExpensive, requireAuth(["faculty", "adm
 
 
 
+// --- Attendance Validation & Authorization Helpers ---
+
+function hasMongoOperators(obj) {
+  if (!obj || typeof obj !== "object") return false;
+  for (const key of Object.keys(obj)) {
+    if (key.startsWith("$")) return true;
+    if (typeof obj[key] === "object" && obj[key] !== null) {
+      if (hasMongoOperators(obj[key])) return true;
+    }
+  }
+  return false;
+}
+
+function validateAttendanceDate(dateStr, isoDateStr) {
+  const target = (isoDateStr || dateStr || "").trim();
+  if (!target) {
+    return { valid: false, error: "Attendance date is required." };
+  }
+  let y, m, d;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(target)) {
+    const parts = target.split("-").map(Number);
+    y = parts[0];
+    m = parts[1];
+    d = parts[2];
+  } else if (/^\d{2}-\d{2}-\d{2,4}$/.test(target)) {
+    const parts = target.split("-").map(Number);
+    d = parts[0];
+    m = parts[1];
+    y = parts[2] < 100 ? parts[2] + 2000 : parts[2];
+  } else {
+    return { valid: false, error: "Invalid date format. Expected YYYY-MM-DD or DD-MM-YY." };
+  }
+
+  if (y < 2000 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) {
+    return { valid: false, error: "Impossible calendar date: month or day out of bounds." };
+  }
+
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  if (d > daysInMonth) {
+    return { valid: false, error: `Invalid calendar date: Month ${m} has only ${daysInMonth} days.` };
+  }
+
+  const entryDate = new Date(Date.UTC(y, m - 1, d));
+  const now = new Date();
+  const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  if (entryDate > tomorrow) {
+    return { valid: false, error: "Attendance date cannot be in the future." };
+  }
+
+  const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  const display = `${String(d).padStart(2, "0")}-${String(m).padStart(2, "0")}-${String(y).slice(-2)}`;
+
+  return { valid: true, isoDate: iso, date: display };
+}
+
+function normalizeAttendanceStatus(status) {
+  if (status === null || status === undefined) return null;
+  const s = String(status).trim().toUpperCase();
+  if (s === "P" || s === "PRESENT") return "P";
+  if (s === "A" || s === "ABSENT") return "A";
+  return null;
+}
+
+function validateAttendanceRecords(records) {
+  if (!records || typeof records !== "object" || Array.isArray(records)) {
+    return { valid: false, error: "Attendance records must be an object mapping student usernames to statuses." };
+  }
+  const normalized = {};
+  for (const [username, status] of Object.entries(records)) {
+    const cleanUser = String(username).trim();
+    if (!cleanUser || cleanUser.length < 2 || cleanUser.length > 50 || cleanUser.includes("$") || /<[^>]+>/.test(cleanUser)) {
+      return { valid: false, error: `Invalid student username in attendance records: ${cleanUser}` };
+    }
+    const normStatus = normalizeAttendanceStatus(status);
+    if (!normStatus) {
+      return { valid: false, error: `Invalid attendance status '${status}' for student ${cleanUser}. Allowed values: P, A, Present, Absent.` };
+    }
+    normalized[cleanUser] = normStatus;
+  }
+  return { valid: true, records: normalized };
+}
+
+function validateFacultyAttendanceAuthorization(user, subject, division, semester) {
+  if (!user) return { authorized: false, reason: "Authentication required." };
+  if (user.role === "admin") return { authorized: true };
+  if (user.role !== "faculty") return { authorized: false, reason: "Requires faculty or admin role." };
+
+  const cleanSub = String(subject || "").trim();
+  if (!cleanSub) return { authorized: false, reason: "Subject is required." };
+
+  const scope = getFacultyAuthorizedScope(user);
+  if (!scope.subjects || scope.subjects.length === 0) {
+    return { authorized: false, reason: "Faculty has no assigned subjects." };
+  }
+
+  const isAssignedSubject = scope.subjects.some(assigned => isSameSubject(assigned, cleanSub));
+  if (!isAssignedSubject) {
+    return { authorized: false, reason: `Faculty is not authorized to manage attendance for unassigned subject: ${cleanSub}` };
+  }
+
+  // Division check
+  if (division) {
+    const normDiv = String(division).trim().toLowerCase();
+    const cleanTargetDiv = normDiv.replace(/^div\s*/i, "").trim();
+
+    const matchedSubject = scope.subjects.find(assigned => isSameSubject(assigned, cleanSub));
+    const divRule = String(scope.divisionsBySubject[matchedSubject] || scope.defaultDivision || "all").toLowerCase();
+
+    if (divRule !== "all" && divRule !== "both divisions" && divRule !== "all divisions") {
+      const cleanRule = divRule.replace(/^div\s*/i, "").trim();
+      if (divRule !== normDiv && cleanRule !== cleanTargetDiv) {
+        return { authorized: false, reason: `Faculty is not authorized to manage attendance for division: ${division}` };
+      }
+    }
+  }
+
+  // Semester check
+  if (semester) {
+    const normSem = String(semester).trim().toLowerCase();
+    const cleanTargetSem = normSem.replace(/[\s_-]+/g, "");
+    const matchedSubject = scope.subjects.find(assigned => isSameSubject(assigned, cleanSub));
+    const assignedSem = getSubjectSemester(matchedSubject) || user.semester;
+    if (assignedSem) {
+      const normAssignedSem = String(assignedSem).trim().toLowerCase().replace(/[\s_-]+/g, "");
+      if (normAssignedSem && cleanTargetSem && normAssignedSem !== cleanTargetSem) {
+        return { authorized: false, reason: `Faculty is not authorized to manage attendance for semester: ${semester}` };
+      }
+    }
+  }
+
+  return { authorized: true };
+}
+
+function recalculateOverallAttendance(dailyAttendance = [], students = {}, targetSubject = null) {
+  if (!Array.isArray(dailyAttendance) || !students || typeof students !== "object") return;
+
+  // Auto-vivify student entry for any user present in dailyAttendance
+  dailyAttendance.forEach(log => {
+    if (log && log.records && typeof log.records === "object") {
+      Object.keys(log.records).forEach(u => {
+        const cleanU = String(u).trim();
+        if (cleanU && !students[cleanU]) {
+          students[cleanU] = { marks: {}, attendance: {} };
+        }
+      });
+    }
+  });
+
+  for (const [username, studentRec] of Object.entries(students)) {
+    if (!studentRec || typeof studentRec !== "object") continue;
+    if (!studentRec.attendance || typeof studentRec.attendance !== "object") {
+      studentRec.attendance = {};
+    }
+
+    const countsBySubject = {};
+    dailyAttendance.forEach(log => {
+      if (!log || !log.subject || !log.records || typeof log.records !== "object") return;
+      if (targetSubject && !isSameSubject(log.subject, targetSubject)) return;
+
+      const subKey = String(log.subject).trim();
+      let status = "";
+      for (const [rUser, rVal] of Object.entries(log.records)) {
+        if (String(rUser).trim().toLowerCase() === username.trim().toLowerCase()) {
+          status = normalizeAttendanceStatus(rVal);
+          break;
+        }
+      }
+      if (status) {
+        if (!countsBySubject[subKey]) countsBySubject[subKey] = { total: 0, present: 0 };
+        countsBySubject[subKey].total++;
+        if (status === "P") countsBySubject[subKey].present++;
+      }
+    });
+
+    for (const [subKey, counts] of Object.entries(countsBySubject)) {
+      if (counts.total > 0) {
+        studentRec.attendance[subKey] = Math.round((counts.present / counts.total) * 100);
+      }
+    }
+  }
+}
+
+// --- Dedicated RESTful Attendance API Endpoints ---
+
+// GET /api/attendance
+app.get("/api/attendance", requireAuth(), async (req, res) => {
+  try {
+    const { semester, division, subject, date, isoDate, studentUsername } = req.query;
+
+    // 1. Student role: IDOR lockdown to authenticated student profile
+    if (req.user.role === "student") {
+      const normStudent = req.user.username.trim().toLowerCase();
+
+      const query = {
+        $or: [
+          { studentUsername: new RegExp(`^${escapeRegex(req.user.username)}$`, "i") },
+          { [`records.${req.user.username}`]: { $exists: true } }
+        ]
+      };
+      if (subject) query.subject = subject;
+
+      let docs = await Attendance.find(query).sort({ date: -1, createdAt: -1 }).lean();
+
+      if (!docs || docs.length === 0) {
+        const store = await AcademicStore.findOne({ storeKey: "default_academic_store" }).lean();
+        docs = (store?.dailyAttendance || []).filter(a => {
+          if (!a) return false;
+          if (subject && !isSameSubject(a.subject, subject)) return false;
+          const hasRec = a.records && typeof a.records === "object" &&
+            Object.keys(a.records).some(k => String(k).toLowerCase() === normStudent);
+          return hasRec || (a.studentUsername && String(a.studentUsername).toLowerCase() === normStudent);
+        });
+      }
+
+      // Strictly redact other students' attendance data
+      const scoped = docs.map(doc => {
+        const item = { ...doc };
+        if (item.records && typeof item.records === "object") {
+          let st = "";
+          for (const [k, v] of Object.entries(item.records)) {
+            if (String(k).toLowerCase() === normStudent) {
+              st = v;
+              break;
+            }
+          }
+          item.records = { [req.user.username]: st };
+        }
+        item.studentUsername = req.user.username;
+        return item;
+      });
+
+      return res.json({ success: true, attendance: scoped });
+    }
+
+    // 2. Faculty role: scope strictly to assigned subjects and divisions
+    if (req.user.role === "faculty") {
+      if (subject) {
+        const authCheck = validateFacultyAttendanceAuthorization(req.user, subject, division, semester);
+        if (!authCheck.authorized) {
+          return res.status(403).json({ success: false, message: authCheck.reason });
+        }
+      }
+      if (division) {
+        const authCheck = validateFacultyAttendanceAuthorization(req.user, subject || req.user.subject, division, semester);
+        if (!authCheck.authorized) {
+          return res.status(403).json({ success: false, message: authCheck.reason });
+        }
+      }
+
+      const scope = getFacultyAuthorizedScope(req.user);
+      const query = {};
+      if (subject) {
+        query.subject = subject;
+      } else {
+        query.subject = { $in: scope.subjects };
+      }
+      if (division) query.division = division;
+      if (semester) query.semester = semester;
+      if (isoDate || date) query.$or = [{ isoDate: isoDate || date }, { date: date || isoDate }];
+
+      let docs = await Attendance.find(query).sort({ date: -1, createdAt: -1 }).lean();
+
+      if (!docs || docs.length === 0) {
+        const store = await AcademicStore.findOne({ storeKey: "default_academic_store" }).lean();
+        docs = (store?.dailyAttendance || []).filter(a => {
+          if (!a || !a.subject) return false;
+          if (subject && !isSameSubject(a.subject, subject)) return false;
+          if (division && a.division !== division) return false;
+          if (semester && a.semester !== semester) return false;
+          return canFacultySetSubject(req.user, a.subject, a.semester, a.division);
+        });
+      }
+
+      return res.json({ success: true, attendance: docs });
+    }
+
+    // 3. Admin role: full attendance administration
+    if (req.user.role === "admin") {
+      const query = {};
+      if (subject) query.subject = subject;
+      if (division) query.division = division;
+      if (semester) query.semester = semester;
+      if (studentUsername) query.$or = [{ studentUsername }, { [`records.${studentUsername}`]: { $exists: true } }];
+      if (isoDate || date) query.$or = [{ isoDate: isoDate || date }, { date: date || isoDate }];
+
+      let docs = await Attendance.find(query).sort({ date: -1, createdAt: -1 }).lean();
+      if (!docs || docs.length === 0) {
+        const store = await AcademicStore.findOne({ storeKey: "default_academic_store" }).lean();
+        docs = (store?.dailyAttendance || []).filter(a => {
+          if (!a) return false;
+          if (subject && !isSameSubject(a.subject, subject)) return false;
+          if (division && a.division !== division) return false;
+          if (semester && a.semester !== semester) return false;
+          return true;
+        });
+      }
+
+      return res.json({ success: true, attendance: docs });
+    }
+
+    return res.status(403).json({ success: false, message: "Access forbidden." });
+  } catch (error) {
+    console.error("Fetch attendance error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch attendance." });
+  }
+});
+
+// Common handler for POST and PUT /api/attendance
+async function handleSaveAttendance(req, res) {
+  try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "MongoDB operators are not permitted." });
+    }
+
+    const {
+      id,
+      attendanceId,
+      subject,
+      division,
+      semester,
+      courseYear,
+      date,
+      isoDate,
+      records,
+      status,
+      studentUsername,
+      facultyUsername
+    } = req.body || {};
+
+    if (!subject || typeof subject !== "string" || !subject.trim()) {
+      return res.status(400).json({ success: false, message: "Subject is required." });
+    }
+    if (!division || typeof division !== "string" || !division.trim()) {
+      return res.status(400).json({ success: false, message: "Division is required." });
+    }
+    if (!semester || typeof semester !== "string" || !semester.trim()) {
+      return res.status(400).json({ success: false, message: "Semester is required." });
+    }
+
+    // Date validation
+    const dateRes = validateAttendanceDate(date, isoDate);
+    if (!dateRes.valid) {
+      return res.status(400).json({ success: false, message: dateRes.error });
+    }
+
+    // Status / Records validation
+    let validatedRecords = {};
+    if (records && typeof records === "object") {
+      const recRes = validateAttendanceRecords(records);
+      if (!recRes.valid) {
+        return res.status(400).json({ success: false, message: recRes.error });
+      }
+      validatedRecords = recRes.records;
+    }
+
+    let topStatus = "";
+    if (status !== undefined && status !== "") {
+      const normSt = normalizeAttendanceStatus(status);
+      if (!normSt) {
+        return res.status(400).json({ success: false, message: `Invalid attendance status '${status}'. Allowed values: P, A, Present, Absent.` });
+      }
+      topStatus = normSt === "P" ? "Present" : "Absent";
+    }
+
+    // Role authorization
+    if (req.user.role === "faculty") {
+      const auth = validateFacultyAttendanceAuthorization(req.user, subject, division, semester);
+      if (!auth.authorized) {
+        return res.status(403).json({ success: false, message: auth.reason });
+      }
+    }
+
+    // Stable deterministic attendanceId
+    const cleanSub = stripHtmlTags(subject).trim();
+    const cleanDiv = stripHtmlTags(division).trim();
+    const cleanSem = stripHtmlTags(semester).trim();
+    const cleanYear = stripHtmlTags(courseYear || "").trim();
+
+    const targetAttId = attendanceId || id ||
+      ("att_" + crypto.createHash("sha256").update(`${dateRes.isoDate}_${cleanSub}_${cleanDiv}_${cleanSem}`).digest("hex").slice(0, 16));
+
+    const facultyUser = req.user.role === "faculty" ? req.user.username : (stripHtmlTags(facultyUsername || "admin"));
+
+    // 1. Non-destructive update in dedicated Attendance collection
+    const attDoc = await Attendance.findOneAndUpdate(
+      { $or: [{ attendanceId: targetAttId }, { subject: cleanSub, division: cleanDiv, semester: cleanSem, isoDate: dateRes.isoDate }] },
+      {
+        $set: {
+          id: targetAttId,
+          attendanceId: targetAttId,
+          subject: cleanSub,
+          division: cleanDiv,
+          semester: cleanSem,
+          courseYear: cleanYear,
+          date: dateRes.date,
+          isoDate: dateRes.isoDate,
+          records: validatedRecords,
+          studentUsername: studentUsername ? stripHtmlTags(studentUsername) : "",
+          status: topStatus,
+          facultyUsername: facultyUser
+        }
+      },
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
+    );
+
+    // 2. Synchronize AcademicStore.dailyAttendance
+    const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+    if (store) {
+      const daily = store.dailyAttendance || [];
+      const existingIdx = daily.findIndex(d =>
+        (d && (d.id === targetAttId || d.attendanceId === targetAttId)) ||
+        (d && isSameSubject(d.subject, cleanSub) && d.division === cleanDiv && d.semester === cleanSem && (d.isoDate === dateRes.isoDate || d.date === dateRes.date))
+      );
+
+      const entryToSave = {
+        id: targetAttId,
+        attendanceId: targetAttId,
+        subject: cleanSub,
+        division: cleanDiv,
+        semester: cleanSem,
+        courseYear: cleanYear,
+        date: dateRes.date,
+        isoDate: dateRes.isoDate,
+        records: validatedRecords,
+        studentUsername: studentUsername ? stripHtmlTags(studentUsername) : "",
+        status: topStatus,
+        facultyUsername: facultyUser,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (existingIdx >= 0) {
+        daily[existingIdx] = entryToSave;
+      } else {
+        daily.push(entryToSave);
+      }
+      store.dailyAttendance = daily;
+
+      // Recalculate student overall percentages
+      if (store.students) {
+        recalculateOverallAttendance(daily, store.students, cleanSub);
+        store.markModified("students");
+      }
+      store.markModified("dailyAttendance");
+      await store.save();
+    }
+
+    res.json({ success: true, message: "Attendance saved successfully.", attendance: attDoc });
+  } catch (error) {
+    console.error("Save attendance error:", error);
+    res.status(500).json({ success: false, message: "Failed to save attendance." });
+  }
+}
+
+app.post("/api/attendance", rateLimitExpensive, requireAuth(["faculty", "admin"]), handleSaveAttendance);
+app.put("/api/attendance", rateLimitExpensive, requireAuth(["faculty", "admin"]), handleSaveAttendance);
+app.put("/api/attendance/:id", rateLimitExpensive, requireAuth(["faculty", "admin"]), handleSaveAttendance);
+
+// DELETE /api/attendance/:id and DELETE /api/attendance
+async function handleDeleteAttendance(req, res) {
+  try {
+    const targetId = String(req.params.id || req.body?.attendanceId || req.body?.id || req.query.id || "").trim();
+    if (!targetId) {
+      return res.status(400).json({ success: false, message: "Attendance ID is required for deletion." });
+    }
+
+    let doc = await Attendance.findOne({ $or: [{ attendanceId: targetId }, { id: targetId }] }).lean();
+    const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+    const storeEntry = (store?.dailyAttendance || []).find(d => d && (d.id === targetId || d.attendanceId === targetId));
+
+    if (!doc && !storeEntry) {
+      return res.status(404).json({ success: false, message: "Attendance record not found." });
+    }
+
+    const recSubject = doc?.subject || storeEntry?.subject || "";
+    const recDiv = doc?.division || storeEntry?.division || "";
+    const recSem = doc?.semester || storeEntry?.semester || "";
+
+    if (req.user.role === "faculty") {
+      const auth = validateFacultyAttendanceAuthorization(req.user, recSubject, recDiv, recSem);
+      if (!auth.authorized) {
+        return res.status(403).json({ success: false, message: auth.reason });
+      }
+    }
+
+    await Attendance.deleteMany({ $or: [{ attendanceId: targetId }, { id: targetId }] });
+
+    if (store) {
+      store.dailyAttendance = (store.dailyAttendance || []).filter(d => !d || (d.id !== targetId && d.attendanceId !== targetId));
+      if (store.students) {
+        recalculateOverallAttendance(store.dailyAttendance, store.students, recSubject);
+        store.markModified("students");
+      }
+      store.markModified("dailyAttendance");
+      await store.save();
+    }
+
+    res.json({ success: true, message: "Attendance record deleted successfully." });
+  } catch (error) {
+    console.error("Delete attendance error:", error);
+    res.status(500).json({ success: false, message: "Failed to delete attendance." });
+  }
+}
+
+app.delete("/api/attendance/:id", rateLimitExpensive, requireAuth(["faculty", "admin"]), handleDeleteAttendance);
+app.delete("/api/attendance", rateLimitExpensive, requireAuth(["faculty", "admin"]), handleDeleteAttendance);
+
+
+
 // --- Academic Data MongoDB Persistence Endpoints ---
 
 function normalizeStoreDivisions(divisions) {
@@ -2115,20 +2639,34 @@ app.get("/api/academic/data", requireAuth(), async (req, res) => {
       });
 
       // Redact other students' records from daily attendance logs
-      const scopedAttendance = (store.dailyAttendance || []).map(att => {
-        const logObj = { ...att };
-        if (logObj.records && typeof logObj.records === "object") {
-          let status = "";
-          for (const [rKey, rVal] of Object.entries(logObj.records)) {
-            if (String(rKey).toLowerCase() === normUsername) {
-              status = rVal;
-              break;
+      const scopedAttendance = (store.dailyAttendance || [])
+        .filter(att => {
+          if (!att) return false;
+          const hasStudentInRecords = att.records && typeof att.records === "object" &&
+            Object.keys(att.records).some(k => String(k).toLowerCase() === normUsername);
+          if (hasStudentInRecords) return true;
+          if (att.studentUsername && String(att.studentUsername).toLowerCase() === normUsername) return true;
+          if (studentDiv && att.division && !isUniversalDiv(att.division) && att.division !== studentDiv) return false;
+          if (req.user.semester && att.semester && att.semester !== req.user.semester) return false;
+          return true;
+        })
+        .map(att => {
+          const logObj = { ...att };
+          if (logObj.records && typeof logObj.records === "object") {
+            let status = "";
+            for (const [rKey, rVal] of Object.entries(logObj.records)) {
+              if (String(rKey).toLowerCase() === normUsername) {
+                status = rVal;
+                break;
+              }
             }
+            logObj.records = { [username]: status };
           }
-          logObj.records = { [username]: status };
-        }
-        return logObj;
-      });
+          if (logObj.studentUsername && String(logObj.studentUsername).toLowerCase() !== normUsername) {
+            logObj.studentUsername = username;
+          }
+          return logObj;
+        });
 
       return res.json({
         success: true,
@@ -2149,8 +2687,14 @@ app.get("/api/academic/data", requireAuth(), async (req, res) => {
       });
     }
 
-    // Faculty or Admin role: return complete operational store data
-    if (req.user.role === "faculty" || req.user.role === "admin") {
+    // Faculty role: scope dailyAttendance to authorized subjects & divisions
+    if (req.user.role === "faculty") {
+      const scope = getFacultyAuthorizedScope(req.user);
+      const facultyAttendance = (store.dailyAttendance || []).filter(att => {
+        if (!att || !att.subject) return false;
+        return canFacultySetSubject(req.user, att.subject, att.semester, att.division);
+      });
+
       return res.json({
         success: true,
         data: {
@@ -2162,6 +2706,29 @@ app.get("/api/academic/data", requireAuth(), async (req, res) => {
           assignments: store.assignments || [],
           notes: store.notes || [],
           deletedAssignments: store.deletedAssignments || [],
+          deletedDailyAttendance: store.deletedDailyAttendance || [],
+          dailyAttendance: facultyAttendance,
+          subjectMarksConfig: store.subjectMarksConfig || {},
+          subjects: store.subjects || [],
+          divisions: normalizeStoreDivisions(store.divisions)
+        }
+      });
+    }
+
+    // Admin role: return complete operational store data
+    if (req.user.role === "admin") {
+      return res.json({
+        success: true,
+        data: {
+          students: store.students || {},
+          notices: store.notices || [],
+          timetable: store.timetable || [],
+          timetableHeader: store.timetableHeader || {},
+          customBreakRows: store.customBreakRows || {},
+          assignments: store.assignments || [],
+          notes: store.notes || [],
+          deletedAssignments: store.deletedAssignments || [],
+          deletedDailyAttendance: store.deletedDailyAttendance || [],
           dailyAttendance: store.dailyAttendance || [],
           subjectMarksConfig: store.subjectMarksConfig || {},
           subjects: store.subjects || [],
@@ -2296,6 +2863,15 @@ async function syncCollectionsFromAcademicData(payload = {}) {
         if (attOps.length > 0) {
           await Attendance.bulkWrite(attOps, { ordered: false });
         }
+      }
+
+      // Explicit attendance deletion (only when explicitly requested)
+      const delDailyList = [
+        ...(Array.isArray(payload.deletedDailyAttendance) ? payload.deletedDailyAttendance : []),
+        ...(Array.isArray(payload.deletedAttendance) ? payload.deletedAttendance : [])
+      ].map(id => String(id).trim()).filter(Boolean);
+      if (delDailyList.length > 0) {
+        await Attendance.deleteMany({ $or: [{ attendanceId: { $in: delDailyList } }, { id: { $in: delDailyList } }] });
       }
 
       // 3. Sync Student Marks into MongoDB 'marks' collection via safe bulkWrite upsert
@@ -2464,6 +3040,12 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
     if (payload.dailyAttendance !== undefined && !Array.isArray(payload.dailyAttendance)) {
       return res.status(400).json({ success: false, message: "Invalid dailyAttendance payload format: Expected an array." });
     }
+    if (payload.deletedDailyAttendance !== undefined && !Array.isArray(payload.deletedDailyAttendance)) {
+      return res.status(400).json({ success: false, message: "Invalid deletedDailyAttendance payload format: Expected an array." });
+    }
+    if (payload.deletedAttendance !== undefined && !Array.isArray(payload.deletedAttendance)) {
+      return res.status(400).json({ success: false, message: "Invalid deletedAttendance payload format: Expected an array." });
+    }
     if (payload.assignments !== undefined && !Array.isArray(payload.assignments)) {
       return res.status(400).json({ success: false, message: "Invalid assignments payload format: Expected an array." });
     }
@@ -2478,6 +3060,8 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
     const MAX_LIMITS = {
       notices: 500,
       dailyAttendance: 5000,
+      deletedDailyAttendance: 1000,
+      deletedAttendance: 1000,
       assignments: 1000,
       notes: 1000,
       timetable: 1000,
@@ -2529,14 +3113,79 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
       update.notices = Array.from(noticeMap.values());
     }
 
-    if (Array.isArray(payload.dailyAttendance)) {
+    if (Array.isArray(payload.dailyAttendance) || Array.isArray(payload.deletedDailyAttendance) || Array.isArray(payload.deletedAttendance)) {
+      if (Array.isArray(payload.dailyAttendance)) {
+        for (const a of payload.dailyAttendance) {
+          if (!a || typeof a !== "object") {
+            return res.status(400).json({ success: false, message: "Invalid attendance entry: Expected an object." });
+          }
+          if (hasMongoOperators(a)) {
+            return res.status(400).json({ success: false, message: "MongoDB operators are not permitted in attendance payloads." });
+          }
+          if (!a.subject || typeof a.subject !== "string" || !a.subject.trim()) {
+            return res.status(400).json({ success: false, message: "Attendance entry requires a valid subject." });
+          }
+          if (a.date || a.isoDate) {
+            const dateCheck = validateAttendanceDate(a.date, a.isoDate);
+            if (!dateCheck.valid) {
+              return res.status(400).json({ success: false, message: dateCheck.error });
+            }
+            a.isoDate = dateCheck.isoDate;
+            a.date = dateCheck.date;
+          }
+          if (a.records && typeof a.records === "object") {
+            const recCheck = validateAttendanceRecords(a.records);
+            if (!recCheck.valid) {
+              return res.status(400).json({ success: false, message: recCheck.error });
+            }
+            a.records = recCheck.records;
+          }
+          if (a.status !== undefined && a.status !== "") {
+            const stNorm = normalizeAttendanceStatus(a.status);
+            if (!stNorm) {
+              return res.status(400).json({ success: false, message: `Invalid attendance status '${a.status}'. Allowed values: P, A, Present, Absent.` });
+            }
+            a.status = stNorm === "P" ? "Present" : "Absent";
+          }
+
+          // Faculty role authorization enforcement
+          if (req.user.role === "faculty") {
+            const authCheck = validateFacultyAttendanceAuthorization(req.user, a.subject, a.division, a.semester);
+            if (!authCheck.authorized) {
+              return res.status(403).json({ success: false, message: authCheck.reason });
+            }
+          }
+        }
+      }
+
       const attMap = new Map();
       (existingStore?.dailyAttendance || []).forEach(a => {
         if (a && (a.id || a.attendanceId)) attMap.set(a.id || a.attendanceId, a);
       });
-      payload.dailyAttendance.forEach(a => {
-        if (a && (a.id || a.attendanceId)) attMap.set(a.id || a.attendanceId, a);
-      });
+      if (Array.isArray(payload.dailyAttendance)) {
+        payload.dailyAttendance.forEach(a => {
+          if (a && (a.id || a.attendanceId)) attMap.set(a.id || a.attendanceId, a);
+        });
+      }
+
+      // Handle deletedDailyAttendance / deletedAttendance
+      const delDaily = [
+        ...(Array.isArray(payload.deletedDailyAttendance) ? payload.deletedDailyAttendance : []),
+        ...(Array.isArray(payload.deletedAttendance) ? payload.deletedAttendance : [])
+      ];
+      if (delDaily.length > 0) {
+        for (const delId of delDaily) {
+          const existing = attMap.get(delId);
+          if (existing && req.user.role === "faculty") {
+            const authCheck = validateFacultyAttendanceAuthorization(req.user, existing.subject, existing.division, existing.semester);
+            if (!authCheck.authorized) {
+              return res.status(403).json({ success: false, message: authCheck.reason });
+            }
+          }
+          attMap.delete(delId);
+        }
+      }
+
       update.dailyAttendance = Array.from(attMap.values());
     }
 
@@ -2626,6 +3275,11 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
       if (payload.divisions) update.divisions = normalizeStoreDivisions(payload.divisions);
     }
 
+    if (update.dailyAttendance && (update.students || existingStore?.students)) {
+      update.students = update.students || { ...(existingStore?.students || {}) };
+      recalculateOverallAttendance(update.dailyAttendance, update.students);
+    }
+
     await AcademicStore.findOneAndUpdate(
       { storeKey: "default_academic_store" },
       { $set: update },
@@ -2635,7 +3289,8 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
     // Synchronize dedicated MongoDB collections in real-time via safe bulkWrite
     await syncCollectionsFromAcademicData({
       ...payload,
-      ...(update.notices ? { notices: update.notices } : {})
+      ...(update.notices ? { notices: update.notices } : {}),
+      ...(update.dailyAttendance ? { dailyAttendance: update.dailyAttendance } : {})
     });
 
     res.json({ success: true, message: "Academic data permanently saved to MongoDB!" });

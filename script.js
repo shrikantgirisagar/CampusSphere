@@ -865,6 +865,7 @@ const DEFAULT_ACADEMIC = {
   deletedAssignments: [],
   deletedNotices: [],
   deletedNotes: [],
+  deletedDailyAttendance: [],
   dailyAttendance: [],
   subjectMarksConfig: {},
   subjects: [],
@@ -905,6 +906,7 @@ function normalizeAcademicData(parsed) {
     deletedAssignments: Array.isArray(parsed.deletedAssignments) ? parsed.deletedAssignments : [],
     deletedNotices: Array.isArray(parsed.deletedNotices) ? parsed.deletedNotices : [],
     deletedNotes: Array.isArray(parsed.deletedNotes) ? parsed.deletedNotes : [],
+    deletedDailyAttendance: Array.isArray(parsed.deletedDailyAttendance) ? parsed.deletedDailyAttendance : [],
     dailyAttendance: Array.isArray(parsed.dailyAttendance) ? parsed.dailyAttendance : [],
     subjectMarksConfig: parsed.subjectMarksConfig && typeof parsed.subjectMarksConfig === "object" ? parsed.subjectMarksConfig : {},
     subjects: Array.isArray(parsed.subjects) ? parsed.subjects : [],
@@ -5706,6 +5708,20 @@ function initAttendancePage() {
         const logItem = btn.closest(".history-item, tr, .card, .att-log-card");
         if (logItem) logItem.remove();
 
+        if (!ACADEMIC.deletedDailyAttendance) ACADEMIC.deletedDailyAttendance = [];
+        const toDeleteEntries = (ACADEMIC.dailyAttendance || []).filter(entry =>
+          entry.subject === currentUser.subject &&
+          entry.isoDate === dDate &&
+          entry.division === dDiv &&
+          entry.semester === dSem &&
+          entry.courseYear === dYear
+        );
+        toDeleteEntries.forEach(entry => {
+          if (entry && (entry.id || entry.attendanceId)) {
+            ACADEMIC.deletedDailyAttendance.push(entry.id || entry.attendanceId);
+          }
+        });
+
         ACADEMIC.dailyAttendance = (ACADEMIC.dailyAttendance || []).filter(entry =>
           !(entry.subject === currentUser.subject &&
             entry.isoDate === dDate &&
@@ -5731,6 +5747,13 @@ function initAttendancePage() {
         if (historyWrap) {
           historyWrap.innerHTML = `<div class="empty-state" style="padding:20px; text-align:center; color:#64748b;">🗑️ All stored attendance records cleared.</div>`;
         }
+
+        if (!ACADEMIC.deletedDailyAttendance) ACADEMIC.deletedDailyAttendance = [];
+        (ACADEMIC.dailyAttendance || []).filter(entry => entry.subject === currentUser.subject).forEach(entry => {
+          if (entry && (entry.id || entry.attendanceId)) {
+            ACADEMIC.deletedDailyAttendance.push(entry.id || entry.attendanceId);
+          }
+        });
 
         ACADEMIC.dailyAttendance = (ACADEMIC.dailyAttendance || []).filter(entry => entry.subject !== currentUser.subject);
         updateStudentOverallAttendance(currentUser.subject);
@@ -9053,8 +9076,9 @@ const pages = {
                       Weekly Lecture Timings (${group.slots.length} ${group.slots.length === 1 ? 'Slot' : 'Slots'}):
                     </div>
 
-                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                      <thead>
+                    <div class="table-wrap">
+                      <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                        <thead>
                         <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; text-align:left;">
                           <th style="padding:6px 8px; color:#475569;">Day</th>
                           <th style="padding:6px 8px; color:#475569;">Timing</th>
@@ -9075,6 +9099,7 @@ const pages = {
                         `).join("")}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 `;
               }).join("")}
