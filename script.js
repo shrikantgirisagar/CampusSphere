@@ -549,11 +549,47 @@ function handleSessionExpired(customMessage) {
   }, 1000);
 }
 
+function getStatusErrorMessage(status, defaultMsg) {
+  switch (Number(status)) {
+    case 400:
+      return defaultMsg || "Validation error: Please verify your input details.";
+    case 401:
+      return "Your session has expired. Please sign in again.";
+    case 403:
+      return defaultMsg || "Access forbidden: You do not have permission to perform this action.";
+    case 404:
+      return defaultMsg || "The requested resource could not be found.";
+    case 409:
+      return defaultMsg || "Conflict: A record with these details already exists.";
+    case 413:
+      return defaultMsg || "Payload too large: The attached file or request data exceeds the allowed limit.";
+    case 429:
+      return "Too many requests. Please wait a moment and try again later.";
+    case 500:
+      return "A server error occurred. Please try again later.";
+    case 502:
+    case 503:
+    case 504:
+      return "The service is temporarily unavailable. Please retry in a few moments.";
+    default:
+      return defaultMsg || `Request failed with status ${status}`;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.getStatusErrorMessage = getStatusErrorMessage;
+}
+
 async function authenticatedFetch(url, options = {}) {
   const optionsCopy = { ...options };
   optionsCopy.headers = getAuthHeaders(optionsCopy.headers || {});
 
-  const response = await fetch(url, optionsCopy);
+  let response;
+  try {
+    response = await fetch(url, optionsCopy);
+  } catch (netErr) {
+    throw new Error("Unable to connect to the server. Please check your connection and try again.");
+  }
 
   if (response.status === 401) {
     if (getStoredAuthToken() || currentUser) {
@@ -566,20 +602,85 @@ async function authenticatedFetch(url, options = {}) {
 
 async function apiRequest(endpoint, options = {}) {
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
-  const response = await authenticatedFetch(url, options);
+  let response;
+  try {
+    response = await authenticatedFetch(url, options);
+  } catch (netErr) {
+    return {
+      success: false,
+      status: 0,
+      networkError: true,
+      message: netErr.message || "Unable to connect to the server. Please check your connection and try again."
+    };
+  }
+
   let data = null;
   try {
     data = await response.json();
   } catch (_) {
     data = null;
   }
+
   if (!data) {
     data = {
       success: response.ok,
-      message: response.ok ? "Success" : `Request failed with status ${response.status}`
+      status: response.status,
+      message: response.ok ? "Success" : getStatusErrorMessage(response.status)
     };
+  } else {
+    data.status = response.status;
+    if (!response.ok) {
+      data.success = false;
+      if (!data.message) {
+        data.message = getStatusErrorMessage(response.status);
+      }
+    }
   }
   return data;
+}
+
+/**
+ * Prompt 28: Production-grade Action Lock, Double-Click Protection & Loading Indicator
+ */
+async function withActionLock(buttonOrSelector, asyncFn, options = {}) {
+  const btn = typeof buttonOrSelector === "string" ? document.querySelector(buttonOrSelector) : buttonOrSelector;
+  if (!btn) {
+    return await asyncFn();
+  }
+
+  // Prevent duplicate submissions / rapid multi-clicks
+  if (btn.dataset.actionLocked === "true" || btn.disabled) {
+    return;
+  }
+
+  btn.dataset.actionLocked = "true";
+  btn.disabled = true;
+  btn.classList.add("btn-loading");
+
+  const originalHtml = btn.innerHTML;
+  const loadingText = options.loadingText || null;
+
+  if (loadingText) {
+    btn.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span>${escapeHtml(loadingText)}</span>`;
+  } else {
+    const spinner = document.createElement("span");
+    spinner.className = "btn-spinner";
+    spinner.setAttribute("aria-hidden", "true");
+    btn.prepend(spinner);
+  }
+
+  try {
+    return await asyncFn();
+  } finally {
+    btn.dataset.actionLocked = "false";
+    btn.disabled = false;
+    btn.classList.remove("btn-loading");
+    btn.innerHTML = originalHtml;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.withActionLock = withActionLock;
 }
 
 function showToast(message, type = "info") {
@@ -588,17 +689,20 @@ function showToast(message, type = "info") {
     container = document.createElement("div");
     container.id = "notifToastContainer";
     container.className = "notif-toast-container";
+    container.setAttribute("aria-live", "polite");
+    container.setAttribute("aria-atomic", "false");
     document.body.appendChild(container);
   }
   const toast = document.createElement("div");
   toast.className = `notif-toast notif-toast-floating notif-toast-${type}`;
+  toast.setAttribute("role", type === "error" ? "alert" : "status");
   const icon = type === "success" ? "✅" : type === "error" ? "⚠️" : type === "warning" ? "⚡" : "ℹ️";
   toast.innerHTML = `
-    <span style="font-size:18px; flex-shrink:0;">${icon}</span>
+    <span style="font-size:18px; flex-shrink:0;" aria-hidden="true">${icon}</span>
     <div class="notif-toast-body" style="flex:1;">
       <div class="notif-toast-text" style="font-weight:600; color:#0f172a; margin:0; font-size:13px;">${escapeHtml(String(message || ""))}</div>
     </div>
-    <button type="button" class="notif-toast-close" title="Dismiss" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer; padding:0 4px;">&times;</button>
+    <button type="button" class="notif-toast-close" title="Dismiss" aria-label="Dismiss notification" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer; padding:0 4px;">&times;</button>
   `;
   const closeBtn = toast.querySelector(".notif-toast-close");
   if (closeBtn) {
@@ -658,18 +762,43 @@ async function hydrateUsersFromServer() {
 }
 
 async function createUserOnServer(userData) {
-  const response = await authenticatedFetch(`${API_BASE_URL}/api/users`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData)
-  });
-  const data = await response.json();
-  if (!response.ok || !data.success) {
-    if (response.status === 403) {
-      throw new Error(data.message || "Forbidden: Only administrators can create privileged accounts.");
-    }
-    throw new Error(data.message || "Unable to save account to MongoDB.");
+  let response;
+  try {
+    response = await authenticatedFetch(`${API_BASE_URL}/api/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData)
+    });
+  } catch (netErr) {
+    throw new Error(netErr.message || "Unable to connect to the server. Please check your connection and try again.");
   }
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = null;
+  }
+
+  if (!response.ok || !data || !data.success) {
+    if (response.status === 403) {
+      throw new Error((data && data.message) || "Forbidden: Only administrators can create privileged accounts.");
+    }
+    if (response.status === 409) {
+      throw new Error((data && data.message) || "Username or email is already registered.");
+    }
+    if (response.status === 413) {
+      throw new Error((data && data.message) || "Payload too large: The submitted data exceeds the allowed limit.");
+    }
+    if (response.status === 429) {
+      throw new Error((data && data.message) || "Too many registration attempts. Please wait a moment and try again.");
+    }
+    if (response.status >= 500) {
+      throw new Error("A server error occurred while creating the account. Please try again later.");
+    }
+    throw new Error((data && data.message) || getStatusErrorMessage(response.status, "Unable to save account to MongoDB."));
+  }
+
   try {
     localStorage.setItem("campussphere_stats_trigger", String(Date.now()));
     if (typeof window.CampusSphereSyncCounts === "function") window.CampusSphereSyncCounts(true);
@@ -679,32 +808,78 @@ async function createUserOnServer(userData) {
 }
 
 async function updateUserOnServer(role, oldUsername, userData) {
-  const response = await authenticatedFetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(oldUsername)}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData)
-  });
-  const data = await response.json();
-  if (!response.ok || !data.success) {
+  let response;
+  try {
+    response = await authenticatedFetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(oldUsername)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData)
+    });
+  } catch (netErr) {
+    throw new Error(netErr.message || "Unable to connect to the server. Please check your connection and try again.");
+  }
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = null;
+  }
+
+  if (!response.ok || !data || !data.success) {
     if (response.status === 403) {
-      throw new Error(data.message || "Forbidden: You are not authorized to modify this account.");
+      throw new Error((data && data.message) || "Forbidden: You are not authorized to modify this account.");
     }
-    throw new Error(data.message || "Unable to update account in MongoDB.");
+    if (response.status === 404) {
+      throw new Error((data && data.message) || "The specified user account could not be found.");
+    }
+    if (response.status === 409) {
+      throw new Error((data && data.message) || "Username or email is already taken by another account.");
+    }
+    if (response.status === 413) {
+      throw new Error((data && data.message) || "Payload too large: The submitted profile data exceeds the allowed limit.");
+    }
+    if (response.status === 429) {
+      throw new Error((data && data.message) || "Too many update requests. Please wait a moment and try again.");
+    }
+    if (response.status >= 500) {
+      throw new Error("A server error occurred while updating the account. Please try again later.");
+    }
+    throw new Error((data && data.message) || getStatusErrorMessage(response.status, "Unable to update account in MongoDB."));
   }
   return data.user;
 }
 
 async function deleteUserOnServer(role, username) {
-  const response = await authenticatedFetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(username)}`, {
-    method: "DELETE"
-  });
-  const data = await response.json();
-  if (!response.ok || !data.success) {
-    if (response.status === 403) {
-      throw new Error(data.message || "Forbidden: Only administrators can delete user accounts.");
-    }
-    throw new Error(data.message || "Unable to delete account from MongoDB.");
+  let response;
+  try {
+    response = await authenticatedFetch(`${API_BASE_URL}/api/users/${encodeURIComponent(role)}/${encodeURIComponent(username)}`, {
+      method: "DELETE"
+    });
+  } catch (netErr) {
+    throw new Error(netErr.message || "Unable to connect to the server. Please check your connection and try again.");
   }
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = null;
+  }
+
+  if (!response.ok || !data || !data.success) {
+    if (response.status === 403) {
+      throw new Error((data && data.message) || "Forbidden: Only administrators can delete user accounts.");
+    }
+    if (response.status === 404) {
+      throw new Error((data && data.message) || "The user account to delete was not found.");
+    }
+    if (response.status >= 500) {
+      throw new Error("A server error occurred while deleting the account. Please try again later.");
+    }
+    throw new Error((data && data.message) || getStatusErrorMessage(response.status, "Unable to delete account from MongoDB."));
+  }
+
   try {
     localStorage.setItem("campussphere_stats_trigger", String(Date.now()));
     if (typeof window.CampusSphereSyncCounts === "function") window.CampusSphereSyncCounts(true);
@@ -714,24 +889,41 @@ async function deleteUserOnServer(role, username) {
 }
 
 async function loginOnServer(role, username, password) {
+  let response;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role, username, password })
     });
-    const data = await response.json();
-    if (!response.ok || !data.success) throw new Error(data.message || "Invalid username or password.");
-    if (data.token) {
-      setStoredAuthToken(data.token);
-    }
-    return data.user;
-  } catch (error) {
-    if (error.message && error.message !== "Failed to fetch" && !error.message.includes("fetch")) {
-      throw error;
-    }
-    throw new Error("Unable to connect to portal server. Please ensure the backend server is running.");
+  } catch (netErr) {
+    throw new Error("Unable to connect to the server. Please check your connection and try again.");
   }
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = null;
+  }
+
+  if (!response.ok || !data || !data.success) {
+    if (response.status === 429) {
+      throw new Error((data && data.message) || "Too many login attempts. Please wait a moment and try again later.");
+    }
+    if (response.status === 400 || response.status === 401) {
+      throw new Error((data && data.message) || "Invalid username or password.");
+    }
+    if (response.status >= 500) {
+      throw new Error("The authentication service is temporarily unavailable. Please try again later.");
+    }
+    throw new Error((data && data.message) || getStatusErrorMessage(response.status, "Unable to sign in."));
+  }
+
+  if (data.token) {
+    setStoredAuthToken(data.token);
+  }
+  return data.user;
 }
 
 async function removeUserAccount(role, username) {
@@ -2249,64 +2441,62 @@ $("signupForm").addEventListener("submit", async e => {
   }
 
   const submitButton = signupModal.querySelector('button[type="submit"]');
-  if (submitButton) submitButton.disabled = true;
+  await withActionLock(submitButton, async () => {
+    try {
+      if (currentUsername) {
+        const existing = USERS[role].find(u => u.username.toLowerCase() === currentUsername.toLowerCase());
+        if (!existing) throw new Error("Could not find the user to update.");
 
-  try {
-    if (currentUsername) {
-      const existing = USERS[role].find(u => u.username.toLowerCase() === currentUsername.toLowerCase());
-      if (!existing) throw new Error("Could not find the user to update.");
+        const updated = await updateUserOnServer(role, currentUsername, {
+          name, newUsername: username, email, subject, subjects, subjectDivisions, department, password,
+          division, semester, courseYear, course, languageChoice, mathChoice
+        });
 
-      const updated = await updateUserOnServer(role, currentUsername, {
-        name, newUsername: username, email, subject, subjects, subjectDivisions, department, password,
-        division, semester, courseYear, course, languageChoice, mathChoice
-      });
-
-      if (role === "student") {
-        if (currentUsername.toLowerCase() !== username.toLowerCase()) {
-          renameStudentAcademicData(currentUsername, username);
+        if (role === "student") {
+          if (currentUsername.toLowerCase() !== username.toLowerCase()) {
+            renameStudentAcademicData(currentUsername, username);
+          }
+          ensureStudentRecord(username);
+          saveAcademicData();
         }
-        ensureStudentRecord(username);
-        saveAcademicData();
+        USERS[role] = USERS[role].map(u => u.id === existing.id || u.username.toLowerCase() === currentUsername.toLowerCase() ? updated : u);
+        saveUsers();
+        await hydrateUsersFromServer();
+        await hydrateAcademicDataFromServer();
+        if (typeof render === "function") render();
+        $("signupMessage").textContent = "Account updated successfully.";
+        $("signupMessage").className = "message success";
+      } else {
+        const created = await createUserOnServer({
+          name, username, password, email, role, subject, subjects, subjectDivisions, department,
+          division, semester, courseYear, course, languageChoice, mathChoice
+        });
+        USERS[role].push(created);
+        if (role === "student") {
+          ensureStudentRecord(username);
+          saveAcademicData();
+        }
+        saveUsers();
+        await hydrateUsersFromServer();
+        await hydrateAcademicDataFromServer();
+        if (typeof render === "function") render();
+        $("username").value = username;
+        $("password").value = "";
+        document.querySelectorAll(".role-tab").forEach(b => b.classList.toggle("active", b.dataset.role === role));
+        currentRole = role;
+        $("signupMessage").textContent = "Account created successfully. You can now sign in.";
+        $("signupMessage").className = "message success";
       }
-      USERS[role] = USERS[role].map(u => u.id === existing.id || u.username.toLowerCase() === currentUsername.toLowerCase() ? updated : u);
-      saveUsers();
-      await hydrateUsersFromServer();
-      await hydrateAcademicDataFromServer();
-      if (typeof render === "function") render();
-      $("signupMessage").textContent = "Account updated successfully.";
-      $("signupMessage").className = "message success";
-    } else {
-      const created = await createUserOnServer({
-        name, username, password, email, role, subject, subjects, subjectDivisions, department,
-        division, semester, courseYear, course, languageChoice, mathChoice
-      });
-      USERS[role].push(created);
-      if (role === "student") {
-        ensureStudentRecord(username);
-        saveAcademicData();
-      }
-      saveUsers();
-      await hydrateUsersFromServer();
-      await hydrateAcademicDataFromServer();
-      if (typeof render === "function") render();
-      $("username").value = username;
-      $("password").value = "";
-      document.querySelectorAll(".role-tab").forEach(b => b.classList.toggle("active", b.dataset.role === role));
-      currentRole = role;
-      $("signupMessage").textContent = "Account created successfully. You can now sign in.";
-      $("signupMessage").className = "message success";
-    }
 
-    setTimeout(() => {
-      closeSignupModal();
-    }, 900);
-  } catch (error) {
-    console.error("Account save error:", error);
-    $("signupMessage").textContent = error.message || "Unable to save account.";
-    $("signupMessage").className = "message error";
-  } finally {
-    if (submitButton) submitButton.disabled = false;
-  }
+      setTimeout(() => {
+        closeSignupModal();
+      }, 900);
+    } catch (error) {
+      console.error("Account save error:", error);
+      $("signupMessage").textContent = error.message || "Unable to save account.";
+      $("signupMessage").className = "message error";
+    }
+  }, { loadingText: "Saving..." });
 });
 
 $("loginForm").addEventListener("submit", async e => {
@@ -2314,32 +2504,41 @@ $("loginForm").addEventListener("submit", async e => {
   const username = $("username").value.trim();
   const password = $("password").value;
   const submitButton = $("loginForm").querySelector('button[type="submit"]');
-  if (submitButton) submitButton.disabled = true;
 
-  try {
-    const user = await loginOnServer(currentRole, username, password);
-    currentUser = user;
-    const roleList = USERS[currentRole] || [];
-    const knownIndex = roleList.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
-    if (knownIndex >= 0) roleList[knownIndex] = user;
-    else roleList.push(user);
-    saveUsers();
-    sessionStorage.setItem("portalUser", JSON.stringify(user));
-
-    try {
-      await hydrateUsersFromServer();
-      await hydrateAcademicDataFromServer();
-    } catch (hErr) {
-      console.warn("Pre-portal hydration warning:", hErr);
+  if (!username || !password) {
+    if ($("loginMessage")) {
+      $("loginMessage").textContent = "Please enter both username and password.";
+      $("loginMessage").className = "message error";
     }
-
-    openPortal();
-  } catch (error) {
-    $("loginMessage").textContent = error.message || "Unable to sign in.";
-    $("loginMessage").className = "message error";
-  } finally {
-    if (submitButton) submitButton.disabled = false;
+    return;
   }
+
+  await withActionLock(submitButton, async () => {
+    try {
+      const user = await loginOnServer(currentRole, username, password);
+      currentUser = user;
+      const roleList = USERS[currentRole] || [];
+      const knownIndex = roleList.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+      if (knownIndex >= 0) roleList[knownIndex] = user;
+      else roleList.push(user);
+      saveUsers();
+      sessionStorage.setItem("portalUser", JSON.stringify(user));
+
+      try {
+        await hydrateUsersFromServer();
+        await hydrateAcademicDataFromServer();
+      } catch (hErr) {
+        console.warn("Pre-portal hydration warning:", hErr);
+      }
+
+      openPortal();
+    } catch (error) {
+      if ($("loginMessage")) {
+        $("loginMessage").textContent = error.message || "Unable to sign in.";
+        $("loginMessage").className = "message error";
+      }
+    }
+  }, { loadingText: "Signing in..." });
 });
 
 if ($("logoutBtn")) $("logoutBtn").addEventListener("click", logout);
@@ -3337,6 +3536,7 @@ function openPortal() {
 
   try { updateDesktopNotificationUI(); } catch (e) { console.warn("updateDesktopNotificationUI error:", e); }
   try { checkPromptDesktopNotifications(); } catch (e) { console.warn("checkPromptDesktopNotifications error:", e); }
+  try { syncPushSubscriptionIfGranted(); } catch (e) { console.warn("syncPushSubscriptionIfGranted error:", e); }
   const initialRoute = getRouteFromHash();
   navigate(initialRoute, false);
 }
@@ -3486,11 +3686,45 @@ function updateNotesBadges() {
 }
 
 // ============================================================================
-// NATIVE LAPTOP DESKTOP PUSH NOTIFICATIONS ENGINE
+// PROMPT 29: REAL SYSTEM-LEVEL WEB PUSH NOTIFICATIONS ENGINE
+// Web Push API, Service Worker, PushManager, VAPID delivery
 // ============================================================================
 
 function isDesktopNotificationSupported() {
   return typeof window !== "undefined" && "Notification" in window;
+}
+
+function isWebPushSupported() {
+  return typeof window !== "undefined" &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, "+")
+    .replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function registerCampusSphereServiceWorker() {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return null;
+  }
+  try {
+    const reg = await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+    return reg;
+  } catch (err) {
+    console.warn("[WebPush] Service Worker registration failed:", err.message);
+    return null;
+  }
 }
 
 function getDesktopNotificationPermission() {
@@ -3498,87 +3732,215 @@ function getDesktopNotificationPermission() {
   return Notification.permission; // "default", "granted", "denied"
 }
 
-function updateDesktopNotificationUI() {
+async function updateDesktopNotificationUI() {
   const dot = $("desktopNotifDot");
   const btn = $("topbarDesktopNotifBtn");
   if (!btn) return;
 
   const perm = getDesktopNotificationPermission();
+
+  let isSubscribed = false;
+  if ("serviceWorker" in navigator && perm === "granted") {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        isSubscribed = Boolean(sub);
+      }
+    } catch (_) {}
+  }
+
   if (dot) {
-    dot.className = "desktop-notif-dot " + perm;
+    dot.className = "desktop-notif-dot " + (isSubscribed ? "granted" : perm);
   }
 
   if (perm === "granted") {
-    btn.title = "Desktop Notifications Active (Click to test)";
-    btn.setAttribute("aria-label", "Desktop Notifications Active");
+    btn.title = isSubscribed
+      ? "Web Push Notifications Active (Click to manage)"
+      : "Enable Real-Time Web Push Alerts";
+    btn.setAttribute("aria-label", isSubscribed ? "Push Notifications Active" : "Enable Push Notifications");
   } else if (perm === "denied") {
-    btn.title = "Desktop Notifications Blocked (Click for help)";
-    btn.setAttribute("aria-label", "Desktop Notifications Blocked");
+    btn.title = "Push Notifications Blocked in Browser Settings (Click for help)";
+    btn.setAttribute("aria-label", "Push Notifications Blocked");
   } else if (perm === "unsupported") {
-    btn.title = "Desktop Notifications Not Supported by this Browser";
+    btn.title = "Push Notifications Not Supported by this Browser";
     btn.style.display = "none";
   } else {
-    btn.title = "Click to Enable Native Laptop Desktop Notifications";
-    btn.setAttribute("aria-label", "Enable Native Laptop Desktop Notifications");
+    btn.title = "Click to Enable Real-Time Operating System Push Notifications";
+    btn.setAttribute("aria-label", "Enable Real-Time Push Notifications");
   }
 }
 
-async function requestDesktopNotificationPermission(interactive = false) {
+async function subscribeToPushNotifications(interactive = false) {
   if (!isDesktopNotificationSupported()) {
-    if (interactive) alert("Your browser does not support native desktop notifications.");
+    if (interactive) showToast("Push notifications are not supported by this browser.", "warning");
+    updateDesktopNotificationUI();
     return false;
   }
 
-  const currentPerm = Notification.permission;
-  if (currentPerm === "granted") {
-    if (interactive) {
-      sendDesktopNotification({
-        title: "CampusSphere • Desktop Alerts Active",
-        body: "You will receive notifications for campus notices.",
-        tag: "campussphere-test"
-      });
-    }
+  const hasPush = "serviceWorker" in navigator && "PushManager" in window;
+  if (!hasPush) {
+    if (interactive) showToast("Your browser does not support Web Push Service Workers.", "warning");
     updateDesktopNotificationUI();
-    return true;
+    return false;
   }
 
-  if (currentPerm === "denied") {
-    if (interactive) {
-      alert("Desktop notifications are currently blocked for this site.\n\nTo enable them:\n1. Click the site settings/tune icon in your browser's address bar.\n2. Set 'Notifications' to 'Allow'.\n3. Reload the page.");
+  let perm = Notification.permission;
+  if (perm === "default") {
+    try {
+      perm = await Notification.requestPermission();
+    } catch (err) {
+      console.warn("Permission request error:", err);
     }
-    updateDesktopNotificationUI();
+  }
+
+  updateDesktopNotificationUI();
+
+  if (perm === "denied") {
+    if (interactive) {
+      alert("Push notifications are currently blocked in your browser settings.\n\nTo enable them:\n1. Click the site settings or lock icon in your address bar.\n2. Set 'Notifications' to 'Allow'.\n3. Refresh this page.");
+    }
+    return false;
+  }
+
+  if (perm !== "granted") {
     return false;
   }
 
   try {
-    const permission = await Notification.requestPermission();
-    updateDesktopNotificationUI();
-    if (permission === "granted") {
-      sendDesktopNotification({
-        title: "CampusSphere • Alerts Enabled 🎉",
-        body: "Native notifications are now enabled! You will be alerted whenever new messages or notices arrive.",
-        tag: "campussphere-enabled"
-      });
-      return true;
+    const reg = await registerCampusSphereServiceWorker();
+    if (!reg) {
+      if (interactive) showToast("Service Worker could not be registered.", "error");
+      return false;
     }
+
+    const keyRes = await apiRequest("/api/push/public-key");
+    if (!keyRes || !keyRes.success || !keyRes.publicKey) {
+      console.warn("VAPID public key unavailable:", keyRes?.message);
+      if (interactive) showToast("Push notifications are not configured on the server.", "warning");
+      return false;
+    }
+
+    const appServerKey = urlBase64ToUint8Array(keyRes.publicKey);
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: appServerKey
+      });
+    }
+
+    if (sub && currentUser) {
+      await authenticatedFetch(`${API_BASE_URL}/api/push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON() })
+      });
+    }
+
+    updateDesktopNotificationUI();
+    if (interactive) {
+      showToast("Real-time push notifications enabled! Alerts will appear even when CampusSphere is closed.", "success");
+      sendDesktopNotification({
+        title: "CampusSphere • System Alerts Active",
+        body: "Real-time push notifications are now active on this device.",
+        tag: "campussphere-active"
+      });
+    }
+    return true;
   } catch (err) {
-    console.warn("Notification permission request error:", err);
+    console.error("subscribeToPushNotifications error:", err);
+    if (interactive) showToast("Could not subscribe to push notifications: " + err.message, "error");
+    return false;
   }
-  return false;
 }
 
-function handleDesktopNotifButtonClick() {
+async function unsubscribeFromPushNotifications(interactive = false) {
+  if (!("serviceWorker" in navigator)) return false;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      if (currentUser) {
+        await authenticatedFetch(`${API_BASE_URL}/api/push/subscribe`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: sub.endpoint })
+        }).catch(() => {});
+      }
+      await sub.unsubscribe();
+    }
+    updateDesktopNotificationUI();
+    if (interactive) {
+      showToast("Push notifications have been disabled on this device.", "info");
+    }
+    return true;
+  } catch (err) {
+    console.warn("unsubscribeFromPushNotifications error:", err);
+    return false;
+  }
+}
+
+async function syncPushSubscriptionIfGranted() {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("Notification" in window)) {
+    return;
+  }
+  if (Notification.permission !== "granted" || !currentUser) {
+    return;
+  }
+  try {
+    const reg = await registerCampusSphereServiceWorker();
+    if (!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      await authenticatedFetch(`${API_BASE_URL}/api/push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON() })
+      }).catch(() => {});
+    }
+  } catch (_) {}
+}
+
+async function handleDesktopNotifButtonClick() {
   const perm = getDesktopNotificationPermission();
-  if (perm === "default") {
-    requestDesktopNotificationPermission(true);
-  } else if (perm === "granted") {
-    sendDesktopNotification({
-      title: "CampusSphere • Laptop Alerts Working!",
-      body: "Desktop alerts are active. You will be notified even when this window is minimized.",
-      tag: "test-alert"
-    });
+  if (perm === "unsupported") {
+    showToast("Push notifications are not supported by this browser.", "warning");
+    return;
+  }
+  if (perm === "denied") {
+    alert("Notifications are currently blocked for this site in your browser settings.\n\nTo allow notifications:\n1. Click the site settings or lock icon in your address bar.\n2. Change 'Notifications' to 'Allow'.\n3. Reload the page.");
+    return;
+  }
+
+  let isSubscribed = false;
+  if ("serviceWorker" in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        isSubscribed = Boolean(sub);
+      }
+    } catch (_) {}
+  }
+
+  if (perm === "granted" && isSubscribed) {
+    const action = confirm("Push notifications are currently active on this device.\n\nClick 'OK' to send a test notification.\nClick 'Cancel' if you want to disable notifications.");
+    if (action) {
+      sendDesktopNotification({
+        title: "CampusSphere • System Alert Test",
+        body: "Real-time push delivery is fully functional! Notifications will appear when minimized or closed.",
+        tag: "test-alert"
+      });
+      showToast("Test notification sent!", "info");
+    } else {
+      const confirmDisable = confirm("Do you want to disable push notifications on this device?");
+      if (confirmDisable) {
+        await unsubscribeFromPushNotifications(true);
+      }
+    }
   } else {
-    requestDesktopNotificationPermission(true);
+    await subscribeToPushNotifications(true);
   }
 }
 
@@ -3588,11 +3950,26 @@ function sendDesktopNotification({ title, body, icon, tag, onClick }) {
   }
 
   try {
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg && reg.showNotification) {
+          reg.showNotification(title || "CampusSphere Alert", {
+            body: body || "",
+            icon: icon || "/CampusSphere-logo.png?v=20260915_hq1",
+            badge: "/CampusSphere-logo.png?v=20260915_hq1",
+            tag: tag || "campussphere-notification",
+            renotify: true
+          });
+        }
+      }).catch(() => {});
+      return true;
+    }
+
     const notif = new Notification(title || "CampusSphere Alert", {
       body: body || "",
       icon: icon || "/CampusSphere-logo.png?v=20260915_hq1",
       tag: tag || "campussphere-notification",
-      badge: "/favicon.ico",
+      badge: "/CampusSphere-logo.png?v=20260915_hq1",
       renotify: true,
       silent: false
     });
@@ -3662,9 +4039,9 @@ function checkPromptDesktopNotifications() {
         <span style="font-size:24px; flex-shrink:0;">🖥️</span>
         <div class="notif-toast-body">
           <div class="notif-toast-header">
-            <b>Enable Laptop Desktop Alerts?</b>
+            <b>Enable Real-Time Notifications?</b>
           </div>
-          <p class="notif-toast-text" style="font-size:12px; margin-top:2px;">Get instant popups for campus notices even when minimized.</p>
+          <p class="notif-toast-text" style="font-size:12px; margin-top:2px;">Get immediate alerts for attendance, marks, assignments & notices even when closed.</p>
           <div style="margin-top:6px; display:flex; gap:6px;">
             <button type="button" id="enableNotifPromptBtn" class="primary-btn" style="padding:4px 10px; font-size:11px; border-radius:8px;">Enable</button>
             <button type="button" class="notif-toast-close-btn secondary-btn" style="padding:4px 8px; font-size:11px; border-radius:8px;">Not Now</button>
@@ -3678,7 +4055,7 @@ function checkPromptDesktopNotifications() {
         enableBtn.onclick = (e) => {
           e.stopPropagation();
           promptToast.remove();
-          requestDesktopNotificationPermission(true);
+          subscribeToPushNotifications(true);
         };
       }
 
@@ -4785,53 +5162,51 @@ function bindEditProfileEvents() {
     }
 
     const submitButton = editProfileModal.querySelector('button[type="submit"]');
-    if (submitButton) submitButton.disabled = true;
+    await withActionLock(submitButton, async () => {
+      try {
+        const updated = await updateUserOnServer("student", username, {
+          name,
+          newUsername: username,
+          email,
+          course,
+          courseYear,
+          semester,
+          division,
+          languageChoice,
+          mathChoice,
+          profilePic: currentUser.profilePic || ""
+        });
 
-    try {
-      const updated = await updateUserOnServer("student", username, {
-        name,
-        newUsername: username,
-        email,
-        course,
-        courseYear,
-        semester,
-        division,
-        languageChoice,
-        mathChoice,
-        profilePic: currentUser.profilePic || ""
-      });
+        // Explicitly guarantee language & math choices & profilePic on updated user object
+        updated.languageChoice = languageChoice;
+        updated.mathChoice = mathChoice;
+        updated.profilePic = currentUser.profilePic || "";
 
-      // Explicitly guarantee language & math choices & profilePic on updated user object
-      updated.languageChoice = languageChoice;
-      updated.mathChoice = mathChoice;
-      updated.profilePic = currentUser.profilePic || "";
+        const index = USERS.student.findIndex(u => u.username.toLowerCase() === username.toLowerCase() || u.id === currentUser.id);
+        if (index >= 0) USERS.student[index] = updated;
+        else USERS.student.push(updated);
 
-      const index = USERS.student.findIndex(u => u.username.toLowerCase() === username.toLowerCase() || u.id === currentUser.id);
-      if (index >= 0) USERS.student[index] = updated;
-      else USERS.student.push(updated);
+        saveUsers();
+        currentUser = sanitizeClientUser(updated);
+        sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
 
-      saveUsers();
-      currentUser = sanitizeClientUser(updated);
-      sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
+        $("userName").textContent = currentUser.name;
+        updateUserAvatarUI();
 
-      $("userName").textContent = currentUser.name;
-      updateUserAvatarUI();
+        setProfileStatusMessage("Academic setup updated successfully!", "success");
+        $("editProfileMessage").textContent = "Academic setup updated successfully!";
+        $("editProfileMessage").className = "message success";
 
-      setProfileStatusMessage("Academic setup updated successfully!", "success");
-      $("editProfileMessage").textContent = "Academic setup updated successfully!";
-      $("editProfileMessage").className = "message success";
-
-      setTimeout(() => {
-        closeEditProfileModal();
-        navigate("profile");
-      }, 500);
-    } catch (error) {
-      console.error("Profile update error:", error);
-      $("editProfileMessage").textContent = error.message || "Unable to update academic setup.";
-      $("editProfileMessage").className = "message error";
-    } finally {
-      if (submitButton) submitButton.disabled = false;
-    }
+        setTimeout(() => {
+          closeEditProfileModal();
+          navigate("profile");
+        }, 500);
+      } catch (error) {
+        console.error("Profile update error:", error);
+        $("editProfileMessage").textContent = error.message || "Unable to update academic setup.";
+        $("editProfileMessage").className = "message error";
+      }
+    }, { loadingText: "Saving..." });
   });
 }
 
@@ -5017,48 +5392,46 @@ function bindFacultyEditProfileEvents() {
         ? currentUser.subject
         : facultyEditSelectedSubjects[0];
 
-      if (submitBtn) submitBtn.disabled = true;
+      await withActionLock(submitBtn, async () => {
+        try {
+          const updated = await updateUserOnServer("faculty", currentUser.username, {
+            name,
+            email,
+            division,
+            department: currentUser.department || "Department of Computer Science & Applications",
+            subject: primarySubject,
+            subjects: facultyEditSelectedSubjects,
+            subjectDivisions: facultyEditSubjectDivisions
+          });
 
-      try {
-        const updated = await updateUserOnServer("faculty", currentUser.username, {
-          name,
-          email,
-          division,
-          department: currentUser.department || "Department of Computer Science & Applications",
-          subject: primarySubject,
-          subjects: facultyEditSelectedSubjects,
-          subjectDivisions: facultyEditSubjectDivisions
-        });
+          currentUser = sanitizeClientUser(updated);
+          currentUser.subjects = facultyEditSelectedSubjects;
+          currentUser.subject = primarySubject;
+          currentUser.subjectDivisions = facultyEditSubjectDivisions;
 
-        currentUser = sanitizeClientUser(updated);
-        currentUser.subjects = facultyEditSelectedSubjects;
-        currentUser.subject = primarySubject;
-        currentUser.subjectDivisions = facultyEditSubjectDivisions;
+          const targetFacultyIndex = (USERS.faculty || []).findIndex(f => f.username.toLowerCase() === currentUser.username.toLowerCase());
+          if (targetFacultyIndex >= 0) {
+            USERS.faculty[targetFacultyIndex] = currentUser;
+          } else {
+            USERS.faculty.push(currentUser);
+          }
 
-        const targetFacultyIndex = (USERS.faculty || []).findIndex(f => f.username.toLowerCase() === currentUser.username.toLowerCase());
-        if (targetFacultyIndex >= 0) {
-          USERS.faculty[targetFacultyIndex] = currentUser;
-        } else {
-          USERS.faculty.push(currentUser);
+          saveUsers();
+          sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
+
+          closeFacultyEditProfileModal();
+          $("userName").textContent = currentUser.name;
+          $("userAvatar").textContent = currentUser.name.charAt(0).toUpperCase();
+
+          updateFacultySubjectSwitcher();
+          const activeItem = document.querySelector(".nav-item.active");
+          const activePage = activeItem ? activeItem.dataset.page : "dashboard";
+          navigate(activePage);
+        } catch (err) {
+          $("facultyEditMessage").textContent = err.message || "Failed to update faculty profile.";
+          $("facultyEditMessage").className = "message error";
         }
-
-        saveUsers();
-        sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
-
-        closeFacultyEditProfileModal();
-        $("userName").textContent = currentUser.name;
-        $("userAvatar").textContent = currentUser.name.charAt(0).toUpperCase();
-
-        updateFacultySubjectSwitcher();
-        const activeItem = document.querySelector(".nav-item.active");
-        const activePage = activeItem ? activeItem.dataset.page : "dashboard";
-        navigate(activePage);
-      } catch (err) {
-        $("facultyEditMessage").textContent = err.message || "Failed to update faculty profile.";
-        $("facultyEditMessage").className = "message error";
-      } finally {
-        if (submitBtn) submitBtn.disabled = false;
-      }
+      }, { loadingText: "Saving..." });
     });
   }
 }
@@ -5270,36 +5643,34 @@ function bindAdminFacultyEditEvents() {
       }
       const division = $("adminEditFacultyDivision") ? $("adminEditFacultyDivision").value : "All Divisions";
       const submitBtn = form.querySelector("button[type='submit']");
-      if (submitBtn) submitBtn.disabled = true;
+      await withActionLock(submitBtn, async () => {
+        try {
+          const primarySubject = adminEditingFacultySubjects[0];
+          const updated = await updateUserOnServer("faculty", adminEditingFacultyUsername, {
+            division,
+            subject: primarySubject,
+            subjects: adminEditingFacultySubjects,
+            subjectDivisions: adminEditingFacultySubjectDivisions
+          });
 
-      try {
-        const primarySubject = adminEditingFacultySubjects[0];
-        const updated = await updateUserOnServer("faculty", adminEditingFacultyUsername, {
-          division,
-          subject: primarySubject,
-          subjects: adminEditingFacultySubjects,
-          subjectDivisions: adminEditingFacultySubjectDivisions
-        });
+          const targetIdx = (USERS.faculty || []).findIndex(f => f.username.toLowerCase() === adminEditingFacultyUsername.toLowerCase());
+          if (targetIdx >= 0) {
+            USERS.faculty[targetIdx] = sanitizeClientUser(updated);
+            USERS.faculty[targetIdx].subjects = adminEditingFacultySubjects;
+            USERS.faculty[targetIdx].subject = primarySubject;
+            USERS.faculty[targetIdx].division = division;
+            USERS.faculty[targetIdx].subjectDivisions = adminEditingFacultySubjectDivisions;
+          }
 
-        const targetIdx = (USERS.faculty || []).findIndex(f => f.username.toLowerCase() === adminEditingFacultyUsername.toLowerCase());
-        if (targetIdx >= 0) {
-          USERS.faculty[targetIdx] = sanitizeClientUser(updated);
-          USERS.faculty[targetIdx].subjects = adminEditingFacultySubjects;
-          USERS.faculty[targetIdx].subject = primarySubject;
-          USERS.faculty[targetIdx].division = division;
-          USERS.faculty[targetIdx].subjectDivisions = adminEditingFacultySubjectDivisions;
+          saveUsers();
+          closeAdminFacultyEditModal();
+          setAdminNotice(`Updated classes for Prof. ${updated.name || adminEditingFacultyUsername} successfully.`, "success");
+          render();
+        } catch (err) {
+          $("adminFacultyEditMessage").textContent = err.message || "Failed to update faculty classes.";
+          $("adminFacultyEditMessage").className = "message error";
         }
-
-        saveUsers();
-        closeAdminFacultyEditModal();
-        setAdminNotice(`Updated classes for Prof. ${updated.name || adminEditingFacultyUsername} successfully.`, "success");
-        render();
-      } catch (err) {
-        $("adminFacultyEditMessage").textContent = err.message || "Failed to update faculty classes.";
-        $("adminFacultyEditMessage").className = "message error";
-      } finally {
-        if (submitBtn) submitBtn.disabled = false;
-      }
+      }, { loadingText: "Saving..." });
     });
   }
 }
@@ -5613,7 +5984,7 @@ function initAttendancePage() {
   // Save Daily Attendance
   const saveBtn = $("saveDailyAttendanceBtn");
   if (saveBtn) {
-    saveBtn.addEventListener("click", () => {
+    saveBtn.addEventListener("click", async () => {
       if (isAttendanceReadOnly) return;
 
       const facultySem = getSemesterForSubject(currentUser.subject);
@@ -5636,52 +6007,70 @@ function initAttendancePage() {
         return;
       }
 
-      if (!ACADEMIC.dailyAttendance) ACADEMIC.dailyAttendance = [];
-      const isoDate = attendanceFilterDate;
-      const formattedDate = formatDateDDMMYY(isoDate);
+      await withActionLock(saveBtn, async () => {
+        if (!ACADEMIC.dailyAttendance) ACADEMIC.dailyAttendance = [];
+        const isoDate = attendanceFilterDate;
+        const formattedDate = formatDateDDMMYY(isoDate);
 
-      let existingIndex = ACADEMIC.dailyAttendance.findIndex(entry =>
-        entry.subject === currentUser.subject &&
-        entry.isoDate === isoDate &&
-        entry.division === attendanceFilterDivision &&
-        entry.semester === attendanceFilterSemester &&
-        entry.courseYear === attendanceFilterCourseYear
-      );
+        let existingIndex = ACADEMIC.dailyAttendance.findIndex(entry =>
+          entry.subject === currentUser.subject &&
+          entry.isoDate === isoDate &&
+          entry.division === attendanceFilterDivision &&
+          entry.semester === attendanceFilterSemester &&
+          entry.courseYear === attendanceFilterCourseYear
+        );
 
-      const recordToSave = {
-        id: existingIndex >= 0 ? ACADEMIC.dailyAttendance[existingIndex].id : "att-" + Date.now(),
-        date: formattedDate,
-        isoDate: isoDate,
-        subject: currentUser.subject,
-        division: attendanceFilterDivision,
-        semester: attendanceFilterSemester,
-        courseYear: attendanceFilterCourseYear,
-        records: { ...activeAttendanceMap },
-        updatedAt: new Date().toISOString()
-      };
+        const recordToSave = {
+          id: existingIndex >= 0 ? ACADEMIC.dailyAttendance[existingIndex].id : "att-" + Date.now(),
+          date: formattedDate,
+          isoDate: isoDate,
+          subject: currentUser.subject,
+          division: attendanceFilterDivision,
+          semester: attendanceFilterSemester,
+          courseYear: attendanceFilterCourseYear,
+          records: { ...activeAttendanceMap },
+          updatedAt: new Date().toISOString()
+        };
 
-      if (existingIndex >= 0) {
-        ACADEMIC.dailyAttendance[existingIndex] = recordToSave;
-      } else {
-        ACADEMIC.dailyAttendance.push(recordToSave);
-      }
-
-      updateStudentOverallAttendance(currentUser.subject);
-      saveAcademicData();
-
-      const successMsg = `✅ Daily attendance for ${formattedDate} saved successfully!`;
-      resetAttendanceFilters();
-      attendanceSaveSuccessMessage = successMsg;
-      navigate("attendance");
-
-      if (window.saveSuccessTimer) clearTimeout(window.saveSuccessTimer);
-      window.saveSuccessTimer = setTimeout(() => {
-        attendanceSaveSuccessMessage = "";
-        const msgEl = document.getElementById("attFilterSuccessMsg");
-        if (msgEl) {
-          msgEl.style.display = "none";
+        if (existingIndex >= 0) {
+          ACADEMIC.dailyAttendance[existingIndex] = recordToSave;
+        } else {
+          ACADEMIC.dailyAttendance.push(recordToSave);
         }
-      }, 1500);
+
+        updateStudentOverallAttendance(currentUser.subject);
+        saveAcademicData();
+
+        let syncRes = null;
+        if (typeof syncAcademicDataToBackend === "function") {
+          syncRes = await syncAcademicDataToBackend();
+        }
+
+        if (syncRes && syncRes.success === false) {
+          const errMsg = syncRes.message || "Failed to sync attendance to the server. Your selections have been preserved; please retry.";
+          if (msg) {
+            msg.textContent = `⚠️ ${errMsg}`;
+            msg.className = "message error";
+          }
+          showToast(errMsg, "error");
+          return;
+        }
+
+        const successMsg = `✅ Daily attendance for ${formattedDate} saved successfully!`;
+        showToast("Daily attendance saved successfully!", "success");
+        resetAttendanceFilters();
+        attendanceSaveSuccessMessage = successMsg;
+        navigate("attendance");
+
+        if (window.saveSuccessTimer) clearTimeout(window.saveSuccessTimer);
+        window.saveSuccessTimer = setTimeout(() => {
+          attendanceSaveSuccessMessage = "";
+          const msgEl = document.getElementById("attFilterSuccessMsg");
+          if (msgEl) {
+            msgEl.style.display = "none";
+          }
+        }, 1500);
+      }, { loadingText: "Saving Attendance..." });
     });
   }
 
@@ -5840,7 +6229,7 @@ function initMarksPage() {
   // Batch Form Submit
   const batchForm = $("marksBatchForm");
   if (batchForm) {
-    batchForm.addEventListener("submit", event => {
+    batchForm.addEventListener("submit", async event => {
       event.preventDefault();
       const config = getSubjectMarksConfig(currentUser.subject);
       const maxI1 = config.maxInternal1 || 20;
@@ -5901,42 +6290,61 @@ function initMarksPage() {
 
       if (hasError) return;
 
-      filteredStudents.forEach(s => {
-        const row = document.querySelector(`tr[data-student-row="${s.username}"]`);
-        if (!row) return;
+      const submitBtn = batchForm.querySelector('button[type="submit"]');
+      await withActionLock(submitBtn, async () => {
+        filteredStudents.forEach(s => {
+          const row = document.querySelector(`tr[data-student-row="${s.username}"]`);
+          if (!row) return;
 
-        const i1Inp = row.querySelector(`input[data-field="internal1"]`);
-        const i2Inp = row.querySelector(`input[data-field="internal2"]`);
-        const assignInp = row.querySelector(`input[data-field="assignment"]`);
+          const i1Inp = row.querySelector(`input[data-field="internal1"]`);
+          const i2Inp = row.querySelector(`input[data-field="internal2"]`);
+          const assignInp = row.querySelector(`input[data-field="assignment"]`);
 
-        const i1Val = i1Inp ? i1Inp.value.trim() : "";
-        const i2Val = i2Inp ? i2Inp.value.trim() : "";
-        const assignVal = assignInp ? assignInp.value.trim() : "";
+          const i1Val = i1Inp ? i1Inp.value.trim() : "";
+          const i2Val = i2Inp ? i2Inp.value.trim() : "";
+          const assignVal = assignInp ? assignInp.value.trim() : "";
 
-        const i1 = i1Val !== "" ? parseFloat(i1Val) : null;
-        const i2 = i2Val !== "" ? parseFloat(i2Val) : null;
-        const assign = assignVal !== "" ? parseFloat(assignVal) : null;
+          const i1 = i1Val !== "" ? parseFloat(i1Val) : null;
+          const i2 = i2Val !== "" ? parseFloat(i2Val) : null;
+          const assign = assignVal !== "" ? parseFloat(assignVal) : null;
 
-        const record = ensureStudentRecord(s.username);
-        record.marks[currentUser.subject] = {
-          internal1: i1,
-          internal2: i2,
-          assignment: assign,
-          maxInternal1: maxI1,
-          maxInternal2: maxI2,
-          maxAssignment: 10
-        };
-      });
+          const record = ensureStudentRecord(s.username);
+          record.marks[currentUser.subject] = {
+            internal1: i1,
+            internal2: i2,
+            assignment: assign,
+            maxInternal1: maxI1,
+            maxInternal2: maxI2,
+            maxAssignment: 10
+          };
+        });
 
-      saveAcademicData();
+        saveAcademicData();
 
-      if (msg) {
-        msg.textContent = "✅ All student marks saved successfully!";
-        msg.className = "message success";
-        setTimeout(() => {
-          if (msg) msg.textContent = "";
-        }, 3000);
-      }
+        let syncRes = null;
+        if (typeof syncAcademicDataToBackend === "function") {
+          syncRes = await syncAcademicDataToBackend();
+        }
+
+        if (syncRes && syncRes.success === false) {
+          const errMsg = syncRes.message || "Failed to sync marks to the server. Your entered marks have been preserved; please retry.";
+          if (msg) {
+            msg.textContent = `⚠️ ${errMsg}`;
+            msg.className = "message error";
+          }
+          showToast(errMsg, "error");
+          return;
+        }
+
+        if (msg) {
+          msg.textContent = "✅ All student marks saved successfully!";
+          msg.className = "message success";
+          setTimeout(() => {
+            if (msg) msg.textContent = "";
+          }, 3000);
+        }
+        showToast("All student marks saved successfully!", "success");
+      }, { loadingText: "Saving Marks..." });
     });
   }
 }
@@ -5945,7 +6353,7 @@ function initAssignmentsPage() {
   if (currentUser.role === "faculty") {
     const form = $("assignmentForm");
     if (form) {
-      form.addEventListener("submit", event => {
+      form.addEventListener("submit", async event => {
         event.preventDefault();
         const title = $("assignmentTitle").value.trim();
         const description = $("assignmentDescription") ? $("assignmentDescription").value.trim() : "";
@@ -5978,49 +6386,63 @@ function initAssignmentsPage() {
           targetStudents = [{ username: "all", name: "All Students", division: targetDiv || "Div A" }];
         }
 
-        const saveAndNavigate = (fileName, fileData) => {
-          const assignBaseId = "assign_" + Date.now();
-          const todayISO = getTodayISODate();
-          if (!Array.isArray(ACADEMIC.deletedAssignments)) ACADEMIC.deletedAssignments = [];
+        const submitBtn = form.querySelector('button[type="submit"]');
+        await withActionLock(submitBtn, async () => {
+          const saveAndNavigate = async (fileName, fileData) => {
+            const assignBaseId = "assign_" + Date.now();
+            const todayISO = getTodayISODate();
+            if (!Array.isArray(ACADEMIC.deletedAssignments)) ACADEMIC.deletedAssignments = [];
 
-          targetStudents.forEach((s, sIdx) => {
-            const deleteKey = `${String(s.username).toLowerCase()}___${targetSub}___${title}___${due}`;
-            ACADEMIC.deletedAssignments = ACADEMIC.deletedAssignments.filter(k => k !== deleteKey);
-            ACADEMIC.assignments.push({
-              id: `${assignBaseId}_${encodeURIComponent(s.username || sIdx)}`,
-              student: s.username,
-              subject: targetSub,
-              targetDivision: targetDiv,
-              title,
-              description,
-              fileName: fileName || "",
-              fileData: fileData || "",
-              due,
-              status,
-              submittedDate: status === "Submitted" ? todayISO : ""
+            targetStudents.forEach((s, sIdx) => {
+              const deleteKey = `${String(s.username).toLowerCase()}___${targetSub}___${title}___${due}`;
+              ACADEMIC.deletedAssignments = ACADEMIC.deletedAssignments.filter(k => k !== deleteKey);
+              ACADEMIC.assignments.push({
+                id: `${assignBaseId}_${encodeURIComponent(s.username || sIdx)}`,
+                student: s.username,
+                subject: targetSub,
+                targetDivision: targetDiv,
+                title,
+                description,
+                fileName: fileName || "",
+                fileData: fileData || "",
+                due,
+                status,
+                submittedDate: status === "Submitted" ? todayISO : ""
+              });
             });
-          });
-          saveAcademicData();
-          navigate("assignments");
-        };
+            saveAcademicData();
+            if (typeof syncAcademicDataToBackend === "function") {
+              await syncAcademicDataToBackend();
+            }
+            showToast("Assignment published successfully!", "success");
+            navigate("assignments");
+          };
 
-        if (fileInput && fileInput.files && fileInput.files[0]) {
-          const file = fileInput.files[0];
-          if (file.size > 2 * 1024 * 1024) {
-            alert("Attachment size exceeds 2 MB limit. Please upload a smaller file.");
-            return;
+          if (fileInput && fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            if (file.size > 2 * 1024 * 1024) {
+              if ($("assignmentMessage")) {
+                $("assignmentMessage").textContent = "Attachment size exceeds 2 MB limit. Please upload a smaller file.";
+                $("assignmentMessage").className = "message error";
+              }
+              return;
+            }
+            await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = async function (e) {
+                await saveAndNavigate(file.name, e.target.result);
+                resolve();
+              };
+              reader.onerror = async function () {
+                await saveAndNavigate(file.name, "");
+                resolve();
+              };
+              reader.readAsDataURL(file);
+            });
+          } else {
+            await saveAndNavigate("", "");
           }
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            saveAndNavigate(file.name, e.target.result);
-          };
-          reader.onerror = function () {
-            saveAndNavigate(file.name, "");
-          };
-          reader.readAsDataURL(file);
-        } else {
-          saveAndNavigate("", "");
-        }
+        }, { loadingText: "Publishing..." });
       });
     }
 
@@ -6132,7 +6554,7 @@ function initNotesPage() {
   if (currentUser.role === "faculty") {
     const uploadBtn = $("btnUploadNotes");
     if (uploadBtn) {
-      uploadBtn.addEventListener("click", () => {
+      uploadBtn.addEventListener("click", async () => {
         const titleEl = $("notesTitle");
         const subEl = $("notesTargetSubject");
         const divEl = $("notesDivision");
@@ -6151,40 +6573,53 @@ function initNotesPage() {
           return;
         }
 
-        const saveAndNavigate = (fileName, fileData) => {
-          if (!Array.isArray(ACADEMIC.notes)) ACADEMIC.notes = [];
-          ACADEMIC.notes.unshift({
-            id: "note_" + Date.now(),
-            subject: targetSubject,
-            title: title,
-            division: division || "All Divisions",
-            fileName: fileName || "",
-            fileData: fileData || "",
-            uploadedBy: currentUser.username,
-            uploadedByName: currentUser.name || "Faculty",
-            date: new Date().toISOString().slice(0, 10)
-          });
-          saveAcademicData();
-          navigate("notes");
-        };
+        await withActionLock(uploadBtn, async () => {
+          const saveAndNavigate = async (fileName, fileData) => {
+            if (!Array.isArray(ACADEMIC.notes)) ACADEMIC.notes = [];
+            ACADEMIC.notes.unshift({
+              id: "note_" + Date.now(),
+              subject: targetSubject,
+              title: title,
+              division: division || "All Divisions",
+              fileName: fileName || "",
+              fileData: fileData || "",
+              uploadedBy: currentUser.username,
+              uploadedByName: currentUser.name || "Faculty",
+              date: new Date().toISOString().slice(0, 10)
+            });
+            saveAcademicData();
+            if (typeof syncAcademicDataToBackend === "function") {
+              await syncAcademicDataToBackend();
+            }
+            showToast("Study notes uploaded successfully!", "success");
+            navigate("notes");
+          };
 
-        if (fileEl && fileEl.files && fileEl.files[0]) {
-          const file = fileEl.files[0];
-          if (file.size > 2 * 1024 * 1024) {
-            alert("Attachment size exceeds 2 MB limit. Please upload a smaller file.");
-            return;
+          if (fileEl && fileEl.files && fileEl.files[0]) {
+            const file = fileEl.files[0];
+            if (file.size > 2 * 1024 * 1024) {
+              if (msgEl) {
+                msgEl.textContent = "⚠️ Attachment size exceeds 2 MB limit. Please upload a smaller file.";
+                msgEl.className = "message error";
+              }
+              return;
+            }
+            await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = async function (e) {
+                await saveAndNavigate(file.name, e.target.result);
+                resolve();
+              };
+              reader.onerror = async function () {
+                await saveAndNavigate(file.name, "");
+                resolve();
+              };
+              reader.readAsDataURL(file);
+            });
+          } else {
+            await saveAndNavigate("", "");
           }
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            saveAndNavigate(file.name, e.target.result);
-          };
-          reader.onerror = function () {
-            saveAndNavigate(file.name, "");
-          };
-          reader.readAsDataURL(file);
-        } else {
-          saveAndNavigate("", "");
-        }
+        }, { loadingText: "Uploading Notes..." });
       });
     }
 
@@ -6239,7 +6674,7 @@ function initNoticesPage() {
   if (currentUser && (currentUser.role === "faculty" || currentUser.role === "admin")) {
     const form = $("noticeForm");
     if (form) {
-      form.addEventListener("submit", event => {
+      form.addEventListener("submit", async event => {
         event.preventDefault();
         const title = $("noticeTitle").value.trim();
         const text = $("noticeText").value.trim();
@@ -6261,43 +6696,53 @@ function initNoticesPage() {
           return;
         }
 
-        const publishNoticeObj = (fileName = "", fileData = "") => {
-          const newNotice = {
-            id: "notice-" + Date.now(),
-            title,
-            text,
-            date,
-            target,
-            authorRole: currentUser.role,
-            authorName: currentUser.name || (currentUser.role === "admin" ? "Admin" : "Faculty"),
-            fileName,
-            fileData
+        const submitBtn = form.querySelector('button[type="submit"]');
+        await withActionLock(submitBtn, async () => {
+          const publishNoticeObj = async (fileName = "", fileData = "") => {
+            const newNotice = {
+              id: "notice-" + Date.now(),
+              title,
+              text,
+              date,
+              target,
+              authorRole: currentUser.role,
+              authorName: currentUser.name || (currentUser.role === "admin" ? "Admin" : "Faculty"),
+              fileName,
+              fileData
+            };
+
+            ACADEMIC.notices.push(newNotice);
+
+            saveAcademicData();
+            updateNoticeBadges();
+
+            if (typeof syncAcademicDataToBackend === "function") {
+              await syncAcademicDataToBackend();
+            }
+
+            showToast("Notice published successfully!", "success");
+            navigate("notices");
           };
 
-          ACADEMIC.notices.push(newNotice);
-
-          saveAcademicData();
-          updateNoticeBadges();
-
-
-          navigate("notices");
-        };
-
-        const file = (fileInput && fileInput.files && fileInput.files.length) ? fileInput.files[0] : null;
-        if (file) {
-          if (file.size > 2 * 1024 * 1024) {
-            $("noticeMessage").textContent = "Attachment size exceeds 2 MB limit. Please upload a smaller file.";
-            $("noticeMessage").className = "message error";
-            return;
+          const file = (fileInput && fileInput.files && fileInput.files.length) ? fileInput.files[0] : null;
+          if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+              $("noticeMessage").textContent = "Attachment size exceeds 2 MB limit. Please upload a smaller file.";
+              $("noticeMessage").className = "message error";
+              return;
+            }
+            await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = async function (e) {
+                await publishNoticeObj(file.name, e.target.result);
+                resolve();
+              };
+              reader.readAsDataURL(file);
+            });
+          } else {
+            await publishNoticeObj();
           }
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            publishNoticeObj(file.name, e.target.result);
-          };
-          reader.readAsDataURL(file);
-        } else {
-          publishNoticeObj();
-        }
+        }, { loadingText: "Publishing Notice..." });
       });
     }
 
@@ -6356,20 +6801,21 @@ function initAdminUserManagement(role = "student") {
       const name = btn.dataset.removeUserName || username;
 
       if (confirm(`Are you sure you want to remove ${role === "student" ? "student" : "faculty"} "${name}"?`)) {
-        btn.disabled = true;
-        // INSTANT 0ms DOM ROW REMOVAL
-        const userRow = btn.closest("tr, [data-user-row], .user-card, .card");
-        if (userRow) userRow.remove();
-
-        try {
-          const removed = await removeUserAccount(userRole, username);
-          if (removed) {
-            setAdminNotice(`${role === "student" ? "Student" : "Faculty"} "${name}" was removed successfully.`, "success");
+        await withActionLock(btn, async () => {
+          const userRow = btn.closest("tr, [data-user-row], .user-card, .card");
+          try {
+            const removed = await removeUserAccount(userRole, username);
+            if (removed) {
+              if (userRow) userRow.remove();
+              setAdminNotice(`${role === "student" ? "Student" : "Faculty"} "${name}" was removed successfully.`, "success");
+              showToast(`${role === "student" ? "Student" : "Faculty"} "${name}" removed.`, "success");
+            }
+          } catch (err) {
+            console.error("Remove user error:", err);
+            setAdminNotice(err.message || "Failed to remove user account.", "error");
+            showToast(err.message || "Failed to remove user account.", "error");
           }
-        } catch (err) {
-          alert(err.message || "Failed to remove user account.");
-          btn.disabled = false;
-        }
+        }, { loadingText: "Removing..." });
       }
     };
   });
@@ -10207,8 +10653,8 @@ function syncTimetableToBackend() {
 }
 
 function syncAcademicDataToBackend() {
-  if (!currentUser || (currentUser.role !== "faculty" && currentUser.role !== "admin")) return Promise.resolve(null);
-  if (!ACADEMIC) return Promise.resolve(null);
+  if (!currentUser || (currentUser.role !== "faculty" && currentUser.role !== "admin")) return Promise.resolve({ success: true });
+  if (!ACADEMIC) return Promise.resolve({ success: true });
   return authenticatedFetch(API_BASE_URL + "/api/academic/sync", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -10216,16 +10662,19 @@ function syncAcademicDataToBackend() {
   }).then(async r => {
     try {
       const json = await r.json();
-      if (!r.ok && r.status === 403) {
-        console.warn("Academic data backend sync forbidden:", json.message);
+      if (!r.ok) {
+        if (r.status === 403) {
+          console.warn("Academic data backend sync forbidden:", json && json.message);
+        }
+        return { success: false, status: r.status, message: (json && json.message) || getStatusErrorMessage(r.status, "Academic data sync failed.") };
       }
-      return json;
+      return json || { success: true };
     } catch (_) {
-      return null;
+      return { success: r.ok, status: r.status, message: getStatusErrorMessage(r.status, "Academic data sync failed.") };
     }
   }).catch(e => {
     console.warn("Academic data backend sync error:", e);
-    return null;
+    return { success: false, status: 0, networkError: true, message: e.message || "Unable to connect to the server. Please check your connection and try again." };
   });
 }
 
@@ -10488,7 +10937,7 @@ function bindSubjectEvents() {
   if (overlay) overlay.onclick = closeSubjectModal;
 
   if (form) {
-    form.onsubmit = (e) => {
+    form.onsubmit = async (e) => {
       e.preventDefault();
       const mode = $("subjectMode").value;
       const originalId = $("originalSubjectId").value;
@@ -10498,7 +10947,7 @@ function bindSubjectEvents() {
       const semester = $("subjectSemesterSelect").value;
 
       if (!id || !/^[a-z0-9_-]+$/i.test(id)) {
-        alert("Subject Code must be alphanumeric (letters, numbers, underscores, dashes only).");
+        showToast("Subject Code must be alphanumeric (letters, numbers, underscores, dashes only).", "warning");
         return;
       }
 
@@ -10508,74 +10957,83 @@ function bindSubjectEvents() {
 
       if (mode === "add") {
         if (ACADEMIC.subjects.some(s => s.id === id)) {
-          alert(`A subject with code '${id}' already exists.`);
+          showToast(`A subject with code '${id}' already exists.`, "warning");
           return;
         }
-        ACADEMIC.subjects.push({ id, name, short, icon: "", semester });
       } else {
         if (id !== originalId && ACADEMIC.subjects.some(s => s.id === id)) {
-          alert(`A subject with code '${id}' already exists.`);
+          showToast(`A subject with code '${id}' already exists.`, "warning");
           return;
-        }
-
-        const s = ACADEMIC.subjects.find(item => item.id === originalId);
-        if (s) {
-          s.id = id;
-          s.name = name;
-          s.short = short;
-          s.icon = "";
-          s.semester = semester;
-        }
-
-        // Cascade rename to other entities (timetable, students data, faculty profile)
-        if (id !== originalId) {
-          // Update timetable entries
-          if (Array.isArray(ACADEMIC.timetable)) {
-            ACADEMIC.timetable.forEach(entry => {
-              if (entry.subject === originalId) {
-                entry.subject = id;
-              }
-            });
-          }
-          // Update student records (attendance, marks)
-          if (ACADEMIC.students) {
-            Object.keys(ACADEMIC.students).forEach(username => {
-              const stud = ACADEMIC.students[username];
-              if (stud) {
-                if (stud.attendance && stud.attendance[originalId] !== undefined) {
-                  stud.attendance[id] = stud.attendance[originalId];
-                  delete stud.attendance[originalId];
-                }
-                if (stud.marks && stud.marks[originalId] !== undefined) {
-                  stud.marks[id] = stud.marks[originalId];
-                  delete stud.marks[originalId];
-                }
-              }
-            });
-          }
-
-          // Update faculty members
-          if (USERS && Array.isArray(USERS.faculty)) {
-            USERS.faculty.forEach(fac => {
-              if (fac.subject === originalId) {
-                fac.subject = id;
-              }
-            });
-            saveUsers();
-          }
-
-          // Update current logged-in user session if they are affected
-          if (currentUser && currentUser.subject === originalId) {
-            currentUser.subject = id;
-            sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
-          }
         }
       }
 
-      saveAcademicData();
-      syncAcademicDataToBackend();
-      closeSubjectModal();
-      render();
+      const submitBtn = form.querySelector('button[type="submit"]');
+      await withActionLock(submitBtn, async () => {
+        if (mode === "add") {
+          ACADEMIC.subjects.push({ id, name, short, icon: "", semester });
+        } else {
+          const s = ACADEMIC.subjects.find(item => item.id === originalId);
+          if (s) {
+            s.id = id;
+            s.name = name;
+            s.short = short;
+            s.icon = "";
+            s.semester = semester;
+          }
+
+          // Cascade rename to other entities (timetable, students data, faculty profile)
+          if (id !== originalId) {
+            // Update timetable entries
+            if (Array.isArray(ACADEMIC.timetable)) {
+              ACADEMIC.timetable.forEach(entry => {
+                if (entry.subject === originalId) {
+                  entry.subject = id;
+                }
+              });
+            }
+            // Update student records (attendance, marks)
+            if (ACADEMIC.students) {
+              Object.keys(ACADEMIC.students).forEach(username => {
+                const stud = ACADEMIC.students[username];
+                if (stud) {
+                  if (stud.attendance && stud.attendance[originalId] !== undefined) {
+                    stud.attendance[id] = stud.attendance[originalId];
+                    delete stud.attendance[originalId];
+                  }
+                  if (stud.marks && stud.marks[originalId] !== undefined) {
+                    stud.marks[id] = stud.marks[originalId];
+                    delete stud.marks[originalId];
+                  }
+                }
+              });
+            }
+
+            // Update faculty members
+            if (USERS && Array.isArray(USERS.faculty)) {
+              USERS.faculty.forEach(fac => {
+                if (fac.subject === originalId) {
+                  fac.subject = id;
+                }
+              });
+              saveUsers();
+            }
+
+            // Update current logged-in user session if they are affected
+            if (currentUser && currentUser.subject === originalId) {
+              currentUser.subject = id;
+              sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
+            }
+          }
+        }
+
+        saveAcademicData();
+        if (typeof syncAcademicDataToBackend === "function") {
+          await syncAcademicDataToBackend();
+        }
+        showToast(`Subject '${name || id}' saved successfully!`, "success");
+        closeSubjectModal();
+        render();
+      }, { loadingText: "Saving..." });
     };
   }
 }
@@ -10864,11 +11322,11 @@ function bindDivisionEvents() {
   if (overlay) overlay.onclick = closeAddDivisionModal;
 
   if (form) {
-    form.onsubmit = (e) => {
+    form.onsubmit = async (e) => {
       e.preventDefault();
       const rawInput = $("divisionNameInput") ? $("divisionNameInput").value.trim() : "";
       if (!rawInput) {
-        alert("Please enter a division name or letter.");
+        showToast("Please enter a division name or letter.", "warning");
         return;
       }
 
@@ -10891,24 +11349,30 @@ function bindDivisionEvents() {
       if (targetYear !== "All Years") {
         const existingYearDivs = ACADEMIC.divisions[targetYear] || [];
         if (existingYearDivs.some(d => d.toLowerCase() === formattedName.toLowerCase())) {
-          alert(`Division "${formattedName}" already exists in ${targetYear}.`);
+          showToast(`Division "${formattedName}" already exists in ${targetYear}.`, "warning");
           return;
         }
       }
 
-      targetYears.forEach(yr => {
-        if (!Array.isArray(ACADEMIC.divisions[yr])) {
-          ACADEMIC.divisions[yr] = ["Div A", "Div B"];
-        }
-        if (!ACADEMIC.divisions[yr].some(d => d.toLowerCase() === formattedName.toLowerCase())) {
-          ACADEMIC.divisions[yr].push(formattedName);
-        }
-      });
+      const submitBtn = form.querySelector('button[type="submit"]');
+      await withActionLock(submitBtn, async () => {
+        targetYears.forEach(yr => {
+          if (!Array.isArray(ACADEMIC.divisions[yr])) {
+            ACADEMIC.divisions[yr] = ["Div A", "Div B"];
+          }
+          if (!ACADEMIC.divisions[yr].some(d => d.toLowerCase() === formattedName.toLowerCase())) {
+            ACADEMIC.divisions[yr].push(formattedName);
+          }
+        });
 
-      saveAcademicData();
-      syncAcademicDataToBackend();
-      closeAddDivisionModal();
-      render();
+        saveAcademicData();
+        if (typeof syncAcademicDataToBackend === "function") {
+          await syncAcademicDataToBackend();
+        }
+        showToast(`Division '${formattedName}' added successfully!`, "success");
+        closeAddDivisionModal();
+        render();
+      }, { loadingText: "Saving..." });
     };
   }
 }
@@ -11649,63 +12113,61 @@ window.addEventListener("pageshow", () => {
       }
 
       const submitBtn = pageSignupForm.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = true;
+      await withActionLock(submitBtn, async () => {
+        try {
+          const created = await createUserOnServer({
+            name, username, password, email, role, subject, subjects, subjectDivisions, department,
+            division, semester, courseYear, course, languageChoice, mathChoice
+          });
+          USERS[role].push(created);
+          if (role === "student") {
+            ensureStudentRecord(username);
+            saveAcademicData();
+          }
+          saveUsers();
+          await hydrateUsersFromServer();
+          await hydrateAcademicDataFromServer();
+          if (typeof render === "function") render();
 
-      try {
-        const created = await createUserOnServer({
-          name, username, password, email, role, subject, subjects, subjectDivisions, department,
-          division, semester, courseYear, course, languageChoice, mathChoice
-        });
-        USERS[role].push(created);
-        if (role === "student") {
-          ensureStudentRecord(username);
-          saveAcademicData();
-        }
-        saveUsers();
-        await hydrateUsersFromServer();
-        await hydrateAcademicDataFromServer();
-        if (typeof render === "function") render();
-
-        if (pageSignupMessage) {
-          pageSignupMessage.textContent = "Account created successfully! Redirecting to Sign In...";
-          pageSignupMessage.className = "message success";
-        }
-
-        const loginUserField = document.getElementById("username");
-        const loginPassField = document.getElementById("password");
-        if (loginUserField) loginUserField.value = username;
-        if (loginPassField) loginPassField.value = "";
-        currentRole = role;
-        document.querySelectorAll(".role-tab[data-role]").forEach(b => b.classList.toggle("active", b.dataset.role === role));
-        const roleLabel = document.getElementById("loginUsernameLabel");
-        if (roleLabel) roleLabel.textContent = "Username";
-
-        setTimeout(() => {
-          pageSignupForm.reset();
-          pageFacultySelectedSubjects = [];
-          pageFacultySubjectDivisions = {};
-          renderPageFacultyChips();
-          setPageSignupCourseYearValue("");
-          updatePageSemesterOptions("");
-          populatePageDivisionSelect();
-          setPageSignupLanguageValue("");
           if (pageSignupMessage) {
-            pageSignupMessage.textContent = "";
-            pageSignupMessage.className = "message";
+            pageSignupMessage.textContent = "Account created successfully! Redirecting to Sign In...";
+            pageSignupMessage.className = "message success";
           }
-          if (typeof showLogin === "function") {
-            showLogin(true);
+
+          const loginUserField = document.getElementById("username");
+          const loginPassField = document.getElementById("password");
+          if (loginUserField) loginUserField.value = username;
+          if (loginPassField) loginPassField.value = "";
+          currentRole = role;
+          document.querySelectorAll(".role-tab[data-role]").forEach(b => b.classList.toggle("active", b.dataset.role === role));
+          const roleLabel = document.getElementById("loginUsernameLabel");
+          if (roleLabel) roleLabel.textContent = "Username";
+
+          setTimeout(() => {
+            pageSignupForm.reset();
+            pageFacultySelectedSubjects = [];
+            pageFacultySubjectDivisions = {};
+            renderPageFacultyChips();
+            setPageSignupCourseYearValue("");
+            updatePageSemesterOptions("");
+            populatePageDivisionSelect();
+            setPageSignupLanguageValue("");
+            if (pageSignupMessage) {
+              pageSignupMessage.textContent = "";
+              pageSignupMessage.className = "message";
+            }
+            if (typeof showLogin === "function") {
+              showLogin(true);
+            }
+          }, 1100);
+        } catch (err) {
+          console.error("Signup error:", err);
+          if (pageSignupMessage) {
+            pageSignupMessage.textContent = err.message || "Unable to create account.";
+            pageSignupMessage.className = "message error";
           }
-        }, 1100);
-      } catch (err) {
-        console.error("Signup error:", err);
-        if (pageSignupMessage) {
-          pageSignupMessage.textContent = err.message || "Unable to create account.";
-          pageSignupMessage.className = "message error";
         }
-      } finally {
-        if (submitBtn) submitBtn.disabled = false;
-      }
+      }, { loadingText: "Creating Account..." });
     });
   }
 
@@ -11974,4 +12436,44 @@ window.addEventListener("pageshow", () => {
     getLastActiveTrigger: () => lastActiveModalTrigger
   };
 })();
+
+/* ============================================================================
+   PROMPT 27: ENFORCE ORIGINAL LIGHT MODE ON ALL DEVICES & PLATFORMS
+   Guarantees that CampusSphere stays strictly in its original light design
+   regardless of OS, browser, or device dark-mode preferences or dynamic changes.
+   ============================================================================ */
+(function enforcePrompt27LightMode() {
+  function applyLightMode() {
+    try {
+      document.documentElement.style.setProperty("color-scheme", "light", "important");
+      if (document.body) {
+        document.body.style.setProperty("color-scheme", "light", "important");
+      }
+    } catch (_) {}
+  }
+
+  applyLightMode();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyLightMode);
+  }
+
+  // Dynamic system theme change listener: guarantee light mode remains enforced
+  try {
+    const darkMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    if (darkMediaQuery && typeof darkMediaQuery.addEventListener === "function") {
+      darkMediaQuery.addEventListener("change", applyLightMode);
+    } else if (darkMediaQuery && typeof darkMediaQuery.addListener === "function") {
+      darkMediaQuery.addListener(applyLightMode);
+    }
+  } catch (_) {}
+
+  window.__prompt27 = {
+    isLightEnforced: () => {
+      const meta = document.querySelector('meta[name="color-scheme"]');
+      const cs = window.getComputedStyle(document.documentElement).colorScheme;
+      return (!meta || meta.content === "light") && (cs ? cs.includes("light") : true);
+    }
+  };
+})();
+
 

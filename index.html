@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>CampusSphere</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +16,7 @@
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
   <link rel="apple-touch-icon" href="CampusSphere-logo.png?v=20260915_hq1">
+  <link rel="manifest" href="/manifest.json">
 </head>
 
 <body>
@@ -467,7 +470,7 @@ Belagavi</small></div>
           </div>
 
           <button class="primary-btn" type="submit"><span>Sign In</span><span class="arrow">→</span></button>
-          <p id="loginMessage" class="message"></p>
+          <p id="loginMessage" class="message" role="alert" aria-live="polite"></p>
         </form>
 
         <div class="auth-switch-bar">
@@ -679,7 +682,7 @@ Belagavi</small></div>
             <span id="pageSignupSubmitLabel">Create Student Account</span>
             <span class="arrow">→</span>
           </button>
-          <p id="pageSignupMessage" class="message"></p>
+          <p id="pageSignupMessage" class="message" role="alert" aria-live="polite"></p>
         </form>
 
         <div class="auth-switch-bar">

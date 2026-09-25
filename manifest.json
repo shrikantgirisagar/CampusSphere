@@ -1,0 +1,22 @@
+{
+  "name": "CampusSphere — Academic Management System",
+  "short_name": "CampusSphere",
+  "description": "College Academic and Attendance Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f8fd",
+  "theme_color": "#1459d9",
+  "icons": [
+    {
+      "src": "/CampusSphere-logo.png?v=20260915_hq1",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/CampusSphere-logo.png?v=20260915_hq1",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -17,6 +17,11 @@ const Assignment = require("./models/Assignment");
 const Timetable = require("./models/Timetable");
 const Note = require("./models/Note");
 const AcademicStore = require("./models/AcademicStore");
+const PushSubscription = require("./models/PushSubscription");
+const pushService = require("./services/pushNotificationService");
+
+// Initialize Web Push VAPID configuration
+pushService.initWebPush();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -199,6 +204,11 @@ app.use((req, res, next) => {
   const firstSegment = (segments[0] || "").toLowerCase();
   const filename = (segments[segments.length - 1] || "").toLowerCase();
 
+  // Prompt 29: Exempt standard PWA & Web Push static files
+  if (filename === "manifest.json" || filename === "manifest.webmanifest" || filename === "service-worker.js") {
+    return next();
+  }
+
   if (BLOCKED_STATIC_DIRS.has(firstSegment)) {
     return res.status(404).json({ success: false, message: "Resource not found." });
   }
@@ -241,6 +251,24 @@ app.get("/script.js", (req, res) => {
 app.get("/animated-background.js", (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(__dirname, "animated-background.js"));
+});
+
+// Prompt 29: Service Worker & PWA Manifest explicit handlers
+app.get("/service-worker.js", (req, res) => {
+  res.set({
+    "Content-Type": "application/javascript; charset=utf-8",
+    "Service-Worker-Allowed": "/",
+    "Cache-Control": "no-cache, no-store, must-revalidate"
+  });
+  res.sendFile(path.join(__dirname, "service-worker.js"));
+});
+
+app.get(["/manifest.json", "/manifest.webmanifest"], (req, res) => {
+  res.set({
+    "Content-Type": "application/manifest+json; charset=utf-8",
+    "Cache-Control": "no-cache, no-store, must-revalidate"
+  });
+  res.sendFile(path.join(__dirname, "manifest.json"));
 });
 
 // Serve remaining static assets from project root
@@ -1330,6 +1358,66 @@ app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
   }
 });
 
+// ============================================================================
+// PROMPT 29: REAL SYSTEM-LEVEL WEB PUSH SUBSCRIPTION ENDPOINTS
+// ============================================================================
+
+app.get("/api/push/public-key", (req, res) => {
+  const publicKey = pushService.getVapidPublicKey();
+  if (!publicKey) {
+    return res.status(503).json({
+      success: false,
+      message: "Web Push notifications are not configured on this server."
+    });
+  }
+  res.json({ success: true, publicKey });
+});
+
+app.post("/api/push/subscribe", rateLimitExpensive, requireAuth(), async (req, res) => {
+  try {
+    const { subscription } = req.body || {};
+    if (!subscription || typeof subscription !== "object") {
+      return res.status(400).json({ success: false, message: "Missing or invalid subscription payload." });
+    }
+    const endpoint = String(subscription.endpoint || "").trim();
+    if (!endpoint || !endpoint.startsWith("http")) {
+      return res.status(400).json({ success: false, message: "A valid push subscription endpoint URL is required." });
+    }
+    if (!subscription.keys?.p256dh || !subscription.keys?.auth) {
+      return res.status(400).json({ success: false, message: "Cryptographic subscription keys (p256dh, auth) are required." });
+    }
+
+    const saved = await pushService.saveSubscription(req.user, subscription, req.headers["user-agent"]);
+    res.json({
+      success: true,
+      message: "Push notification subscription registered successfully.",
+      endpoint: saved.endpoint
+    });
+  } catch (err) {
+    console.error("Push subscribe error:", err.message);
+    res.status(500).json({ success: false, message: err.message || "Failed to register push subscription." });
+  }
+});
+
+const handlePushUnsubscribe = async (req, res) => {
+  try {
+    const endpoint = String(req.body?.endpoint || req.query?.endpoint || "").trim();
+    if (!endpoint) {
+      return res.status(400).json({ success: false, message: "Subscription endpoint is required for unsubscription." });
+    }
+    const removed = await pushService.removeSubscription(req.user, endpoint);
+    res.json({
+      success: true,
+      message: removed ? "Unsubscribed from push notifications successfully." : "Subscription not found or already removed."
+    });
+  } catch (err) {
+    console.error("Push unsubscribe error:", err.message);
+    res.status(500).json({ success: false, message: "Failed to unsubscribe from push notifications." });
+  }
+};
+
+app.delete("/api/push/subscribe", rateLimitExpensive, requireAuth(), handlePushUnsubscribe);
+app.post("/api/push/unsubscribe", rateLimitExpensive, requireAuth(), handlePushUnsubscribe);
 
 // --- Prompt 17: Timetable Dynamic Builder & Server-Side RBAC ---
 
@@ -2438,6 +2526,11 @@ async function handleSaveAttendance(req, res) {
 
     const facultyUser = req.user.role === "faculty" ? req.user.username : (stripHtmlTags(facultyUsername || "admin"));
 
+    // Capture previous state to ensure idempotency and prevent duplicate pushes on identical saves
+    const prevAtt = await Attendance.findOne(
+      { $or: [{ attendanceId: targetAttId }, { subject: cleanSub, division: cleanDiv, semester: cleanSem, isoDate: dateRes.isoDate }] }
+    ).lean();
+
     // 1. Non-destructive update in dedicated Attendance collection
     const attDoc = await Attendance.findOneAndUpdate(
       { $or: [{ attendanceId: targetAttId }, { subject: cleanSub, division: cleanDiv, semester: cleanSem, isoDate: dateRes.isoDate }] },
@@ -2500,6 +2593,19 @@ async function handleSaveAttendance(req, res) {
       store.markModified("dailyAttendance");
       await store.save();
     }
+
+    // Prompt 29: Immediate Web Push Notification for Present attendance
+    pushService.notifyAttendance({
+      subject: cleanSub,
+      date: dateRes.date,
+      isoDate: dateRes.isoDate,
+      attendanceId: targetAttId,
+      records: validatedRecords,
+      singleStudent: studentUsername ? stripHtmlTags(studentUsername) : "",
+      singleStatus: topStatus,
+      prevRecords: prevAtt?.records,
+      prevSingleStatus: prevAtt?.status
+    }).catch(pushErr => console.warn("[WebPush] notifyAttendance async error:", pushErr.message));
 
     res.json({ success: true, message: "Attendance saved successfully.", attendance: attDoc });
   } catch (error) {
@@ -3292,6 +3398,81 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
       ...(update.notices ? { notices: update.notices } : {}),
       ...(update.dailyAttendance ? { dailyAttendance: update.dailyAttendance } : {})
     });
+
+    // Prompt 29: Immediate real-time Web Push event delivery for academic operations
+    // 1. Attendance notifications for newly marked Present students
+    if (Array.isArray(payload.dailyAttendance)) {
+      for (const a of payload.dailyAttendance) {
+        if (!a || typeof a !== "object") continue;
+        const targetId = a.attendanceId || a.id;
+        const prevEntry = (existingStore?.dailyAttendance || []).find(d =>
+          d && (d.attendanceId === targetId || d.id === targetId || (d.subject === a.subject && d.isoDate === a.isoDate && d.division === a.division))
+        );
+        pushService.notifyAttendance({
+          subject: a.subject,
+          date: a.date,
+          isoDate: a.isoDate,
+          attendanceId: targetId,
+          records: a.records,
+          singleStudent: a.studentUsername,
+          singleStatus: a.status,
+          prevRecords: prevEntry?.records,
+          prevSingleStatus: prevEntry?.status
+        }).catch(err => console.warn("[WebPush] Attendance sync push error:", err.message));
+      }
+    }
+
+    // 2. Marks notifications for added or updated student marks
+    if (payload.students && typeof payload.students === "object") {
+      for (const [username, sRecord] of Object.entries(payload.students)) {
+        if (sRecord && sRecord.marks && typeof sRecord.marks === "object") {
+          const prevStudentMarks = existingStore?.students?.[username]?.marks || {};
+          for (const [subId, m] of Object.entries(sRecord.marks)) {
+            if (m && typeof m === "object") {
+              pushService.notifyMarks({
+                studentUsername: username,
+                subject: subId,
+                mark: m,
+                prevMark: prevStudentMarks[subId]
+              }).catch(err => console.warn("[WebPush] Marks sync push error:", err.message));
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Assignment notifications for newly published assignments
+    if (Array.isArray(payload.assignments)) {
+      const prevAssignIds = new Set((existingStore?.assignments || []).map(a => a && (a.id || a.title)));
+      for (const asgn of payload.assignments) {
+        if (asgn && asgn.id && !prevAssignIds.has(asgn.id)) {
+          pushService.notifyAssignment(asgn)
+            .catch(err => console.warn("[WebPush] Assignment sync push error:", err.message));
+        }
+      }
+    }
+
+    // 4. Study Notes notifications for newly published notes
+    if (Array.isArray(payload.notes)) {
+      const prevNoteIds = new Set((existingStore?.notes || []).map(n => n && (n.id || n.title)));
+      for (const note of payload.notes) {
+        if (note && note.id && !prevNoteIds.has(note.id)) {
+          pushService.notifyNote(note)
+            .catch(err => console.warn("[WebPush] Notes sync push error:", err.message));
+        }
+      }
+    }
+
+    // 5. Notices notifications for newly published notices
+    if (Array.isArray(payload.notices)) {
+      const prevNoticeIds = new Set((existingStore?.notices || []).map(n => n && (n.id || n.noticeId || n.title)));
+      for (const notice of payload.notices) {
+        if (notice && (notice.id || notice.noticeId) && !prevNoticeIds.has(notice.id || notice.noticeId)) {
+          pushService.notifyNotice(notice, req.user)
+            .catch(err => console.warn("[WebPush] Notice sync push error:", err.message));
+        }
+      }
+    }
 
     res.json({ success: true, message: "Academic data permanently saved to MongoDB!" });
   } catch (error) {
