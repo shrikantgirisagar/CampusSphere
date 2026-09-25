@@ -18,7 +18,10 @@
     "test:prompt21": "node scripts/test-prompt21-attendance.js",
     "test:prompt22": "node scripts/test-prompt22-mobile-responsive.js",
     "test:prompt23": "node scripts/test-prompt23-mobile-screen-fit.js",
-    "test:all": "node scripts/test-prompt23-mobile-screen-fit.js && node scripts/test-prompt22-mobile-responsive.js && node scripts/test-prompt21-attendance.js && node scripts/test-prompt20-timetable-persistence.js && node scripts/test-prompt19-timetable-workflow.js && node scripts/test-prompt18-timetable.js && node scripts/test-prompt17-timetable.js && node scripts/test-prompt16-deployment-readiness.js && node scripts/test-prompt15-performance-reliability.js && node scripts/test-prompt14-e2e-workflows.js && node scripts/test-prompt11-production-readiness.js && node scripts/test-production-auth-config.js && node scripts/test-mongodb-integrity.js && node scripts/test-api-hardening.js && node scripts/test-xss-security.js && node scripts/test-user-api-security.js && node scripts/test-academic-security.js && node scripts/test-sync-safety.js && npm test"
+    "test:prompt24": "node scripts/test-prompt24-signup-mobile.js",
+    "test:prompt25": "node scripts/test-prompt25-auth-page-navigation.js",
+    "test:prompt26": "node scripts/test-prompt26-accessibility-browser.js",
+    "test:all": "node scripts/test-prompt26-accessibility-browser.js && node scripts/test-prompt25-auth-page-navigation.js && node scripts/test-prompt24-signup-mobile.js && node scripts/test-prompt23-mobile-screen-fit.js && node scripts/test-prompt22-mobile-responsive.js && node scripts/test-prompt21-attendance.js && node scripts/test-prompt20-timetable-persistence.js && node scripts/test-prompt19-timetable-workflow.js && node scripts/test-prompt18-timetable.js && node scripts/test-prompt17-timetable.js && node scripts/test-prompt16-deployment-readiness.js && node scripts/test-prompt15-performance-reliability.js && node scripts/test-prompt14-e2e-workflows.js && node scripts/test-prompt11-production-readiness.js && node scripts/test-production-auth-config.js && node scripts/test-mongodb-integrity.js && node scripts/test-api-hardening.js && node scripts/test-xss-security.js && node scripts/test-user-api-security.js && node scripts/test-academic-security.js && node scripts/test-sync-safety.js && npm test"
   },
   "dependencies": {
     "cors": "^2.8.5",

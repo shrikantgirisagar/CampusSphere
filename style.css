@@ -119,8 +119,44 @@ button {
   -webkit-tap-highlight-color: transparent
 }
 
-.hidden {
-  display: none !important
+.hidden,
+.login-page.hidden,
+.signup-page.hidden,
+#loginPage.hidden,
+#signupPage.hidden,
+#publicHome.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Prompt 26: Cross-Browser Accessibility & Visible Focus Architecture
+   Ensures WCAG 2.1 AA compliant keyboard navigation and visible focus rings.
+   ========================================================================== */
+:focus-visible {
+  outline: 2px solid var(--campus-primary, #1459d9) !important;
+  outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="radio"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--campus-primary, #1459d9) !important;
+  outline-offset: 2px !important;
+}
+
+.primary-btn:focus-visible,
+.hero-primary-btn:focus-visible,
+.home-signup-btn:focus-visible,
+.save-att-btn:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--campus-primary, #1459d9) !important;
 }
 
 /* ---------- CampusSphere Ambient Animated Background (Global Reusable Component) ---------- */
@@ -309,8 +345,17 @@ animated-background,
 
 /* Accessibility: Prefers Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
   .ambient-blob,
-  .ambient-ring {
+  .ambient-ring,
+  .login-particles {
     animation: none !important;
   }
 }
@@ -1887,11 +1932,22 @@ animated-background,
 /* Responsive collapse without any issues */
 /* Responsive collapse without any issues */
 @media (max-width: 900px) {
+  .login-page:not(.hidden):not([style*="display: none"]):not([style*="display:none"]),
+  .signup-page:not(.hidden):not([style*="display: none"]):not([style*="display:none"]) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    min-height: 100vh !important;
+    height: auto !important;
+  }
+
   .login-objects {
     display: none !important;
   }
 
-  .auth-card-horizontal {
+  .auth-card-horizontal,
+  .signup-card.auth-card-horizontal {
     grid-template-columns: 1fr !important;
     width: 100% !important;
     max-width: 560px !important;
@@ -1900,23 +1956,34 @@ animated-background,
     box-sizing: border-box !important;
   }
 
-  .auth-showcase-panel {
-    border-right: none;
-    border-bottom: 1.5px solid rgba(226, 232, 240, 0.85);
-    padding: 24px 20px !important;
-    gap: 14px !important;
+  .auth-showcase-panel,
+  .signup-card .auth-showcase-panel {
+    border-right: none !important;
+    border-bottom: 1.5px solid rgba(226, 232, 240, 0.85) !important;
+    padding: 22px 20px !important;
+    gap: 12px !important;
   }
 
-  .showcase-features {
-    display: none; /* Keep card compact on tablets */
+  .showcase-features,
+  .signup-card .showcase-features {
+    display: none !important; /* Keep card compact on tablets */
   }
 
-  .auth-form-panel {
-    padding: 24px 20px !important;
+  .auth-form-panel,
+  .signup-card .auth-form-panel {
+    padding: 22px 20px !important;
   }
 }
 
 @media (max-width: 560px) {
+  .auth-card-horizontal,
+  .signup-card.auth-card-horizontal {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    border-radius: 20px !important;
+  }
+
   .auth-input-grid,
   .signup-card .auth-input-grid {
     grid-template-columns: 1fr !important;
@@ -1927,38 +1994,37 @@ animated-background,
     grid-column: span 1 !important;
   }
 
-  .auth-form-panel {
-    padding: 20px 16px !important;
-  }
-
+  .auth-form-panel,
   .signup-card .auth-form-panel {
     padding: 16px 14px !important;
   }
 
-  .auth-showcase-panel {
-    padding: 20px 16px !important;
-  }
-
+  .auth-showcase-panel,
   .signup-card .auth-showcase-panel {
     padding: 16px 14px !important;
   }
 
-  .showcase-logo-wrap {
-    width: 52px;
-    height: 52px;
-    margin-bottom: 10px;
+  .showcase-logo-wrap,
+  .signup-card .showcase-logo-wrap {
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: 8px !important;
   }
 
-  .showcase-brand-header h1 {
-    font-size: 20px;
+  .showcase-brand-header h1,
+  .signup-card .showcase-brand-header h1 {
+    font-size: 20px !important;
   }
 
-  .showcase-college-name {
-    font-size: 11.5px;
+  .showcase-college-name,
+  .signup-card .showcase-college-name {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
     word-break: break-word !important;
   }
 
-  .showcase-motto-pill {
+  .showcase-motto-pill,
+  .signup-card .showcase-motto-pill {
     max-width: 100% !important;
     flex-wrap: wrap !important;
     box-sizing: border-box !important;
@@ -1966,22 +2032,54 @@ animated-background,
     justify-content: center !important;
   }
 
-  .login-creator-credit {
+  .login-creator-credit,
+  .signup-card .login-creator-credit {
     flex-wrap: wrap !important;
     text-align: center !important;
+  }
+
+  .signup-card .subject-search-wrap input,
+  #pageFacultySubjectSearch {
+    min-width: 0 !important;
+  }
+
+  .signup-card .direct-subjects-list,
+  #pageSignupDirectSubjectsList {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 }
 
 @media (max-width: 380px) {
-  .login-page {
-    padding: 14px 10px !important;
+  .login-page:not(.hidden):not([style*="display: none"]):not([style*="display:none"]),
+  .signup-page:not(.hidden):not([style*="display: none"]):not([style*="display:none"]) {
+    padding: 12px 8px !important;
+  }
+
+  .auth-card-horizontal,
+  .signup-card.auth-card-horizontal {
+    border-radius: 16px !important;
   }
 
   .auth-form-panel,
   .auth-showcase-panel,
   .signup-card .auth-form-panel,
   .signup-card .auth-showcase-panel {
-    padding: 14px 12px !important;
+    padding: 14px 10px !important;
+  }
+
+  .role-tab {
+    min-height: 54px !important;
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+  }
+
+  .signup-card .signup-role-tabs .role-tab {
+    min-height: 44px !important;
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+    gap: 4px !important;
   }
 
   .signup-card .year-pill-btn,
@@ -1992,58 +2090,106 @@ animated-background,
     padding: 0 2px !important;
   }
 
-  .role-tab {
-    min-height: 54px !important;
-    padding: 6px 4px !important;
-    font-size: 12px !important;
+  .signup-card .input-wrap input,
+  .signup-card .password-wrap input,
+  .signup-card .input-wrap select,
+  .signup-card select {
+    height: 38px !important;
+    padding-left: 32px !important;
+  }
+
+  .signup-card .input-icon {
+    left: 9px !important;
+    font-size: 14px !important;
   }
 }
 
 /* Smartphone Landscape Screen-Fit Optimization */
 @media (max-height: 500px) and (orientation: landscape) {
-  .login-page {
+  .login-page:not(.hidden):not([style*="display: none"]):not([style*="display:none"]),
+  .signup-page:not(.hidden):not([style*="display: none"]):not([style*="display:none"]) {
     padding: 10px 14px !important;
     justify-content: flex-start !important;
+    min-height: 100vh !important;
+    height: auto !important;
   }
 
-  .auth-card-horizontal {
+  .auth-card-horizontal,
+  .signup-card.auth-card-horizontal {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 560px !important;
+    min-height: auto !important;
     margin: 8px auto !important;
   }
 
-  .auth-showcase-panel {
+  .auth-showcase-panel,
+  .signup-card .auth-showcase-panel {
     padding: 12px 16px !important;
     gap: 8px !important;
   }
 
-  .showcase-logo-wrap {
-    width: 40px !important;
-    height: 40px !important;
+  .showcase-features,
+  .signup-card .showcase-features {
+    display: none !important;
+  }
+
+  .showcase-logo-wrap,
+  .signup-card .showcase-logo-wrap {
+    width: 36px !important;
+    height: 36px !important;
     margin-bottom: 4px !important;
   }
 
-  .showcase-brand-header h1 {
-    font-size: 18px !important;
+  .showcase-brand-header h1,
+  .signup-card .showcase-brand-header h1 {
+    font-size: 17px !important;
   }
 
-  .showcase-college-name {
+  .showcase-college-name,
+  .signup-card .showcase-college-name {
     font-size: 10px !important;
     margin-bottom: 2px !important;
   }
 
-  .showcase-college-sub {
-    margin-bottom: 4px !important;
+  .showcase-college-sub,
+  .signup-card .showcase-college-sub {
+    margin-bottom: 2px !important;
   }
 
-  .auth-form-panel {
-    padding: 14px 16px !important;
+  .showcase-motto-pill,
+  .signup-card .showcase-motto-pill {
+    padding: 2px 8px !important;
+    font-size: 10px !important;
   }
 
-  .role-tabs {
-    margin-bottom: 10px !important;
+  .auth-form-panel,
+  .signup-card .auth-form-panel {
+    padding: 12px 16px !important;
   }
 
-  .role-tab {
-    min-height: 42px !important;
+  .signup-card .login-heading {
+    margin-bottom: 8px !important;
+  }
+
+  .signup-card .login-heading h2 {
+    font-size: 17px !important;
+  }
+
+  .role-tabs,
+  .signup-card .signup-role-tabs {
+    margin-bottom: 8px !important;
+  }
+
+  .role-tab,
+  .signup-card .signup-role-tabs .role-tab {
+    min-height: 36px !important;
+  }
+
+  .auth-input-grid,
+  .signup-card .auth-input-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
   }
 }
 
@@ -10328,5 +10474,53 @@ body.courses-page-body {
   font-size: 12.5px;
   box-shadow: 0 1px 2px rgba(20, 89, 217, 0.08);
 }
+
+/* ==========================================================================
+   Prompt 25: Complete Authentication Page Isolation
+   Ensure Login and Signup pages are completely isolated from each other.
+   Hidden pages occupy 0 layout space and are never rendered concurrently.
+   ========================================================================== */
+#loginPage.hidden,
+#signupPage.hidden,
+#publicHome.hidden,
+.login-page.hidden,
+.signup-page.hidden,
+[id="loginPage"].hidden,
+[id="signupPage"].hidden,
+#loginPage[style*="display: none"],
+#loginPage[style*="display:none"],
+#signupPage[style*="display: none"],
+#signupPage[style*="display:none"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ==========================================================================
+   Prompt 26: iOS Safari Input Auto-Zoom Prevention & Mobile Accessibility
+   iOS Safari automatically zooms in on inputs with font-size < 16px.
+   Enforcing 16px on mobile viewports preserves user zoom control and layout stability.
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+
 
 

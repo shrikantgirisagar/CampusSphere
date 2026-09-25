@@ -522,10 +522,18 @@ function handleSessionExpired(customMessage) {
   } else {
     const homeEl = $("publicHome");
     const loginEl = $("loginPage");
-    if (homeEl) homeEl.classList.add("hidden");
+    const signupEl = $("signupPage");
+    if (homeEl) {
+      homeEl.classList.add("hidden");
+      homeEl.style.setProperty("display", "none", "important");
+    }
+    if (signupEl) {
+      signupEl.classList.add("hidden");
+      signupEl.style.setProperty("display", "none", "important");
+    }
     if (loginEl) {
       loginEl.classList.remove("hidden");
-      loginEl.style.display = "grid";
+      loginEl.style.removeProperty("display");
       try { resetLoginForm(); } catch (_) {}
     }
   }
@@ -1254,10 +1262,14 @@ function resetLoginForm() {
   }
 }
 
-document.querySelectorAll(".role-tab").forEach(btn => {
+document.querySelectorAll("#loginPage .role-tab").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".role-tab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("#loginPage .role-tab").forEach(b => {
+      b.classList.remove("active");
+      b.setAttribute("aria-selected", "false");
+    });
     btn.classList.add("active");
+    btn.setAttribute("aria-selected", "true");
     currentRole = btn.dataset.role;
     resetLoginForm();
     updateLoginUsernameLabel(currentRole);
@@ -1275,6 +1287,7 @@ $("togglePassword").addEventListener("click", () => {
   button.innerHTML = visible ? eyeClosedSVG : eyeOpenSVG;
   button.setAttribute("aria-label", visible ? "Hide password" : "Show password");
   button.setAttribute("title", visible ? "Hide password" : "Show password");
+  button.setAttribute("aria-pressed", visible ? "true" : "false");
 });
 
 document.addEventListener("click", e => {
@@ -1288,6 +1301,7 @@ document.addEventListener("click", e => {
     toggleBtn.innerHTML = visible ? eyeClosedSVG : eyeOpenSVG;
     toggleBtn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
     toggleBtn.setAttribute("title", visible ? "Hide password" : "Show password");
+    toggleBtn.setAttribute("aria-pressed", visible ? "true" : "false");
   }
 });
 
@@ -1488,8 +1502,8 @@ const signupModal = document.createElement("div");
 signupModal.id = "signupModal";
 signupModal.className = "modal-backdrop hidden";
 signupModal.innerHTML = `
-  <div class="signup-modal">
-    <button type="button" id="closeSignup" class="close-modal" aria-label="Close">×</button>
+  <div class="signup-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button type="button" id="closeSignup" class="close-modal" aria-label="Close Signup Modal">×</button>
     <div class="modal-icon" id="modalIcon">🎓</div>
     <div class="modal-title">
       <span id="modalRoleLabel">STUDENT ACCOUNT</span>
@@ -1499,28 +1513,28 @@ signupModal.innerHTML = `
     <form id="signupForm" autocomplete="off">
       <input type="hidden" id="signupRole">
       <input type="hidden" id="signupCurrentUsername">
-      <label>Full Name</label>
+      <label for="signupName">Full Name</label>
       <div class="input-wrap"><span class="input-icon">👤</span><input id="signupName" required placeholder="Enter full name"></div>
-      <label id="signupUsernameLabel">Username</label>
+      <label for="signupUsername" id="signupUsernameLabel">Username</label>
       <div class="input-wrap"><span class="input-icon">🪪</span><input id="signupUsername" required placeholder="Choose a username"></div>
-      <label>Password</label>
+      <label for="signupPassword">Password</label>
       <div class="password-wrap">
         <span class="input-icon">🔒</span>
         <input id="signupPassword" type="password" required minlength="6" placeholder="Create a password" autocomplete="new-password">
-        <button type="button" id="toggleSignupPassword" class="eye-btn" aria-label="Show password" title="Show password">
+        <button type="button" id="toggleSignupPassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
           <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path>
             <circle cx="12" cy="12" r="2.7"></circle>
           </svg>
         </button>
       </div>
-      <label>Email Address</label>
+      <label for="signupEmail">Email Address</label>
       <div class="input-wrap"><span class="input-icon">✉️</span><input id="signupEmail" type="email" required placeholder="Enter your email address" autocomplete="email"></div>
       
       <div id="studentDetailsFields">
-        <label>Course</label>
+        <label for="signupCourse">Course</label>
         <div class="input-wrap"><span class="input-icon">🎓</span><input id="signupCourse" readonly value="Bachelor of Computer Applications (BCA)" style="color: #0A2540; font-weight: 700;"></div>
-        <label>Course Year</label>
+        <label for="signupCourseYear">Course Year</label>
         <div class="input-wrap">
           <select id="signupCourseYear" required>
             <option value="">-- Select Course Year --</option>
@@ -1529,7 +1543,7 @@ signupModal.innerHTML = `
             <option value="3rd Year">3rd Year</option>
           </select>
         </div>
-        <label>Semester</label>
+        <label for="signupSemester">Semester</label>
         <div class="input-wrap">
           <select id="signupSemester" required>
             <option value="">Select Semester</option>
@@ -1537,14 +1551,14 @@ signupModal.innerHTML = `
             <option value="2nd Semester">2nd Semester</option>
           </select>
         </div>
-        <label>Division</label>
+        <label for="signupDivision">Division</label>
         <div class="input-wrap">
           <select id="signupDivision" required>
             <option value="">-- Select Division --</option>
             ${renderDivisionSelectOptions()}
           </select>
         </div>
-        <label>Language Subject Choice</label>
+        <label for="signupLanguage">Language Subject Choice</label>
         <div class="input-wrap">
           <select id="signupLanguage" required>
             <option value="">-- Select Language Subject --</option>
@@ -1553,7 +1567,7 @@ signupModal.innerHTML = `
           </select>
         </div>
         <div id="signupMathWrap">
-          <label>Mathematics / Accountancy Choice (1st Semester)</label>
+          <label for="signupMathChoice">Mathematics / Accountancy Choice (1st Semester)</label>
           <div class="input-wrap">
             <select id="signupMathChoice">
               <option value="">-- Select Subject Choice --</option>
@@ -1565,7 +1579,7 @@ signupModal.innerHTML = `
       </div>
 
       <div id="facultyDeptField" class="hidden">
-        <label>Faculty Department</label>
+        <label for="signupDepartment">Faculty Department</label>
         <div class="input-wrap"><span class="input-icon">🏛️</span><input id="signupDepartment" value="Department of Computer Science & Applications" placeholder="Enter department"></div>
       </div>
 
@@ -1576,7 +1590,7 @@ signupModal.innerHTML = `
         <div id="signupSelectedSubjectsWrap" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:6px 10px; margin-bottom:8px; display:none; flex-wrap:wrap; align-items:center; gap:4px;">
         </div>
         <div class="subject-search-wrap" style="margin-bottom:6px;">
-          <input type="text" id="facultySubjectSearch" placeholder="Filter subjects by name or code..." class="search-input">
+          <input type="text" id="facultySubjectSearch" placeholder="Filter subjects by name or code..." class="search-input" aria-label="Filter subjects by name or code">
           <button type="button" id="btnSearchFacultySubject" class="search-btn"><span>Filter</span></button>
         </div>
         <div id="signupDirectSubjectsList" class="direct-subjects-list"></div>
@@ -1634,16 +1648,16 @@ const editProfileModal = document.createElement("div");
 editProfileModal.id = "editProfileModal";
 editProfileModal.className = "modal-backdrop hidden";
 editProfileModal.innerHTML = `
-  <div class="signup-modal edit-profile-modal-card">
-    <button type="button" id="closeEditProfile" class="close-modal" aria-label="Close">×</button>
+  <div class="signup-modal edit-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
+    <button type="button" id="closeEditProfile" class="close-modal" aria-label="Close Academic Setup Modal">×</button>
     <div class="modal-icon">⚙️</div>
     <div class="modal-title">
       <span>ACADEMIC SETUP</span>
-      <h2>Edit Academic Setup</h2>
+      <h2 id="editProfileTitle">Edit Academic Setup</h2>
       <p>Configure your division, year, semester, and language choices below.</p>
     </div>
     <form id="editProfileForm">
-      <label>1. Division</label>
+      <label for="editProfileDivision">1. Division</label>
       <div class="input-wrap">
         <select id="editProfileDivision" required>
           <option value="">Select Division</option>
@@ -1651,7 +1665,7 @@ editProfileModal.innerHTML = `
         </select>
       </div>
 
-      <label>2. Course Year</label>
+      <label for="editProfileCourseYear">2. Course Year</label>
       <div class="input-wrap">
         <select id="editProfileCourseYear" required>
           <option value="">Select Course Year</option>
@@ -1661,7 +1675,7 @@ editProfileModal.innerHTML = `
         </select>
       </div>
 
-      <label>3. Semester</label>
+      <label for="editProfileSemester">3. Semester</label>
       <div class="input-wrap">
         <select id="editProfileSemester" required>
           <option value="">Select Semester</option>
@@ -1674,10 +1688,10 @@ editProfileModal.innerHTML = `
         </select>
       </div>
 
-      <label>4. Course / Degree Program</label>
+      <label for="editProfileCourse">4. Course / Degree Program</label>
       <div class="input-wrap"><span class="input-icon">🎓</span><input id="editProfileCourse" disabled readonly placeholder="Bachelor of Computer Applications (BCA)"></div>
 
-      <label>5. Language Subject Choice</label>
+      <label for="editProfileLanguage">5. Language Subject Choice</label>
       <div class="input-wrap">
         <select id="editProfileLanguage" required>
           <option value="">Select Language Subject</option>
@@ -1687,7 +1701,7 @@ editProfileModal.innerHTML = `
       </div>
 
       <div id="editProfileMathWrap">
-        <label>6. Mathematics / Accountancy Choice (1st Semester Only)</label>
+        <label for="editProfileMathChoice">6. Mathematics / Accountancy Choice (1st Semester Only)</label>
         <div class="input-wrap">
           <select id="editProfileMathChoice">
             <option value="Mathematics">Mathematics</option>
@@ -1707,12 +1721,12 @@ const cropImageModal = document.createElement("div");
 cropImageModal.id = "cropImageModal";
 cropImageModal.className = "modal-backdrop hidden";
 cropImageModal.innerHTML = `
-  <div class="signup-modal crop-modal-card">
-    <button type="button" id="closeCropModal" class="close-modal" aria-label="Close">×</button>
+  <div class="signup-modal crop-modal-card" role="dialog" aria-modal="true" aria-labelledby="cropModalTitle">
+    <button type="button" id="closeCropModal" class="close-modal" aria-label="Close Photo Crop Modal">×</button>
     <div class="modal-icon">✂️</div>
     <div class="modal-title">
       <span>PROFILE PICTURE</span>
-      <h2>Crop & Adjust Photo</h2>
+      <h2 id="cropModalTitle">Crop & Adjust Photo</h2>
       <p>Drag to reposition your photo and use the zoom controls for the perfect fit.</p>
     </div>
 
@@ -1723,9 +1737,9 @@ cropImageModal.innerHTML = `
 
     <div class="crop-controls-wrap">
       <div class="crop-zoom-bar">
-        <button type="button" id="cropZoomOutBtn" class="crop-zoom-step-btn" title="Zoom Out">➖</button>
-        <input type="range" id="cropZoomRange" class="crop-zoom-slider" min="0.5" max="3" step="0.02" value="1">
-        <button type="button" id="cropZoomInBtn" class="crop-zoom-step-btn" title="Zoom In">➕</button>
+        <button type="button" id="cropZoomOutBtn" class="crop-zoom-step-btn" title="Zoom Out" aria-label="Zoom Out">➖</button>
+        <input type="range" id="cropZoomRange" class="crop-zoom-slider" min="0.5" max="3" step="0.02" value="1" aria-label="Zoom photo">
+        <button type="button" id="cropZoomInBtn" class="crop-zoom-step-btn" title="Zoom In" aria-label="Zoom In">➕</button>
         <span id="cropZoomVal" class="crop-zoom-val">100%</span>
       </div>
       <div class="crop-btn-row">
@@ -1990,25 +2004,25 @@ const facultyEditProfileModal = document.createElement("div");
 facultyEditProfileModal.id = "facultyEditProfileModal";
 facultyEditProfileModal.className = "modal-backdrop hidden";
 facultyEditProfileModal.innerHTML = `
-  <div class="signup-modal edit-profile-modal-card">
-    <button type="button" id="closeFacultyEditProfile" class="close-modal" aria-label="Close">×</button>
+  <div class="signup-modal edit-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="facultyEditProfileTitle">
+    <button type="button" id="closeFacultyEditProfile" class="close-modal" aria-label="Close Faculty Profile Modal">×</button>
     <div class="modal-icon">🧑‍🏫</div>
     <div class="modal-title">
       <span>FACULTY PROFILE</span>
-      <h2>Edit Profile Details</h2>
+      <h2 id="facultyEditProfileTitle">Edit Profile Details</h2>
       <p>Update your full name, email address, and assigned division below.</p>
     </div>
     <form id="facultyEditProfileForm">
-      <label>1. Full Name</label>
+      <label for="facultyEditName">1. Full Name</label>
       <div class="input-wrap"><span class="input-icon">👤</span><input id="facultyEditName" type="text" required placeholder="Full Name"></div>
 
-      <label>2. Username</label>
+      <label for="facultyEditUsername">2. Username</label>
       <div class="input-wrap"><span class="input-icon">🪪</span><input id="facultyEditUsername" disabled readonly placeholder="Username"></div>
 
-      <label>3. Email Address</label>
+      <label for="facultyEditEmail">3. Email Address</label>
       <div class="input-wrap"><span class="input-icon">✉️</span><input id="facultyEditEmail" type="email" required placeholder="Email address"></div>
 
-      <label>4. Assigned Division</label>
+      <label for="facultyEditDivision">4. Assigned Division</label>
       <div class="input-wrap">
         <select id="facultyEditDivision" style="padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:600; width:100%;">
           <option value="Both Divisions">Both Divisions (Div A & Div B)</option>
@@ -2025,7 +2039,7 @@ facultyEditProfileModal.innerHTML = `
         <div id="facultyEditSelectedSubjectsWrap" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:6px 10px; margin-bottom:8px; min-height:40px; display:flex; flex-wrap:wrap; align-items:center; gap:4px;">
         </div>
         <div class="subject-search-wrap" style="margin-bottom:6px;">
-          <input type="text" id="facultyEditSubjectSearch" placeholder="Filter subjects by name or code..." class="search-input">
+          <input type="text" id="facultyEditSubjectSearch" placeholder="Filter subjects by name or code..." class="search-input" aria-label="Filter subjects by name or code">
           <button type="button" id="btnSearchFacultyEditSubject" class="search-btn"><span>Filter</span></button>
         </div>
         <div id="facultyEditDirectSubjectsList" class="direct-subjects-list"></div>
@@ -3294,7 +3308,18 @@ function openPortal() {
   if (currentUser && currentUser.role === "faculty") {
     try { resetAttendanceFilters(); } catch (e) { console.warn("resetAttendanceFilters error:", e); }
   }
-  if ($("loginPage")) $("loginPage").classList.add("hidden");
+  if ($("loginPage")) {
+    $("loginPage").classList.add("hidden");
+    $("loginPage").style.setProperty("display", "none", "important");
+  }
+  if ($("signupPage")) {
+    $("signupPage").classList.add("hidden");
+    $("signupPage").style.setProperty("display", "none", "important");
+  }
+  if ($("publicHome")) {
+    $("publicHome").classList.add("hidden");
+    $("publicHome").style.setProperty("display", "none", "important");
+  }
   if ($("app")) $("app").classList.remove("hidden");
   if (window.AnimatedBackground) {
     try { window.AnimatedBackground.ensure(); } catch (e) { console.warn("AnimatedBackground.ensure error:", e); }
@@ -5048,13 +5073,13 @@ const adminFacultyEditModal = document.createElement("div");
 adminFacultyEditModal.id = "adminFacultyEditModal";
 adminFacultyEditModal.className = "modal-backdrop hidden";
 adminFacultyEditModal.innerHTML = `
-  <div class="modal" style="max-width: 540px;">
-    <button class="close-btn" id="closeAdminFacultyEditModal" type="button">&times;</button>
+  <div class="modal" style="max-width: 540px;" role="dialog" aria-modal="true" aria-labelledby="adminFacultyEditModalTitle">
+    <button class="close-btn" id="closeAdminFacultyEditModal" type="button" aria-label="Close Faculty Classes Manager Modal">&times;</button>
     <div class="modal-header">
       <span class="modal-icon">👨‍🏫</span>
       <div>
         <span class="modal-role" style="color: #6366f1;">ADMIN FACULTY MANAGER</span>
-        <h2 style="margin: 0; font-size: 19px; color: #1e293b;">Manage Faculty Classes</h2>
+        <h2 id="adminFacultyEditModalTitle" style="margin: 0; font-size: 19px; color: #1e293b;">Manage Faculty Classes</h2>
       </div>
     </div>
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -5080,7 +5105,7 @@ adminFacultyEditModal.innerHTML = `
         <label style="display: block; font-weight: 700; color: #334155; font-size: 12.5px; margin-bottom: 6px;">Assigned Subjects & Classes (All Semesters / Years)</label>
         <div id="adminEditFacultySubjectsChips" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 44px; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; margin-bottom: 10px;"></div>
         <div class="subject-search-wrap" style="margin-bottom:6px;">
-          <input type="text" id="adminEditFacultySubjectSearch" placeholder="Filter subjects by name or code..." class="search-input">
+          <input type="text" id="adminEditFacultySubjectSearch" placeholder="Filter subjects by name or code..." class="search-input" aria-label="Filter subjects by name or code">
           <button type="button" id="btnSearchAdminEditFacultySubject" class="search-btn"><span>Filter</span></button>
         </div>
         <div id="adminEditDirectSubjectsList" class="direct-subjects-list"></div>
@@ -8177,8 +8202,8 @@ const pages = {
                           <td><span class="chip-sm">${escapeHtml(s.courseYear || "2nd Year")} • ${escapeHtml(s.semester || "3rd Sem")} • ${escapeHtml(s.division || "Sec A")}</span></td>
                           <td style="text-align:center;">
                             <div class="pa-toggle-group">
-                              <button type="button" class="btn-pa btn-p ${status === "P" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="P" title="P">P</button>
-                              <button type="button" class="btn-pa btn-a ${status === "A" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="A" title="A">A</button>
+                              <button type="button" class="btn-pa btn-p ${status === "P" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="P" title="Present" aria-label="Mark ${escapeHtml(s.name)} Present">P</button>
+                              <button type="button" class="btn-pa btn-a ${status === "A" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="A" title="Absent" aria-label="Mark ${escapeHtml(s.name)} Absent">A</button>
                             </div>
                           </td>
                         </tr>
@@ -9185,17 +9210,17 @@ const pages = {
           <div class="timetable-toolbar-wrapper">
             <!-- 1. Merge Cells -->
             <div class="timetable-tb-group">
-              <button type="button" id="tbBtnMerge" class="timetable-btn" title="Merge Selected Cells">⊞ Merge Cells</button>
+              <button type="button" id="tbBtnMerge" class="timetable-btn" title="Merge Selected Cells" aria-label="Merge Selected Cells">⊞ Merge Cells</button>
             </div>
 
             <!-- 2. Bold -->
             <div class="timetable-tb-group">
-              <button type="button" id="tbBtnBold" class="timetable-btn" title="Toggle Bold"><b>B</b></button>
+              <button type="button" id="tbBtnBold" class="timetable-btn" title="Toggle Bold" aria-label="Toggle Bold"><b>B</b></button>
             </div>
 
             <!-- 3. Font Family (allowlist) -->
             <div class="timetable-tb-group">
-              <select id="tbSelectFontFamily" class="timetable-select" title="Font Family">
+              <select id="tbSelectFontFamily" class="timetable-select" title="Font Family" aria-label="Font Family">
                 <option value="Arial">Arial</option>
                 <option value="Inter" selected>Inter</option>
                 <option value="Roboto">Roboto</option>
@@ -9207,7 +9232,7 @@ const pages = {
 
             <!-- 4. Font Size (allowlist) -->
             <div class="timetable-tb-group">
-              <select id="tbSelectFontSize" class="timetable-select" title="Font Size">
+              <select id="tbSelectFontSize" class="timetable-select" title="Font Size" aria-label="Font Size">
                 <option value="11px">11px</option>
                 <option value="12px">12px</option>
                 <option value="13px" selected>13px</option>
@@ -9219,7 +9244,7 @@ const pages = {
 
             <!-- 5. Dynamic Time Slot Structural Action -->
             <div class="timetable-tb-group" style="margin-left:auto;">
-              <button type="button" id="btnAddTimeRow" class="timetable-btn timetable-btn-primary" title="Add Time Slot Row">+ Add Time Slot</button>
+              <button type="button" id="btnAddTimeRow" class="timetable-btn timetable-btn-primary" title="Add Time Slot Row" aria-label="Add Time Slot Row">+ Add Time Slot</button>
             </div>
 
             <datalist id="eligibleSubjectsList">
@@ -10111,13 +10136,21 @@ function logout() {
 
   const appEl = $("app");
   const loginEl = $("loginPage");
+  const signupEl = $("signupPage");
   const homeEl = $("publicHome");
   if (appEl) appEl.classList.add("hidden");
   if (loginEl) {
     loginEl.classList.add("hidden");
-    loginEl.style.display = "none";
+    loginEl.style.setProperty("display", "none", "important");
   }
-  if (homeEl) homeEl.classList.remove("hidden");
+  if (signupEl) {
+    signupEl.classList.add("hidden");
+    signupEl.style.setProperty("display", "none", "important");
+  }
+  if (homeEl) {
+    homeEl.classList.remove("hidden");
+    homeEl.style.removeProperty("display");
+  }
 
   try {
     resetLoginForm();
@@ -11099,13 +11132,16 @@ window.addEventListener("pageshow", () => {
   const showHome = () => {
     if (login) {
       login.classList.add("hidden");
-      login.style.display = "none";
+      login.style.setProperty("display", "none", "important");
     }
     if (signup) {
       signup.classList.add("hidden");
-      signup.style.display = "none";
+      signup.style.setProperty("display", "none", "important");
     }
-    home.classList.remove("hidden");
+    if (home) {
+      home.classList.remove("hidden");
+      home.style.removeProperty("display");
+    }
     document.querySelectorAll(".bg-orb").forEach(el => { el.style.display = "none"; });
     const h = window.location.hash.toLowerCase();
     if (h === "#login" || h === "#signup") {
@@ -11120,14 +11156,17 @@ window.addEventListener("pageshow", () => {
   };
 
   const showLogin = (updateHash = true) => {
-    if (home) home.classList.add("hidden");
+    if (home) {
+      home.classList.add("hidden");
+      home.style.setProperty("display", "none", "important");
+    }
     if (signup) {
       signup.classList.add("hidden");
-      signup.style.display = "none";
+      signup.style.setProperty("display", "none", "important");
     }
     if (login) {
       login.classList.remove("hidden");
-      login.style.display = "grid";
+      login.style.removeProperty("display");
       try { resetLoginForm(); } catch (_) {}
     }
     document.querySelectorAll(".bg-orb").forEach(el => { el.style.display = ""; });
@@ -11138,14 +11177,17 @@ window.addEventListener("pageshow", () => {
   };
 
   const showSignup = (role = "student", updateHash = true) => {
-    if (home) home.classList.add("hidden");
+    if (home) {
+      home.classList.add("hidden");
+      home.style.setProperty("display", "none", "important");
+    }
     if (login) {
       login.classList.add("hidden");
-      login.style.display = "none";
+      login.style.setProperty("display", "none", "important");
     }
     if (signup) {
       signup.classList.remove("hidden");
-      signup.style.display = "grid";
+      signup.style.removeProperty("display");
       if (typeof setPageSignupRole === "function") {
         setPageSignupRole(role);
       }
@@ -11772,7 +11814,18 @@ window.addEventListener("pageshow", () => {
   const savedSession = sessionStorage.getItem("portalUser");
   const hasToken = !!getStoredAuthToken();
   if (savedSession && hasToken) {
-    home.classList.add("hidden");
+    if (home) {
+      home.classList.add("hidden");
+      home.style.setProperty("display", "none", "important");
+    }
+    if (login) {
+      login.classList.add("hidden");
+      login.style.setProperty("display", "none", "important");
+    }
+    if (signup) {
+      signup.classList.add("hidden");
+      signup.style.setProperty("display", "none", "important");
+    }
     document.querySelectorAll(".bg-orb").forEach(el => { el.style.display = "none"; });
   } else if (window.location.hash.toLowerCase() === "#signup" || window.location.pathname.toLowerCase().startsWith("/signup")) {
     showSignup("student", false);
@@ -11782,3 +11835,143 @@ window.addEventListener("pageshow", () => {
     showHome();
   }
 })();
+
+/* ============================================================================
+   PROMPT 26: CROSS-BROWSER ACCESSIBILITY, FOCUS MANAGEMENT & KEYBOARD UX
+   - Modal focus trap & restoration
+   - Escape key closes active modal & restores trigger focus
+   - Tablist arrow key navigation (Left/Right/Up/Down)
+   - Mobile navigation Escape key handler
+   ============================================================================ */
+(function setupPrompt26Accessibility() {
+  let lastActiveModalTrigger = null;
+
+  // Track the element that triggered or had focus before a modal opened
+  document.addEventListener("focusin", (e) => {
+    const activeModal = getCurrentlyActiveModal();
+    if (!activeModal && e.target && e.target !== document.body) {
+      lastActiveModalTrigger = e.target;
+    }
+  }, true);
+
+  // Also catch click on triggers
+  document.addEventListener("click", (e) => {
+    const trigger = e.target.closest("button, a, [role='button'], [data-open-modal]");
+    if (trigger && !getCurrentlyActiveModal()) {
+      lastActiveModalTrigger = trigger;
+    }
+  }, true);
+
+  function getCurrentlyActiveModal() {
+    const modalDefinitions = [
+      { id: "signupModal", close: typeof closeSignupModal === "function" ? closeSignupModal : null },
+      { id: "editProfileModal", close: typeof closeEditProfileModal === "function" ? closeEditProfileModal : null },
+      { id: "cropImageModal", close: typeof closeCropModal === "function" ? closeCropModal : null },
+      { id: "facultyEditProfileModal", close: typeof closeFacultyEditProfileModal === "function" ? closeFacultyEditProfileModal : null },
+      { id: "adminFacultyEditModal", close: typeof closeAdminFacultyEditModal === "function" ? closeAdminFacultyEditModal : null },
+      { id: "aiAnalysisModal", close: typeof closeAiAnalysisModal === "function" ? closeAiAnalysisModal : null },
+      { id: "subjectModal", close: typeof closeSubjectModal === "function" ? closeSubjectModal : null },
+      { id: "divisionModal", close: typeof closeAddDivisionModal === "function" ? closeAddDivisionModal : null }
+    ];
+
+    for (let i = modalDefinitions.length - 1; i >= 0; i--) {
+      const def = modalDefinitions[i];
+      const el = document.getElementById(def.id);
+      if (el && !el.classList.contains("hidden") && el.style.display !== "none" && (el.offsetWidth > 0 || el.offsetHeight > 0)) {
+        return { element: el, close: def.close };
+      }
+    }
+    return null;
+  }
+
+  // Global keydown listener
+  document.addEventListener("keydown", (e) => {
+    const activeModal = getCurrentlyActiveModal();
+
+    // 1. ESCAPE KEY: Close active modal or mobile nav & restore focus
+    if (e.key === "Escape" || e.keyCode === 27) {
+      if (activeModal && typeof activeModal.close === "function") {
+        e.preventDefault();
+        e.stopPropagation();
+        activeModal.close();
+        if (lastActiveModalTrigger && typeof lastActiveModalTrigger.focus === "function") {
+          try {
+            lastActiveModalTrigger.focus();
+          } catch (_) {}
+        }
+        return;
+      }
+
+      // Check if public mobile nav is open
+      const nav = document.querySelector(".public-nav.is-open");
+      const toggle = document.querySelector(".public-menu-toggle");
+      if (nav && toggle) {
+        e.preventDefault();
+        nav.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Open navigation menu");
+        try {
+          toggle.focus();
+        } catch (_) {}
+        return;
+      }
+    }
+
+    // 2. TAB KEY: Focus Trap inside active modal
+    if (e.key === "Tab" && activeModal) {
+      const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      const focusableNodes = Array.from(activeModal.element.querySelectorAll(focusableSelector))
+        .filter(node => node.offsetWidth > 0 || node.offsetHeight > 0 || node.getClientRects().length > 0);
+
+      if (focusableNodes.length > 0) {
+        const firstFocusable = focusableNodes[0];
+        const lastFocusable = focusableNodes[focusableNodes.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable || !activeModal.element.contains(document.activeElement)) {
+            e.preventDefault();
+            lastFocusable.focus();
+          }
+        } else {
+          if (document.activeElement === lastFocusable || !activeModal.element.contains(document.activeElement)) {
+            e.preventDefault();
+            firstFocusable.focus();
+          }
+        }
+      }
+      return;
+    }
+
+    // 3. ARROW KEYS: Navigation on [role="tab"] within [role="tablist"]
+    if (document.activeElement && document.activeElement.getAttribute("role") === "tab") {
+      const tablist = document.activeElement.closest('[role="tablist"]');
+      if (tablist) {
+        const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'))
+          .filter(t => t.offsetWidth > 0 || t.offsetHeight > 0 || t.getClientRects().length > 0);
+        const idx = tabs.indexOf(document.activeElement);
+
+        if (idx !== -1) {
+          let nextIdx = -1;
+          if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+            nextIdx = (idx + 1) % tabs.length;
+          } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+            nextIdx = (idx - 1 + tabs.length) % tabs.length;
+          }
+
+          if (nextIdx !== -1) {
+            e.preventDefault();
+            tabs[nextIdx].click();
+            tabs[nextIdx].focus();
+          }
+        }
+      }
+    }
+  });
+
+  // Expose helper on window for automated testing verification
+  window.__prompt26 = {
+    getCurrentlyActiveModal,
+    getLastActiveTrigger: () => lastActiveModalTrigger
+  };
+})();
+
