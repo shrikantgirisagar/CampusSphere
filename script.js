@@ -12112,6 +12112,76 @@ window.addEventListener("pageshow", () => {
         return;
       }
 
+      if (role === "student") {
+        const submitBtn = pageSignupForm.querySelector('button[type="submit"]');
+        await withActionLock(submitBtn, async () => {
+          try {
+            if (pageSignupMessage) {
+              pageSignupMessage.textContent = "Sending verification code...";
+              pageSignupMessage.className = "message";
+            }
+            const res = await fetch(`${API_BASE_URL}/api/auth/signup/request-otp`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name, username, password, email, role: "student",
+                course, courseYear, semester, division, languageChoice, mathChoice
+              })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+              if (pageSignupMessage) {
+                pageSignupMessage.textContent = data.message || "Failed to send verification code.";
+                pageSignupMessage.className = "message error";
+              }
+              return;
+            }
+
+            if (pageSignupMessage) {
+              pageSignupMessage.textContent = "";
+              pageSignupMessage.className = "message";
+            }
+
+            if (typeof openSignupOtpModal === "function") {
+              openSignupOtpModal({
+                email,
+                onVerified: async (authData) => {
+                  USERS.student.push(authData.user);
+                  ensureStudentRecord(authData.user.username);
+                  saveAcademicData();
+                  saveUsers();
+                  await hydrateUsersFromServer();
+                  await hydrateAcademicDataFromServer();
+
+                  if (authData.token) {
+                    setStoredAuthToken(authData.token);
+                  }
+                  sessionStorage.setItem("portalUser", JSON.stringify(authData.user));
+                  currentUser = authData.user;
+                  currentRole = "student";
+
+                  pageSignupForm.reset();
+                  setPageSignupCourseYearValue("");
+                  updatePageSemesterOptions("");
+                  populatePageDivisionSelect();
+                  setPageSignupLanguageValue("");
+
+                  if (typeof render === "function") render();
+                  openPortal();
+                }
+              });
+            }
+          } catch (err) {
+            console.error("Signup OTP request error:", err);
+            if (pageSignupMessage) {
+              pageSignupMessage.textContent = "Unable to process signup right now. Please try again.";
+              pageSignupMessage.className = "message error";
+            }
+          }
+        });
+        return;
+      }
+
       const submitBtn = pageSignupForm.querySelector('button[type="submit"]');
       await withActionLock(submitBtn, async () => {
         try {
@@ -12120,10 +12190,6 @@ window.addEventListener("pageshow", () => {
             division, semester, courseYear, course, languageChoice, mathChoice
           });
           USERS[role].push(created);
-          if (role === "student") {
-            ensureStudentRecord(username);
-            saveAcademicData();
-          }
           saveUsers();
           await hydrateUsersFromServer();
           await hydrateAcademicDataFromServer();
@@ -12475,5 +12541,473 @@ window.addEventListener("pageshow", () => {
     }
   };
 })();
+
+/* ============================================================================
+   PROMPT 32: EMAIL OTP AUTHENTICATION, SIGNUP VERIFICATION & FORGOT PASSWORD
+   ============================================================================ */
+let openSignupOtpModal = null;
+
+(function initPrompt32EmailOtpAuth() {
+  // Elements for Forgot Password Modal
+  const forgotModal = document.getElementById("forgotPasswordModal");
+  const forgotOverlay = document.getElementById("forgotPasswordModalOverlay");
+  const closeForgotBtn = document.getElementById("closeForgotPasswordModalBtn");
+  const cancelForgotBtn = document.getElementById("btnForgotCancel");
+  const btnForgotPassword = document.getElementById("btnForgotPassword");
+
+  const forgotStep1 = document.getElementById("forgotStep1");
+  const forgotStep2 = document.getElementById("forgotStep2");
+  const forgotStep3 = document.getElementById("forgotStep3");
+  const forgotStep4 = document.getElementById("forgotStep4");
+
+  const forgotRequestForm = document.getElementById("forgotRequestForm");
+  const forgotEmailInput = document.getElementById("forgotEmail");
+  const forgotStep1Message = document.getElementById("forgotStep1Message");
+
+  const forgotVerifyForm = document.getElementById("forgotVerifyForm");
+  const forgotOtpInput = document.getElementById("forgotOtp");
+  const forgotSentEmailDisplay = document.getElementById("forgotSentEmailDisplay");
+  const forgotCooldownTimer = document.getElementById("forgotCooldownTimer");
+  const btnForgotResendOtp = document.getElementById("btnForgotResendOtp");
+  const forgotStep2Message = document.getElementById("forgotStep2Message");
+
+  const forgotResetForm = document.getElementById("forgotResetForm");
+  const forgotNewPasswordInput = document.getElementById("forgotNewPassword");
+  const forgotConfirmPasswordInput = document.getElementById("forgotConfirmPassword");
+  const toggleForgotNewPassword = document.getElementById("toggleForgotNewPassword");
+  const toggleForgotConfirmPassword = document.getElementById("toggleForgotConfirmPassword");
+  const forgotStep3Message = document.getElementById("forgotStep3Message");
+
+  const btnForgotBackToLogin = document.getElementById("btnForgotBackToLogin");
+
+  // Elements for Signup OTP Modal
+  const signupOtpModal = document.getElementById("signupOtpModal");
+  const signupOtpOverlay = document.getElementById("signupOtpModalOverlay");
+  const closeSignupOtpBtn = document.getElementById("closeSignupOtpModalBtn");
+  const cancelSignupOtpBtn = document.getElementById("btnCancelSignupOtp");
+  const signupOtpForm = document.getElementById("signupOtpForm");
+  const signupOtpInput = document.getElementById("signupOtpInput");
+  const signupSentEmailDisplay = document.getElementById("signupSentEmailDisplay");
+  const signupCooldownTimer = document.getElementById("signupCooldownTimer");
+  const btnResendSignupOtp = document.getElementById("btnResendSignupOtp");
+  const signupOtpMessage = document.getElementById("signupOtpMessage");
+
+  // State
+  let pendingForgotEmail = "";
+  let pendingResetToken = "";
+  let forgotCooldownInterval = null;
+
+  let pendingSignupEmail = "";
+  let signupOnVerifiedCallback = null;
+  let signupCooldownInterval = null;
+
+  // Helper to start 60s cooldown timer
+  function startCooldownTimer(displayEl, buttonEl, intervalRefSetter, onDone) {
+    if (!displayEl || !buttonEl) return;
+    let remaining = 60;
+    buttonEl.disabled = true;
+    buttonEl.style.opacity = "0.5";
+    buttonEl.style.cursor = "not-allowed";
+    displayEl.textContent = `Resend in ${remaining}s`;
+
+    const timer = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(timer);
+        displayEl.textContent = "";
+        buttonEl.disabled = false;
+        buttonEl.style.opacity = "1";
+        buttonEl.style.cursor = "pointer";
+        if (typeof onDone === "function") onDone();
+      } else {
+        displayEl.textContent = `Resend in ${remaining}s`;
+      }
+    }, 1000);
+
+    intervalRefSetter(timer);
+  }
+
+  // --- FORGOT PASSWORD MODAL CONTROLS ---
+  function showForgotStep(stepNum) {
+    if (forgotStep1) forgotStep1.classList.toggle("hidden", stepNum !== 1);
+    if (forgotStep2) forgotStep2.classList.toggle("hidden", stepNum !== 2);
+    if (forgotStep3) forgotStep3.classList.toggle("hidden", stepNum !== 3);
+    if (forgotStep4) forgotStep4.classList.toggle("hidden", stepNum !== 4);
+  }
+
+  function openForgotPasswordModal() {
+    if (!forgotModal) return;
+    pendingForgotEmail = "";
+    pendingResetToken = "";
+    if (forgotCooldownInterval) clearInterval(forgotCooldownInterval);
+
+    if (forgotEmailInput) forgotEmailInput.value = "";
+    if (forgotOtpInput) forgotOtpInput.value = "";
+    if (forgotNewPasswordInput) forgotNewPasswordInput.value = "";
+    if (forgotConfirmPasswordInput) forgotConfirmPasswordInput.value = "";
+
+    if (forgotStep1Message) { forgotStep1Message.textContent = ""; forgotStep1Message.className = "message"; }
+    if (forgotStep2Message) { forgotStep2Message.textContent = ""; forgotStep2Message.className = "message"; }
+    if (forgotStep3Message) { forgotStep3Message.textContent = ""; forgotStep3Message.className = "message"; }
+
+    showForgotStep(1);
+    forgotModal.classList.remove("hidden");
+    if (forgotEmailInput) setTimeout(() => forgotEmailInput.focus(), 50);
+  }
+
+  function closeForgotPasswordModal() {
+    if (!forgotModal) return;
+    forgotModal.classList.add("hidden");
+    if (forgotCooldownInterval) clearInterval(forgotCooldownInterval);
+  }
+
+  if (btnForgotPassword) {
+    btnForgotPassword.addEventListener("click", openForgotPasswordModal);
+  }
+  if (closeForgotBtn) closeForgotBtn.addEventListener("click", closeForgotPasswordModal);
+  if (cancelForgotBtn) cancelForgotBtn.addEventListener("click", closeForgotPasswordModal);
+  if (forgotOverlay) forgotOverlay.addEventListener("click", closeForgotPasswordModal);
+
+  // Step 1: Submit Request OTP
+  if (forgotRequestForm) {
+    forgotRequestForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = forgotEmailInput ? forgotEmailInput.value.trim().toLowerCase() : "";
+      if (!email) return;
+
+      const submitBtn = document.getElementById("btnForgotSendOtp");
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = "0.7"; }
+      if (forgotStep1Message) { forgotStep1Message.textContent = "Sending verification code..."; forgotStep1Message.className = "message"; }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password/request-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          if (forgotStep1Message) {
+            forgotStep1Message.textContent = data.message || "Unable to send verification code.";
+            forgotStep1Message.className = "message error";
+          }
+          return;
+        }
+
+        pendingForgotEmail = email;
+        if (forgotSentEmailDisplay) forgotSentEmailDisplay.textContent = email;
+        showForgotStep(2);
+
+        // Start cooldown countdown
+        startCooldownTimer(forgotCooldownTimer, btnForgotResendOtp, (t) => { forgotCooldownInterval = t; });
+        if (forgotOtpInput) setTimeout(() => forgotOtpInput.focus(), 50);
+      } catch (err) {
+        console.error("Forgot password request error:", err);
+        if (forgotStep1Message) {
+          forgotStep1Message.textContent = "Unable to process request right now. Please try again.";
+          forgotStep1Message.className = "message error";
+        }
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+      }
+    });
+  }
+
+  // Step 2: Resend OTP
+  if (btnForgotResendOtp) {
+    btnForgotResendOtp.addEventListener("click", async () => {
+      if (!pendingForgotEmail) return;
+      btnForgotResendOtp.disabled = true;
+      if (forgotStep2Message) { forgotStep2Message.textContent = "Resending code..."; forgotStep2Message.className = "message"; }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password/request-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: pendingForgotEmail })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          if (forgotStep2Message) {
+            forgotStep2Message.textContent = data.message || "Failed to resend code.";
+            forgotStep2Message.className = "message error";
+          }
+          btnForgotResendOtp.disabled = false;
+          return;
+        }
+
+        if (forgotStep2Message) {
+          forgotStep2Message.textContent = "A fresh code has been sent.";
+          forgotStep2Message.className = "message success";
+        }
+        startCooldownTimer(forgotCooldownTimer, btnForgotResendOtp, (t) => { forgotCooldownInterval = t; });
+      } catch (err) {
+        console.error("Forgot password resend error:", err);
+        if (forgotStep2Message) {
+          forgotStep2Message.textContent = "Unable to resend code right now.";
+          forgotStep2Message.className = "message error";
+        }
+        btnForgotResendOtp.disabled = false;
+      }
+    });
+  }
+
+  // Step 2: Verify OTP
+  if (forgotVerifyForm) {
+    forgotVerifyForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const otp = forgotOtpInput ? forgotOtpInput.value.trim() : "";
+      if (!otp || otp.length !== 6) {
+        if (forgotStep2Message) {
+          forgotStep2Message.textContent = "Please enter the 6-digit verification code.";
+          forgotStep2Message.className = "message error";
+        }
+        return;
+      }
+
+      const submitBtn = document.getElementById("btnForgotVerifyOtp");
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = "0.7"; }
+      if (forgotStep2Message) { forgotStep2Message.textContent = "Verifying..."; forgotStep2Message.className = "message"; }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password/verify-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: pendingForgotEmail, otp })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success || !data.resetToken) {
+          if (forgotStep2Message) {
+            forgotStep2Message.textContent = data.message || "Invalid verification code.";
+            forgotStep2Message.className = "message error";
+          }
+          return;
+        }
+
+        pendingResetToken = data.resetToken;
+        if (forgotCooldownInterval) clearInterval(forgotCooldownInterval);
+        showForgotStep(3);
+        if (forgotNewPasswordInput) setTimeout(() => forgotNewPasswordInput.focus(), 50);
+      } catch (err) {
+        console.error("Forgot password verify error:", err);
+        if (forgotStep2Message) {
+          forgotStep2Message.textContent = "Unable to verify code right now. Please try again.";
+          forgotStep2Message.className = "message error";
+        }
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+      }
+    });
+  }
+
+  // Password visibility toggle helpers
+  function setupEyeToggle(btn, input) {
+    if (!btn || !input) return;
+    btn.addEventListener("click", () => {
+      const isPass = input.type === "password";
+      input.type = isPass ? "text" : "password";
+      btn.setAttribute("aria-pressed", isPass ? "true" : "false");
+      btn.title = isPass ? "Hide password" : "Show password";
+    });
+  }
+  setupEyeToggle(toggleForgotNewPassword, forgotNewPasswordInput);
+  setupEyeToggle(toggleForgotConfirmPassword, forgotConfirmPasswordInput);
+
+  // Step 3: Reset Password
+  if (forgotResetForm) {
+    forgotResetForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const newPassword = forgotNewPasswordInput ? forgotNewPasswordInput.value : "";
+      const confirmPassword = forgotConfirmPasswordInput ? forgotConfirmPasswordInput.value : "";
+
+      if (newPassword.length < 6) {
+        if (forgotStep3Message) {
+          forgotStep3Message.textContent = "Password must contain at least 6 characters.";
+          forgotStep3Message.className = "message error";
+        }
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        if (forgotStep3Message) {
+          forgotStep3Message.textContent = "Passwords do not match.";
+          forgotStep3Message.className = "message error";
+        }
+        return;
+      }
+
+      const submitBtn = document.getElementById("btnForgotSetPassword");
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = "0.7"; }
+      if (forgotStep3Message) { forgotStep3Message.textContent = "Updating password..."; forgotStep3Message.className = "message"; }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password/reset-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            resetToken: pendingResetToken,
+            newPassword,
+            confirmPassword
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          if (forgotStep3Message) {
+            forgotStep3Message.textContent = data.message || "Failed to reset password.";
+            forgotStep3Message.className = "message error";
+          }
+          return;
+        }
+
+        pendingResetToken = "";
+        showForgotStep(4);
+      } catch (err) {
+        console.error("Reset password error:", err);
+        if (forgotStep3Message) {
+          forgotStep3Message.textContent = "Unable to reset password right now. Please try again.";
+          forgotStep3Message.className = "message error";
+        }
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+      }
+    });
+  }
+
+  // Step 4: Back to Login
+  if (btnForgotBackToLogin) {
+    btnForgotBackToLogin.addEventListener("click", () => {
+      closeForgotPasswordModal();
+      if (typeof window.CampusSpherePublic?.showLogin === "function") {
+        window.CampusSpherePublic.showLogin(true);
+      }
+      const uField = document.getElementById("username");
+      if (uField) setTimeout(() => uField.focus(), 100);
+    });
+  }
+
+  // --- SIGNUP OTP MODAL CONTROLS ---
+  openSignupOtpModal = function({ email, onVerified }) {
+    pendingSignupEmail = email;
+    signupOnVerifiedCallback = onVerified;
+    if (signupCooldownInterval) clearInterval(signupCooldownInterval);
+
+    if (signupSentEmailDisplay) signupSentEmailDisplay.textContent = email;
+    if (signupOtpInput) signupOtpInput.value = "";
+    if (signupOtpMessage) { signupOtpMessage.textContent = ""; signupOtpMessage.className = "message"; }
+
+    if (signupOtpModal) signupOtpModal.classList.remove("hidden");
+    startCooldownTimer(signupCooldownTimer, btnResendSignupOtp, (t) => { signupCooldownInterval = t; });
+    if (signupOtpInput) setTimeout(() => signupOtpInput.focus(), 50);
+  };
+
+  function closeSignupModal() {
+    if (!signupOtpModal) return;
+    signupOtpModal.classList.add("hidden");
+    if (signupCooldownInterval) clearInterval(signupCooldownInterval);
+  }
+
+  if (closeSignupOtpBtn) closeSignupOtpBtn.addEventListener("click", closeSignupModal);
+  if (cancelSignupOtpBtn) cancelSignupOtpBtn.addEventListener("click", closeSignupModal);
+  if (signupOtpOverlay) signupOtpOverlay.addEventListener("click", closeSignupModal);
+
+  // Resend Signup OTP
+  if (btnResendSignupOtp) {
+    btnResendSignupOtp.addEventListener("click", async () => {
+      if (!pendingSignupEmail) return;
+      btnResendSignupOtp.disabled = true;
+      if (signupOtpMessage) { signupOtpMessage.textContent = "Resending code..."; signupOtpMessage.className = "message"; }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/signup/resend-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: pendingSignupEmail })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          if (signupOtpMessage) {
+            signupOtpMessage.textContent = data.message || "Failed to resend code.";
+            signupOtpMessage.className = "message error";
+          }
+          btnResendSignupOtp.disabled = false;
+          return;
+        }
+
+        if (signupOtpMessage) {
+          signupOtpMessage.textContent = "A fresh code has been sent.";
+          signupOtpMessage.className = "message success";
+        }
+        startCooldownTimer(signupCooldownTimer, btnResendSignupOtp, (t) => { signupCooldownInterval = t; });
+      } catch (err) {
+        console.error("Signup resend error:", err);
+        if (signupOtpMessage) {
+          signupOtpMessage.textContent = "Unable to resend code right now.";
+          signupOtpMessage.className = "message error";
+        }
+        btnResendSignupOtp.disabled = false;
+      }
+    });
+  }
+
+  // Verify Signup OTP
+  if (signupOtpForm) {
+    signupOtpForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const otp = signupOtpInput ? signupOtpInput.value.trim() : "";
+      if (!otp || otp.length !== 6) {
+        if (signupOtpMessage) {
+          signupOtpMessage.textContent = "Please enter the 6-digit verification code.";
+          signupOtpMessage.className = "message error";
+        }
+        return;
+      }
+
+      const submitBtn = document.getElementById("btnVerifySignupOtp");
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = "0.7"; }
+      if (signupOtpMessage) { signupOtpMessage.textContent = "Verifying & activating account..."; signupOtpMessage.className = "message"; }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/signup/verify-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: pendingSignupEmail, otp })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          if (signupOtpMessage) {
+            signupOtpMessage.textContent = data.message || "Invalid verification code.";
+            signupOtpMessage.className = "message error";
+          }
+          return;
+        }
+
+        closeSignupModal();
+        if (typeof signupOnVerifiedCallback === "function") {
+          await signupOnVerifiedCallback(data);
+        }
+      } catch (err) {
+        console.error("Signup verify error:", err);
+        if (signupOtpMessage) {
+          signupOtpMessage.textContent = "Unable to verify code right now. Please try again.";
+          signupOtpMessage.className = "message error";
+        }
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+      }
+    });
+  }
+
+  // Expose module for testing
+  window.__prompt32 = {
+    openForgotPasswordModal,
+    closeForgotPasswordModal,
+    openSignupOtpModal
+  };
+})();
+
 
 
