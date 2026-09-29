@@ -7332,7 +7332,7 @@ body.courses-page-body {
   }
 }
 
-/* Header Content Container */
+/* Header Content Container - Centered flow with relative positioning */
 .institution-header-inner {
   position: relative;
   z-index: 2;
@@ -7341,20 +7341,23 @@ body.courses-page-body {
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  justify-content: center;
   padding: 10px 0;
 }
 
-/* Brand Link */
+/* Brand Link - Centered independently of action buttons */
 .institution-brand {
   display: inline-flex;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
+  text-align: center;
+  margin: 0 auto;
+  max-width: calc(100% - 360px);
   color: inherit;
   text-decoration: none;
   min-width: 0;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
+  z-index: 2;
 }
 
 /* Logo Styling - Hidden (College logo removed per brand update) */
@@ -7366,13 +7369,22 @@ body.courses-page-body {
 .institution-copy {
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .institution-college-name,
 .institution-copy strong {
+  display: block;
+  width: 100%;
+  text-align: center;
+  
   font-family: var(--campus-font-heading);
-  font-size: clamp(14px, 1.25vw, 17px);
+  font-size: clamp(25px, 1.25vw, 32px);
   font-weight: 800;
   letter-spacing: 0.02em;
   word-spacing: normal;
@@ -7389,6 +7401,7 @@ body.courses-page-body {
   color: var(--color-text-brand, #1459d9);
   letter-spacing: 0.03em;
   margin-top: 2px;
+  text-align: center;
 }
 
 .institution-copy small {
@@ -7398,6 +7411,7 @@ body.courses-page-body {
   font-weight: 600;
   letter-spacing: 0.3px;
   margin-top: 3px;
+  text-align: center;
 }
 
 .institution-copy em {
@@ -7408,14 +7422,20 @@ body.courses-page-body {
   font-weight: 600;
   letter-spacing: 0.25px;
   margin-top: 2px;
+  text-align: center;
 }
 
-/* Actions Wrapper */
+/* Actions Wrapper - Positioned absolutely on the right without shifting centered brand */
 .institution-actions {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
   flex: 0 0 auto;
+  z-index: 3;
 }
 
 /* Auth Buttons */
@@ -8187,6 +8207,16 @@ body.courses-page-body {
 }
 
 @media (max-width: 900px) {
+  .institution-brand {
+    max-width: calc(100% - 300px);
+  }
+
+  .home-auth-btn {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
   .syllabus-grid {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -8814,10 +8844,14 @@ body.courses-page-body {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .institution-header-inner {
     width: min(100% - 28px, 1240px);
     min-height: 78px;
+  }
+
+  .institution-brand {
+    max-width: calc(100% - 290px);
   }
 
   .institution-copy strong {
@@ -9004,6 +9038,30 @@ body.courses-page-body {
 }
 
 @media (max-width: 600px) {
+  .institution-header-inner {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0 14px;
+    min-height: auto;
+  }
+
+  .institution-brand {
+    max-width: 100%;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .institution-actions {
+    position: static;
+    transform: none;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto;
+    gap: 8px;
+  }
+
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -9013,13 +9071,15 @@ body.courses-page-body {
 @media (max-width: 430px) {
   .institution-brand {
     gap: 9px;
+    max-width: 100%;
   }
 
   .institution-copy strong {
-    max-width: 260px;
+    max-width: 100%;
     font-size: clamp(15px, 4vw, 19px);
     line-height: 1.15;
     word-spacing: 2.5px !important;
+    text-align: center;
   }
 
   .institution-copy em {
@@ -9027,8 +9087,9 @@ body.courses-page-body {
   }
 
   .institution-actions {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 6px;
+    justify-content: center;
   }
 
   .institution-actions .home-login-btn {
@@ -10058,7 +10119,7 @@ body.courses-page-body {
 }
 
 /* ==========================================================================
-   Prompt 27: Strict Original Light Mode Enforcement
+   Strict Original Light Mode Enforcement
    Ensure CampusSphere exclusively renders its original light mode design
    regardless of OS, browser, or device dark-mode preferences.
    ========================================================================== */
@@ -10123,7 +10184,7 @@ body.courses-page-body {
 }
 
 /* =========================================================
-   PROMPT 17: COMPLETE DYNAMIC TIMETABLE BUILDER STYLES
+   COMPLETE DYNAMIC TIMETABLE BUILDER STYLES
    Using CampusSphere Homepage Design Tokens (#1459d9, #0A2540, etc.)
    ========================================================= */
 
@@ -10449,7 +10510,7 @@ body.courses-page-body {
 }
 
 /* ==========================================================================
-   Prompt 25: Complete Authentication Page Isolation
+   Complete Authentication Page Isolation
    Ensure Login and Signup pages are completely isolated from each other.
    Hidden pages occupy 0 layout space and are never rendered concurrently.
    ========================================================================== */
@@ -10477,7 +10538,7 @@ body.courses-page-body {
 }
 
 /* ==========================================================================
-   Prompt 26: iOS Safari Input Auto-Zoom Prevention & Mobile Accessibility
+   iOS Safari Input Auto-Zoom Prevention & Mobile Accessibility
    iOS Safari automatically zooms in on inputs with font-size < 16px.
    Enforcing 16px on mobile viewports preserves user zoom control and layout stability.
    ========================================================================== */
