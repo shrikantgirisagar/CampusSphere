@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Admin Courses &amp; Syllabus Management | CampusSphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260916_24">
+  <script src="animated-background.js?v=20260916_24"></script>
+  <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
+  <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
+  <link rel="apple-touch-icon" href="CampusSphere-logo.png?v=20260915_hq1">
+  <link rel="manifest" href="/manifest.json">
+</head>
+
+<body class="courses-page-body">
+  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
+  <animated-background class="campus-ambient-bg" aria-hidden="true">
+    <div class="ambient-blob blob-blue"></div>
+    <div class="ambient-blob blob-indigo"></div>
+    <div class="ambient-blob blob-cyan"></div>
+    <div class="ambient-blob blob-emerald"></div>
+    <div class="ambient-blob blob-violet"></div>
+    <div class="ambient-grid-overlay"></div>
+    <div class="ambient-shapes">
+      <span class="ambient-ring ring-1"></span>
+      <span class="ambient-ring ring-2"></span>
+      <span class="ambient-ring ring-3"></span>
+    </div>
+  </animated-background>
+
+  <div class="courses-page">
+    <!-- INSTITUTION HEADER -->
+    <header class="institution-header">
+      <div class="header-ambient-layers" aria-hidden="true">
+        <div class="header-ambient-gradient"></div>
+        <div class="header-blob header-blob-1"></div>
+        <div class="header-blob header-blob-2"></div>
+        <div class="header-blob header-blob-3"></div>
+        <div class="header-shimmer"></div>
+      </div>
+
+      <div class="institution-header-inner">
+        <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
+          <span class="institution-copy">
+            <strong class="institution-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</strong>
+            <span class="institution-portal-identity">CampusSphere — Administration Console</span>
+          </span>
+        </a>
+        <div class="institution-actions">
+          <a href="index.html#dashboard" class="home-auth-btn home-login-btn">Admin Portal</a>
+          <a href="courses.html" class="home-auth-btn home-signup-btn">Student View</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="public-nav" aria-label="Primary navigation">
+      <div class="public-nav-inner">
+        <a class="public-nav-link" href="index.html#publicHome">Home</a>
+        <a class="public-nav-link" href="courses.html">Public Courses</a>
+        <a class="public-nav-link active" href="admin-courses-syllabus.html">Syllabus Admin</a>
+        <a class="public-nav-link" href="index.html#dashboard">Portal Dashboard</a>
+        <a class="public-nav-link" href="about.html">About</a>
+        <a class="public-nav-link" href="#public-footer">Contact</a>
+      </div>
+    </nav>
+
+    <!-- MAIN ADMIN CONTENT CONTAINER -->
+    <main class="courses-container" style="max-width: 1100px; margin: 0 auto; padding: 24px 16px;">
+      <!-- Breadcrumb Navigation -->
+      <nav class="courses-breadcrumb" aria-label="Breadcrumb" style="margin-bottom: 20px;">
+        <a href="index.html#publicHome">Home</a>
+        <span>/</span>
+        <a href="index.html#dashboard">Admin Portal</a>
+        <span>/</span>
+        <strong>Courses &amp; Syllabus Management</strong>
+      </nav>
+
+      <!-- Auth Protection Notice (Shown if not admin) -->
+      <div id="adminAuthGate" class="syllabus-error-card hidden" style="display:none; margin: 40px auto; max-width: 500px;">
+        <div style="font-size: 36px; margin-bottom: 12px;">🔒</div>
+        <h2 style="color: #0f172a; margin: 0 0 8px 0; font-size: 20px;">Administrator Login Required</h2>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
+          You must be logged in as an Administrator to manage syllabus curriculum PDFs.
+        </p>
+        <a href="index.html#login" class="primary-btn" style="text-decoration: none; display: inline-block;">Go to Sign In &rarr;</a>
+      </div>
+
+      <!-- Admin Syllabus Container -->
+      <div id="adminSyllabusApp" style="display:none;">
+        <header class="courses-hero-banner" style="margin-bottom: 28px; text-align: center;">
+          <h1 style="color: #0A2540; margin-bottom: 8px;">Courses &amp; Syllabus Management</h1>
+          <p style="color: #475569; font-size: 15px; margin: 0 auto 16px; max-width: 600px;">BCA Courses &amp; Syllabus Management — Manage BCA syllabus PDFs for all six semesters.</p>
+          
+          <div class="courses-meta-tags" style="justify-content: center;">
+            <span class="courses-meta-tag">⏱️ 3 Academic Years (6 Semesters)</span>
+            <span class="courses-meta-tag">🏛️ Affiliation: RCUB</span>
+            <span class="courses-meta-tag">🛡️ Role: Administrator</span>
+          </div>
+        </header>
+
+        <div id="syllabusContentContainer" class="syllabus-content-container">
+          <div class="syllabus-loading-state">
+            <div class="spinner"></div>
+            <p>Loading syllabus curriculum...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- FOOTER WITH COLLEGE DETAILS, CONTACTS & DEVELOPER CREDIT -->
+    <footer id="public-footer" class="public-footer" style="margin-top: 60px;">
+      <div class="footer-grid">
+        <div class="footer-col footer-col-brand">
+          <div class="footer-brand">
+            <div><strong>BHARATESH COLLEGE OF COMPUTER APPLICATIONS</strong><small>Arihantgiri, B.C.188, Near Fort, Old P.B Road, Belagavi</small></div>
+          </div>
+          <p>Education • Equality • Empowerment</p>
+        </div>
+        <div class="footer-col">
+          <h3>Quick Links</h3>
+          <a href="index.html#publicHome">Home</a>
+          <a href="courses.html">Public Courses</a>
+          <a href="index.html#dashboard">Admin Portal</a>
+          <a href="about.html">About</a>
+          <a href="#public-footer">Contact</a>
+        </div>
+        <div class="footer-col footer-col-contact">
+          <h3>Contact</h3>
+          <div class="footer-contact-item">
+            <span class="contact-label">Landline</span>
+            <div class="contact-numbers">
+              <a href="tel:08312465227">0831 – 2465227</a>,
+              <a href="tel:0831246393">246393</a>
+            </div>
+          </div>
+          <div class="footer-contact-item">
+            <span class="contact-label">Mobile</span>
+            <div class="contact-numbers">
+              <a href="tel:+919538273344">+91 95382 73344</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="adminSyllabusCurrentYear"></span> BHARATESH COLLEGE OF COMPUTER APPLICATIONS. All rights reserved.</span>
+        <span class="footer-developer-credit">
+          Designed &amp; Developed by <strong class="creator-badge footer-creator-badge"><span class="creator-name">Shrikant Girisagar</span> <span class="creator-course-tag">BCA</span></strong>
+        </span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification Container for Downloads & Actions -->
+  <div id="notifToastContainer" class="notif-toast-container" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Load Main Application Logic (Reusable across Portal & Admin) -->
+  <script src="script.js?v=20260916_24"></script>
+  <script>
+    // Set Year
+    const yearEl = document.getElementById("adminSyllabusCurrentYear");
+    if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+
+    // Role check and initial load
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = getStoredAuthToken();
+      let user = null;
+      try {
+        user = JSON.parse(sessionStorage.getItem("portalUser") || "null");
+      } catch (_) {}
+
+      const authGate = document.getElementById("adminAuthGate");
+      const appWrap = document.getElementById("adminSyllabusApp");
+
+      if (!token || !user || user.role !== "admin") {
+        if (authGate) authGate.style.display = "block";
+        if (appWrap) appWrap.style.display = "none";
+        return;
+      }
+
+      if (authGate) authGate.style.display = "none";
+      if (appWrap) appWrap.style.display = "block";
+
+      // Initialize Syllabus Page
+      initSyllabusPage();
+      if (typeof openSyllabusUploadModal === "function") {
+        window.openSyllabusUploadModal = openSyllabusUploadModal;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -98,59 +98,101 @@
         </div>
       </header>
 
-      <!-- THREE SYLLABUS DOWNLOAD CARDS (Exact match to reference design) -->
+      <!-- ADMIN QUICK ACCESS BANNER (Visible when admin is logged in) -->
+      <div id="coursesAdminBanner" class="courses-admin-banner hidden" style="display:none;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">⚙️</span>
+          <div>
+            <strong>Administrator Access Active</strong>
+            <div style="font-size: 12px; color: #15803d;">You can upload, replace, and delete syllabus PDFs from the management console.</div>
+          </div>
+        </div>
+        <a href="admin-courses-syllabus.html" class="home-auth-btn home-login-btn" style="padding: 8px 16px; font-size: 12px; text-decoration: none;">Manage Syllabus PDFs &rarr;</a>
+      </div>
+
+      <!-- THREE SYLLABUS DOWNLOAD CARDS (First Year, Second Year, Third Year BCA) -->
       <section class="syllabus-section" aria-label="Syllabus Download Cards">
         <div class="syllabus-grid">
           
           <!-- Card 1: First Year BCA -->
-          <article class="syllabus-card">
+          <article class="syllabus-card" data-year-level="1">
             <div>
-              <span class="semester-tag">Semester I &amp; II</span>
+              <span class="semester-tag">Semester I &amp; II • Academic Year: 2025–26</span>
               <div class="syllabus-card-header">
                 <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
                   <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
                 </svg>
-                <h2 class="syllabus-card-title">First Year BCA</h2>
+                <div>
+                  <h2 class="syllabus-card-title">First Year BCA</h2>
+                  <small style="display:block; color:#64748b; font-size:12.5px; margin-top:3px;">RCUB NEP Curriculum • Semester I &amp; II</small>
+                </div>
               </div>
             </div>
-            <button type="button" class="syllabus-download-btn" data-syllabus-title="First Year BCA (Semester I &amp; II)" aria-label="Download Syllabus for First Year BCA Semester I and II">
-              DOWNLOAD SYLLABUS
-            </button>
+
+            <div style="margin-top: auto;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:12.5px;">
+                <span style="color:#64748b; font-weight:600;">Status:</span>
+                <span class="courses-sem-status" id="coursesStatusYear1">Available</span>
+              </div>
+              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear1" data-sem-id="coursesBtnSem1" onclick="handleCoursesPageDownload(1, 'First Year BCA')" aria-label="Download Syllabus for First Year BCA">
+                DOWNLOAD SYLLABUS
+              </button>
+            </div>
           </article>
 
           <!-- Card 2: Second Year BCA -->
-          <article class="syllabus-card">
+          <article class="syllabus-card" data-year-level="2">
             <div>
-              <span class="semester-tag">Semester III &amp; IV</span>
+              <span class="semester-tag">Semester III &amp; IV • Academic Year: 2026–27</span>
               <div class="syllabus-card-header">
                 <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
                   <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
                 </svg>
-                <h2 class="syllabus-card-title">Second Year BCA</h2>
+                <div>
+                  <h2 class="syllabus-card-title">Second Year BCA</h2>
+                  <small style="display:block; color:#64748b; font-size:12.5px; margin-top:3px;">RCUB NEP Curriculum • Semester III &amp; IV</small>
+                </div>
               </div>
             </div>
-            <button type="button" class="syllabus-download-btn" data-syllabus-title="Second Year BCA (Semester III &amp; IV)" aria-label="Download Syllabus for Second Year BCA Semester III and IV">
-              DOWNLOAD SYLLABUS
-            </button>
+
+            <div style="margin-top: auto;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:12.5px;">
+                <span style="color:#64748b; font-weight:600;">Status:</span>
+                <span class="courses-sem-status" id="coursesStatusYear2">Available</span>
+              </div>
+              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear2" onclick="handleCoursesPageDownload(2, 'Second Year BCA')" aria-label="Download Syllabus for Second Year BCA">
+                DOWNLOAD SYLLABUS
+              </button>
+            </div>
           </article>
 
           <!-- Card 3: Third Year BCA -->
-          <article class="syllabus-card">
+          <article class="syllabus-card" data-year-level="3">
             <div>
-              <span class="semester-tag">Semester V &amp; VI</span>
+              <span class="semester-tag">Semester V &amp; VI • Academic Year: 2027–28</span>
               <div class="syllabus-card-header">
                 <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
                   <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
                 </svg>
-                <h2 class="syllabus-card-title">Third Year BCA</h2>
+                <div>
+                  <h2 class="syllabus-card-title">Third Year BCA</h2>
+                  <small style="display:block; color:#64748b; font-size:12.5px; margin-top:3px;">RCUB NEP Curriculum • Semester V &amp; VI</small>
+                </div>
               </div>
             </div>
-            <button type="button" class="syllabus-download-btn" data-syllabus-title="Third Year BCA (Semester V &amp; VI)" aria-label="Download Syllabus for Third Year BCA Semester V and VI">
-              DOWNLOAD SYLLABUS
-            </button>
+
+            <div style="margin-top: auto;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:12.5px;">
+                <span style="color:#64748b; font-weight:600;">Status:</span>
+                <span class="courses-sem-status" id="coursesStatusYear3">Available</span>
+              </div>
+              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear3" data-sem-id="coursesBtnSem6" onclick="handleCoursesPageDownload(3, 'Third Year BCA')" aria-label="Download Syllabus for Third Year BCA">
+                DOWNLOAD SYLLABUS
+              </button>
+            </div>
           </article>
 
         </div>
@@ -259,52 +301,85 @@
       link.addEventListener("click", e => e.preventDefault());
     });
 
-    // Download Syllabus interaction feedback & sample file download
+    // Download Syllabus interaction feedback & real PDF streaming
     const toast = document.getElementById("syllabusToast");
     const toastMsg = document.getElementById("syllabusToastMsg");
     let toastTimer;
 
-    document.querySelectorAll(".syllabus-download-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const title = btn.getAttribute("data-syllabus-title") || "Syllabus";
-        if (toast && toastMsg) {
-          toastMsg.textContent = "Downloading " + title + " (RCUB NEP Curriculum)...";
+    const token = sessionStorage.getItem("portalAuthToken") || "";
+    let user = null;
+    try {
+      user = JSON.parse(sessionStorage.getItem("portalUser") || "null");
+    } catch (_) {}
+
+    // Show admin banner if logged in as administrator
+    if (user && user.role === "admin") {
+      const adminBanner = document.getElementById("coursesAdminBanner");
+      if (adminBanner) {
+        adminBanner.classList.remove("hidden");
+        adminBanner.style.removeProperty("display");
+      }
+    }
+
+    // Hydrate live syllabus status if authenticated
+    if (token) {
+      fetch("/api/syllabus", {
+        headers: { "Authorization": "Bearer " + token }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.syllabi)) {
+          data.syllabi.forEach(item => {
+            const yr = item.yearLevel;
+            const statusEl = document.getElementById("coursesStatusYear" + yr);
+            const btn = document.getElementById("coursesBtnYear" + yr);
+            if (statusEl && btn) {
+              if (item.isUploaded) {
+                statusEl.textContent = "✓ Available (" + (item.formattedSize || "PDF") + ")";
+                statusEl.className = "courses-sem-status";
+                btn.disabled = false;
+              } else {
+                statusEl.textContent = "⏳ Pending Upload";
+                statusEl.className = "courses-sem-status pending";
+                btn.disabled = true;
+                btn.title = "Syllabus not yet published by department";
+              }
+            }
+          });
+        }
+      })
+      .catch(() => {});
+    }
+
+    function handleCoursesPageDownload(yearLevel, title) {
+      const currentToken = sessionStorage.getItem("portalAuthToken") || "";
+      if (toast && toastMsg) {
+        clearTimeout(toastTimer);
+        if (!currentToken) {
+          toastMsg.innerHTML = '<span>Please <a href="index.html#login" style="color:#60a5fa; text-decoration:underline; font-weight:700;">Sign In</a> to download official syllabus PDFs.</span>';
           toast.classList.add("is-visible");
-          clearTimeout(toastTimer);
           toastTimer = setTimeout(() => {
             toast.classList.remove("is-visible");
-          }, 3500);
+          }, 4500);
+          return;
         }
 
-        // Generate and download a syllabus structure text outline
-        try {
-          const content = "=========================================================\\n" +
-            "BHARATESH COLLEGE OF COMPUTER APPLICATIONS\\n" +
-            "Affiliated with Rani Channamma University, Belagavi (RCUB)\\n" +
-            "Course: Bachelor of Computer Applications (BCA) - NEP\\n" +
-            "Document: " + title + " Curriculum\\n" +
-            "=========================================================\\n\\n" +
-            "Academic Structure:\\n" +
-            "• Core Computing: Programming Fundamentals, OOP, Data Structures\\n" +
-            "• Database Systems: Relational Models, SQL, Enterprise DB\\n" +
-            "• Web & Full-Stack: Frontend UI/UX, Backend APIs, Cloud\\n" +
-            "• Software Engineering: Agile Methodologies, Testing, System Design\\n" +
-            "• Practical Labs & Projects: NEP Skill-Oriented Project Work\\n\\n" +
-            "Official Affiliation: Rani Channamma University, Belagavi\\n" +
-            "Contact Office: 0831 – 2465227 / +91 95382 73344\\n" +
-            "Designed & Developed by Shrikant Girisagar [BCA]\\n";
-          const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = title.replace(/[^a-zA-Z0-9]/g, "_") + "_Syllabus.txt";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        } catch (_) {}
-      });
-    });
+        toastMsg.textContent = "Downloading " + title + " Syllabus PDF...";
+        toast.classList.add("is-visible");
+        toastTimer = setTimeout(() => {
+          toast.classList.remove("is-visible");
+        }, 3500);
+      }
+
+      if (currentToken) {
+        const downloadUrl = "/api/syllabus/" + yearLevel + "/download?token=" + encodeURIComponent(currentToken);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    }
   </script>
 </body>
 </html>

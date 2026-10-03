@@ -17,11 +17,89 @@ const Assignment = require("./models/Assignment");
 const Timetable = require("./models/Timetable");
 const Note = require("./models/Note");
 const AcademicStore = require("./models/AcademicStore");
-const PushSubscription = require("./models/PushSubscription");
+const Syllabus = require("./models/Syllabus");
+const { VALID_YEAR_CONFIG, VALID_SEMESTER_YEAR_MAP } = require("./models/Syllabus");
+const multer = require("multer");
 const pushService = require("./services/pushNotificationService");
 
 // Initialize Web Push VAPID configuration
 pushService.initWebPush();
+
+// Syllabus Storage Configuration
+const SYLLABUS_BASE_DIR = path.resolve(__dirname, "uploads", "syllabi");
+const SYLLABUS_YEAR_DIRS = {
+  1: path.join(SYLLABUS_BASE_DIR, "first-year"),
+  2: path.join(SYLLABUS_BASE_DIR, "second-year"),
+  3: path.join(SYLLABUS_BASE_DIR, "third-year")
+};
+
+// Guarantee all syllabus storage directories exist on boot
+for (const dir of Object.values(SYLLABUS_YEAR_DIRS)) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+const SYLLABUS_MAX_FILE_SIZE_MB = parseInt(process.env.SYLLABUS_MAX_FILE_SIZE_MB || "100", 10);
+const SYLLABUS_MAX_FILE_SIZE_BYTES = SYLLABUS_MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const syllabusStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const sem = parseInt(req.body?.semester || req.params?.semester, 10);
+    const mapping = VALID_SEMESTER_YEAR_MAP[sem];
+    const targetDir = mapping ? SYLLABUS_YEAR_DIRS[mapping.yearLevel] : SYLLABUS_BASE_DIR;
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    cb(null, targetDir);
+  },
+  filename: function (req, file, cb) {
+    const sem = parseInt(req.body?.semester || req.params?.semester, 10);
+    const randomHex = crypto.randomBytes(16).toString("hex");
+    const safeExt = ".pdf";
+    const generated = `syllabus-sem${sem || "x"}-${Date.now()}-${randomHex}${safeExt}`;
+    cb(null, generated);
+  }
+});
+
+const uploadSyllabus = multer({
+  storage: syllabusStorage,
+  limits: {
+    fileSize: SYLLABUS_MAX_FILE_SIZE_BYTES,
+    files: 1
+  },
+  fileFilter: function (req, file, cb) {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    if (ext !== ".pdf") {
+      const err = new Error("Only PDF files are allowed.");
+      err.code = "INVALID_FILE_TYPE";
+      return cb(err, false);
+    }
+    if (file.mimetype && file.mimetype !== "application/pdf") {
+      const err = new Error("Only PDF files are allowed.");
+      err.code = "INVALID_FILE_TYPE";
+      return cb(err, false);
+    }
+    cb(null, true);
+  }
+});
+
+function verifyPdfMagicBytes(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return false;
+    const fd = fs.openSync(filePath, "r");
+    const buffer = Buffer.alloc(1024);
+    const bytesRead = fs.readSync(fd, buffer, 0, 1024, 0);
+    fs.closeSync(fd);
+
+    if (bytesRead < 5) return false;
+    const headerStr = buffer.slice(0, Math.min(bytesRead, 1024)).toString("latin1");
+    return headerStr.startsWith("%PDF-") || headerStr.includes("%PDF-");
+  } catch (err) {
+    console.error("PDF magic bytes verification error:", err.message);
+    return false;
+  }
+}
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -269,6 +347,11 @@ app.get(["/manifest.json", "/manifest.webmanifest"], (req, res) => {
     "Cache-Control": "no-cache, no-store, must-revalidate"
   });
   res.sendFile(path.join(__dirname, "manifest.json"));
+});
+
+// Protect uploads directory against direct unauthenticated static access
+app.use("/uploads", (req, res) => {
+  res.status(403).json({ success: false, message: "Direct access to uploads directory is forbidden." });
 });
 
 // Serve remaining static assets from project root
@@ -522,7 +605,7 @@ function verifyAuthToken(token) {
 }
 
 async function authenticateRequest(req, res, next) {
-  const authHeader = req.headers["authorization"] || req.headers["x-auth-token"];
+  const authHeader = req.headers["authorization"] || req.headers["x-auth-token"] || req.query.token;
   let token = "";
   if (authHeader && String(authHeader).startsWith("Bearer ")) {
     token = String(authHeader).slice(7).trim();
@@ -3481,6 +3564,803 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
   }
 });
 
+// --- Administrator Academic Divisions Cascade Synchronization ---
+app.post("/api/academic/divisions/cascade", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
+  try {
+    const { action, courseYear, oldDivision, newDivision, fallbackDivision } = req.body || {};
+    if (!action || !["add", "rename", "delete"].includes(action)) {
+      return res.status(400).json({ success: false, message: "Invalid action. Allowed values: 'add', 'rename', 'delete'." });
+    }
+
+    const yr = stripHtmlTags(String(courseYear || "1st Year")).trim();
+    const validYears = ["1st Year", "2nd Year", "3rd Year", "All Years"];
+    if (!validYears.includes(yr)) {
+      return res.status(400).json({ success: false, message: "Invalid course year." });
+    }
+
+    const targetYears = yr === "All Years" ? ["1st Year", "2nd Year", "3rd Year"] : [yr];
+    const yearSemestersMap = {
+      "1st Year": ["1st Semester", "2nd Semester"],
+      "2nd Year": ["3rd Semester", "4th Semester"],
+      "3rd Year": ["5th Semester", "6th Semester"]
+    };
+    const targetSemesters = targetYears.flatMap(y => yearSemestersMap[y] || []);
+
+    const cleanOldDiv = oldDivision ? stripHtmlTags(String(oldDivision)).trim() : "";
+    const cleanNewDiv = newDivision ? stripHtmlTags(String(newDivision)).trim() : "";
+    const cleanFallback = fallbackDivision ? stripHtmlTags(String(fallbackDivision)).trim() : "";
+
+    let store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+    if (!store) {
+      store = new AcademicStore({ storeKey: "default_academic_store" });
+    }
+    const currentDivs = normalizeStoreDivisions(store.divisions);
+
+    if (action === "add") {
+      if (!cleanNewDiv) {
+        return res.status(400).json({ success: false, message: "New division name is required." });
+      }
+      targetYears.forEach(y => {
+        if (!Array.isArray(currentDivs[y])) currentDivs[y] = ["Div A", "Div B"];
+        if (!currentDivs[y].some(d => d.toLowerCase() === cleanNewDiv.toLowerCase())) {
+          currentDivs[y].push(cleanNewDiv);
+        }
+      });
+      store.divisions = currentDivs;
+      store.markModified("divisions");
+      await store.save();
+
+      return res.json({
+        success: true,
+        message: `Division '${cleanNewDiv}' added successfully.`,
+        divisions: currentDivs
+      });
+    }
+
+    if (action === "rename") {
+      if (!cleanOldDiv || !cleanNewDiv) {
+        return res.status(400).json({ success: false, message: "Old division and new division names are required." });
+      }
+      if (cleanOldDiv.toLowerCase() === cleanNewDiv.toLowerCase()) {
+        return res.json({ success: true, message: "Division name unchanged.", divisions: currentDivs });
+      }
+
+      // 1. Update AcademicStore divisions
+      targetYears.forEach(y => {
+        if (Array.isArray(currentDivs[y])) {
+          currentDivs[y] = currentDivs[y].map(d => d.toLowerCase() === cleanOldDiv.toLowerCase() ? cleanNewDiv : d);
+        }
+      });
+      store.divisions = currentDivs;
+
+      // 2. Cascade in AcademicStore sub-arrays
+      if (Array.isArray(store.timetable)) {
+        store.timetable.forEach(t => {
+          if (t && t.division && t.division.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            t.division = cleanNewDiv;
+          }
+        });
+        store.markModified("timetable");
+      }
+      if (Array.isArray(store.assignments)) {
+        store.assignments.forEach(a => {
+          if (a && a.targetDivision && a.targetDivision.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            a.targetDivision = cleanNewDiv;
+          }
+        });
+        store.markModified("assignments");
+      }
+      if (Array.isArray(store.dailyAttendance)) {
+        store.dailyAttendance.forEach(att => {
+          if (att && att.division && att.division.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            att.division = cleanNewDiv;
+          }
+        });
+        store.markModified("dailyAttendance");
+      }
+      if (Array.isArray(store.notes)) {
+        store.notes.forEach(n => {
+          if (n && n.division && n.division.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            n.division = cleanNewDiv;
+          }
+        });
+        store.markModified("notes");
+      }
+      if (Array.isArray(store.notices)) {
+        store.notices.forEach(n => {
+          if (n && n.targetDivision && n.targetDivision.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            n.targetDivision = cleanNewDiv;
+          }
+        });
+        store.markModified("notices");
+      }
+      store.markModified("divisions");
+      await store.save();
+
+      // 3. Cascade in MongoDB User collection (Students)
+      const oldDivRegex = new RegExp(`^${escapeRegex(cleanOldDiv)}$`, "i");
+      await User.updateMany(
+        {
+          role: "student",
+          division: oldDivRegex,
+          $or: [
+            { courseYear: { $in: targetYears } },
+            { semester: { $in: targetSemesters } }
+          ]
+        },
+        { $set: { division: cleanNewDiv } }
+      );
+
+      // 4. Cascade in MongoDB User collection (Faculty)
+      await User.updateMany(
+        {
+          role: "faculty",
+          division: oldDivRegex
+        },
+        { $set: { division: cleanNewDiv } }
+      );
+      const facultyWithSubDivs = await User.find({ role: "faculty" });
+      for (const fac of facultyWithSubDivs) {
+        let changed = false;
+        let subDivs = fac.subjectDivisions;
+        if (subDivs instanceof Map) {
+          subDivs = Object.fromEntries(subDivs);
+        }
+        if (subDivs && typeof subDivs === "object") {
+          const updatedSubDivs = { ...subDivs };
+          for (const [subKey, divVal] of Object.entries(subDivs)) {
+            if (divVal && String(divVal).toLowerCase() === cleanOldDiv.toLowerCase()) {
+              updatedSubDivs[subKey] = cleanNewDiv;
+              changed = true;
+            }
+          }
+          if (changed) {
+            fac.subjectDivisions = updatedSubDivs;
+            fac.markModified("subjectDivisions");
+            await fac.save();
+          }
+        }
+      }
+
+      // 5. Cascade in Timetable collection
+      await Timetable.updateMany(
+        {
+          semester: { $in: targetSemesters },
+          division: oldDivRegex
+        },
+        { $set: { division: cleanNewDiv } }
+      );
+
+      // 6. Cascade in Attendance collection
+      await Attendance.updateMany(
+        {
+          division: oldDivRegex,
+          $or: [
+            { courseYear: { $in: targetYears } },
+            { semester: { $in: targetSemesters } }
+          ]
+        },
+        { $set: { division: cleanNewDiv } }
+      );
+
+      // 7. Cascade in Assignment, Note, Notice collections
+      await Assignment.updateMany(
+        { targetDivision: oldDivRegex },
+        { $set: { targetDivision: cleanNewDiv } }
+      );
+      await Note.updateMany(
+        { division: oldDivRegex },
+        { $set: { division: cleanNewDiv } }
+      );
+      await Notice.updateMany(
+        { targetDivision: oldDivRegex },
+        { $set: { targetDivision: cleanNewDiv } }
+      );
+
+      return res.json({
+        success: true,
+        message: `Division '${cleanOldDiv}' successfully renamed to '${cleanNewDiv}' and synchronized across all records.`,
+        divisions: currentDivs
+      });
+    }
+
+    if (action === "delete") {
+      if (!cleanOldDiv) {
+        return res.status(400).json({ success: false, message: "Division to delete is required." });
+      }
+
+      for (const y of targetYears) {
+        const remaining = (currentDivs[y] || []).filter(d => d.toLowerCase() !== cleanOldDiv.toLowerCase());
+        if (remaining.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot delete division: At least one division must remain configured for ${y}.`
+          });
+        }
+      }
+
+      const effectiveFallback = cleanFallback || targetYears.map(y => currentDivs[y].find(d => d.toLowerCase() !== cleanOldDiv.toLowerCase()))[0] || "Div A";
+
+      // 1. Update AcademicStore divisions
+      targetYears.forEach(y => {
+        if (Array.isArray(currentDivs[y])) {
+          currentDivs[y] = currentDivs[y].filter(d => d.toLowerCase() !== cleanOldDiv.toLowerCase());
+        }
+      });
+      store.divisions = currentDivs;
+
+      // 2. Cascade AcademicStore sub-arrays
+      if (Array.isArray(store.timetable)) {
+        store.timetable = store.timetable.map(t => {
+          if (t && t.division && t.division.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            return { ...t, division: effectiveFallback };
+          }
+          return t;
+        });
+        store.markModified("timetable");
+      }
+      if (Array.isArray(store.assignments)) {
+        store.assignments.forEach(a => {
+          if (a && a.targetDivision && a.targetDivision.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            a.targetDivision = "All Divisions";
+          }
+        });
+        store.markModified("assignments");
+      }
+      if (Array.isArray(store.dailyAttendance)) {
+        store.dailyAttendance.forEach(att => {
+          if (att && att.division && att.division.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            att.division = effectiveFallback;
+          }
+        });
+        store.markModified("dailyAttendance");
+      }
+      if (Array.isArray(store.notes)) {
+        store.notes.forEach(n => {
+          if (n && n.division && n.division.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            n.division = "All Divisions";
+          }
+        });
+        store.markModified("notes");
+      }
+      if (Array.isArray(store.notices)) {
+        store.notices.forEach(n => {
+          if (n && n.targetDivision && n.targetDivision.toLowerCase() === cleanOldDiv.toLowerCase()) {
+            n.targetDivision = "all";
+          }
+        });
+        store.markModified("notices");
+      }
+      store.markModified("divisions");
+      await store.save();
+
+      // 3. Cascade Students to fallback division
+      const oldDivRegex = new RegExp(`^${escapeRegex(cleanOldDiv)}$`, "i");
+      await User.updateMany(
+        {
+          role: "student",
+          division: oldDivRegex,
+          $or: [
+            { courseYear: { $in: targetYears } },
+            { semester: { $in: targetSemesters } }
+          ]
+        },
+        { $set: { division: effectiveFallback } }
+      );
+
+      // 4. Cascade Faculty
+      await User.updateMany(
+        {
+          role: "faculty",
+          division: oldDivRegex
+        },
+        { $set: { division: effectiveFallback } }
+      );
+      const facultyWithSubDivs = await User.find({ role: "faculty" });
+      for (const fac of facultyWithSubDivs) {
+        let changed = false;
+        let subDivs = fac.subjectDivisions;
+        if (subDivs instanceof Map) {
+          subDivs = Object.fromEntries(subDivs);
+        }
+        if (subDivs && typeof subDivs === "object") {
+          const updatedSubDivs = { ...subDivs };
+          for (const [subKey, divVal] of Object.entries(subDivs)) {
+            if (divVal && String(divVal).toLowerCase() === cleanOldDiv.toLowerCase()) {
+              updatedSubDivs[subKey] = effectiveFallback;
+              changed = true;
+            }
+          }
+          if (changed) {
+            fac.subjectDivisions = updatedSubDivs;
+            fac.markModified("subjectDivisions");
+            await fac.save();
+          }
+        }
+      }
+
+      // 5. Cascade Timetable collection
+      for (const sem of targetSemesters) {
+        const fallbackDoc = await Timetable.findOne({ semester: sem, division: effectiveFallback });
+        if (fallbackDoc) {
+          await Timetable.deleteMany({ semester: sem, division: oldDivRegex });
+        } else {
+          await Timetable.updateMany({ semester: sem, division: oldDivRegex }, { $set: { division: effectiveFallback } });
+        }
+      }
+
+      // 6. Cascade Attendance collection
+      await Attendance.updateMany(
+        {
+          division: oldDivRegex,
+          $or: [
+            { courseYear: { $in: targetYears } },
+            { semester: { $in: targetSemesters } }
+          ]
+        },
+        { $set: { division: effectiveFallback } }
+      );
+
+      // 7. Cascade Assignment, Note, Notice collections
+      await Assignment.updateMany(
+        { targetDivision: oldDivRegex },
+        { $set: { targetDivision: "All Divisions" } }
+      );
+      await Note.updateMany(
+        { division: oldDivRegex },
+        { $set: { division: "All Divisions" } }
+      );
+      await Notice.updateMany(
+        { targetDivision: oldDivRegex },
+        { $set: { targetDivision: "all" } }
+      );
+
+      return res.json({
+        success: true,
+        message: `Division '${cleanOldDiv}' successfully deleted. Students and academic records reassigned to '${effectiveFallback}'.`,
+        divisions: currentDivs
+      });
+    }
+  } catch (err) {
+    console.error("Division cascade error:", err);
+    res.status(500).json({ success: false, message: "Failed to cascade division change." });
+  }
+});
+
+// ============================================================================
+// COURSES & SYLLABUS MANAGEMENT API (Admin + Student/Faculty + PDF)
+// ============================================================================
+
+const ALL_YEARS_METADATA = [
+  {
+    yearLevel: 1,
+    yearTitle: "First Year BCA",
+    academicYear: "2025–26",
+    semesterLabel: "Semester I & II",
+    semesters: [1, 2],
+    semester: 1
+  },
+  {
+    yearLevel: 2,
+    yearTitle: "Second Year BCA",
+    academicYear: "2026–27",
+    semesterLabel: "Semester III & IV",
+    semesters: [3, 4],
+    semester: 2
+  },
+  {
+    yearLevel: 3,
+    yearTitle: "Third Year BCA",
+    academicYear: "2027–28",
+    semesterLabel: "Semester V & VI",
+    semesters: [5, 6],
+    semester: 3
+  }
+];
+
+function resolveYearLevel(param) {
+  const n = parseInt(param, 10);
+  if (isNaN(n)) return null;
+  if (n === 1 || n === 2 || n === 3) return n;
+  if (n === 4) return 2;
+  if (n === 5 || n === 6) return 3;
+  return null;
+}
+
+function formatSyllabus(doc) {
+  if (!doc) return null;
+  const size = Number(doc.fileSize || 0);
+  let formattedSize = "0 B";
+  if (size >= 1024 * 1024) {
+    formattedSize = (size / (1024 * 1024)).toFixed(1) + " MB";
+  } else if (size >= 1024) {
+    formattedSize = Math.round(size / 1024) + " KB";
+  } else {
+    formattedSize = size + " B";
+  }
+
+  const config = VALID_YEAR_CONFIG[doc.yearLevel] || {};
+
+  return {
+    yearLevel: doc.yearLevel,
+    yearTitle: doc.yearTitle || config.yearTitle || `Year ${doc.yearLevel} BCA`,
+    academicYear: doc.academicYear || config.academicYear || "",
+    semesterLabel: doc.semesterLabel || config.semesterLabel || "",
+    semesters: config.semesters || [],
+    semester: doc.semester || doc.yearLevel,
+    isUploaded: true,
+    originalFilename: doc.originalFilename,
+    fileSize: doc.fileSize,
+    formattedSize,
+    mimeType: doc.mimeType || "application/pdf",
+    uploadedBy: doc.uploadedBy || "admin",
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt
+  };
+}
+
+// GET /api/syllabus - Returns 3 year cards syllabus metadata for authenticated users
+app.get("/api/syllabus", requireAuth(), async (req, res) => {
+  try {
+    const docs = await Syllabus.find({}).lean();
+    const docMap = new Map();
+    for (const d of docs) {
+      docMap.set(d.yearLevel, d);
+    }
+
+    const syllabi = ALL_YEARS_METADATA.map(meta => {
+      const existing = docMap.get(meta.yearLevel);
+      if (existing) {
+        return {
+          ...meta,
+          ...formatSyllabus(existing)
+        };
+      }
+      return {
+        ...meta,
+        isUploaded: false,
+        originalFilename: null,
+        fileSize: null,
+        formattedSize: null,
+        uploadedBy: null,
+        createdAt: null,
+        updatedAt: null
+      };
+    });
+
+    res.json({
+      success: true,
+      maxFileSizeMb: SYLLABUS_MAX_FILE_SIZE_MB,
+      syllabi
+    });
+  } catch (error) {
+    console.error("Fetch syllabi error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch syllabus data." });
+  }
+});
+
+// GET /api/syllabus/:yearLevel - Returns single year syllabus metadata
+app.get("/api/syllabus/:yearLevel", requireAuth(), async (req, res) => {
+  try {
+    const yearLevel = resolveYearLevel(req.params.yearLevel);
+    if (!yearLevel) {
+      return res.status(400).json({ success: false, message: "Invalid year level. Must be 1 (First Year), 2 (Second Year), or 3 (Third Year)." });
+    }
+
+    const doc = await Syllabus.findOne({ yearLevel }).lean();
+    if (!doc) {
+      return res.status(404).json({ success: false, message: `Syllabus not found for Year ${yearLevel}.` });
+    }
+
+    res.json({
+      success: true,
+      syllabus: formatSyllabus(doc)
+    });
+  } catch (error) {
+    console.error("Fetch single syllabus error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch syllabus." });
+  }
+});
+
+// GET /api/syllabus/:yearLevel/download - Authenticated safe streaming of syllabus PDF
+app.get("/api/syllabus/:yearLevel/download", requireAuth(), async (req, res) => {
+  try {
+    const yearLevel = resolveYearLevel(req.params.yearLevel);
+    if (!yearLevel) {
+      return res.status(400).json({ success: false, message: "Invalid year level. Must be 1 (First Year), 2 (Second Year), or 3 (Third Year)." });
+    }
+
+    const doc = await Syllabus.findOne({ yearLevel }).lean();
+    if (!doc) {
+      return res.status(404).json({ success: false, message: `Syllabus not found for Year ${yearLevel}.` });
+    }
+
+    const resolved = path.resolve(doc.storagePath);
+    if (!resolved.startsWith(SYLLABUS_BASE_DIR)) {
+      return res.status(403).json({ success: false, message: "Access forbidden: Invalid storage path." });
+    }
+
+    if (!fs.existsSync(resolved)) {
+      return res.status(404).json({ success: false, message: "Syllabus file is missing from server storage." });
+    }
+
+    const safeFilename = (doc.originalFilename || `BCA_Year_${yearLevel}_Syllabus.pdf`)
+      .replace(/[\r\n\x00-\x1f"\\/]/g, "_")
+      .trim();
+
+    const isInline = req.query.inline === "1" || req.query.view === "1";
+    res.setHeader("Content-Type", doc.mimeType || "application/pdf");
+    res.setHeader("Content-Disposition", `${isInline ? "inline" : "attachment"}; filename="${safeFilename}"`);
+    res.setHeader("Content-Length", doc.fileSize);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
+    const stream = fs.createReadStream(resolved);
+    stream.on("error", (err) => {
+      console.error("Stream error downloading syllabus:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, message: "Error streaming syllabus file." });
+      }
+    });
+    stream.pipe(res);
+  } catch (error) {
+    console.error("Download syllabus error:", error);
+    res.status(500).json({ success: false, message: "Failed to download syllabus." });
+  }
+});
+
+// POST /api/syllabus - Admin-only upload of syllabus PDF (One PDF per Year Card)
+app.post("/api/syllabus", requireAuth(["admin"]), (req, res) => {
+  uploadSyllabus.single("file")(req, res, async (err) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(413).json({
+          success: false,
+          message: `The selected PDF exceeds the maximum allowed size of ${SYLLABUS_MAX_FILE_SIZE_MB} MB.`
+        });
+      }
+      if (err.code === "INVALID_FILE_TYPE") {
+        return res.status(415).json({
+          success: false,
+          message: "Only PDF files are allowed."
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: err.message || "Failed to upload file."
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "PDF file is required." });
+    }
+
+    const uploadedFilePath = req.file.path;
+
+    try {
+      const yearLevelInput = req.body.yearLevel || req.body.year || req.body.semester;
+      const yearLevel = resolveYearLevel(yearLevelInput);
+
+      if (!yearLevel) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(400).json({ success: false, message: "Invalid year level. Must be 1 (First Year), 2 (Second Year), or 3 (Third Year)." });
+      }
+
+      const config = VALID_YEAR_CONFIG[yearLevel];
+      if (!config) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(400).json({ success: false, message: "Invalid year configuration." });
+      }
+
+      // Verify PDF magic bytes
+      if (!verifyPdfMagicBytes(uploadedFilePath)) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(415).json({
+          success: false,
+          message: "Invalid file signature: Only genuine PDF files starting with %PDF- are accepted."
+        });
+      }
+
+      let existing = await Syllabus.findOne({ yearLevel });
+      let oldPathToDelete = null;
+
+      if (existing) {
+        oldPathToDelete = existing.storagePath;
+        existing.yearTitle = config.yearTitle;
+        existing.academicYear = config.academicYear;
+        existing.semesterLabel = config.semesterLabel;
+        existing.semester = yearLevel;
+        existing.originalFilename = req.file.originalname;
+        existing.storedFilename = req.file.filename;
+        existing.storagePath = req.file.path;
+        existing.fileSize = req.file.size;
+        existing.mimeType = "application/pdf";
+        existing.uploadedBy = req.user.username || "admin";
+        existing.updatedAt = new Date();
+        await existing.save();
+      } else {
+        existing = await Syllabus.create({
+          yearLevel,
+          semester: yearLevel,
+          yearTitle: config.yearTitle,
+          academicYear: config.academicYear,
+          semesterLabel: config.semesterLabel,
+          originalFilename: req.file.originalname,
+          storedFilename: req.file.filename,
+          storagePath: req.file.path,
+          fileSize: req.file.size,
+          mimeType: "application/pdf",
+          uploadedBy: req.user.username || "admin"
+        });
+      }
+
+      // Safely delete old physical file if it differs from the newly uploaded file
+      if (oldPathToDelete && oldPathToDelete !== req.file.path && fs.existsSync(oldPathToDelete)) {
+        try {
+          const resolvedOld = path.resolve(oldPathToDelete);
+          if (resolvedOld.startsWith(SYLLABUS_BASE_DIR)) {
+            fs.unlinkSync(resolvedOld);
+          }
+        } catch (cleanupErr) {
+          console.warn("Could not delete old syllabus file:", cleanupErr.message);
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `${config.yearTitle} syllabus uploaded successfully.`,
+        syllabus: formatSyllabus(existing)
+      });
+    } catch (saveErr) {
+      if (fs.existsSync(uploadedFilePath)) {
+        try { fs.unlinkSync(uploadedFilePath); } catch (_) {}
+      }
+      console.error("Save syllabus error:", saveErr);
+      return res.status(500).json({ success: false, message: "Failed to save syllabus." });
+    }
+  });
+});
+
+// PUT /api/syllabus/:yearLevel - Admin-only replacement of syllabus PDF
+app.put("/api/syllabus/:yearLevel", requireAuth(["admin"]), (req, res) => {
+  uploadSyllabus.single("file")(req, res, async (err) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(413).json({
+          success: false,
+          message: `The selected PDF exceeds the maximum allowed size of ${SYLLABUS_MAX_FILE_SIZE_MB} MB.`
+        });
+      }
+      if (err.code === "INVALID_FILE_TYPE") {
+        return res.status(415).json({
+          success: false,
+          message: "Only PDF files are allowed."
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: err.message || "Failed to upload file."
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Replacement PDF file is required." });
+    }
+
+    const uploadedFilePath = req.file.path;
+
+    try {
+      const yearLevel = resolveYearLevel(req.params.yearLevel);
+      if (!yearLevel) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(400).json({ success: false, message: "Invalid year level: Must be 1, 2, or 3." });
+      }
+
+      const config = VALID_YEAR_CONFIG[yearLevel];
+      if (!config) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(400).json({ success: false, message: "Invalid year configuration." });
+      }
+
+      // Verify PDF magic bytes
+      if (!verifyPdfMagicBytes(uploadedFilePath)) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(415).json({
+          success: false,
+          message: "Invalid file signature: Only genuine PDF files starting with %PDF- are accepted."
+        });
+      }
+
+      let existing = await Syllabus.findOne({ yearLevel });
+      let oldPathToDelete = null;
+
+      if (existing) {
+        oldPathToDelete = existing.storagePath;
+        existing.originalFilename = req.file.originalname;
+        existing.storedFilename = req.file.filename;
+        existing.storagePath = req.file.path;
+        existing.fileSize = req.file.size;
+        existing.mimeType = "application/pdf";
+        existing.uploadedBy = req.user.username || "admin";
+        existing.updatedAt = new Date();
+        await existing.save();
+      } else {
+        existing = await Syllabus.create({
+          yearLevel,
+          semester: yearLevel,
+          yearTitle: config.yearTitle,
+          academicYear: config.academicYear,
+          semesterLabel: config.semesterLabel,
+          originalFilename: req.file.originalname,
+          storedFilename: req.file.filename,
+          storagePath: req.file.path,
+          fileSize: req.file.size,
+          mimeType: "application/pdf",
+          uploadedBy: req.user.username || "admin"
+        });
+      }
+
+      if (oldPathToDelete && oldPathToDelete !== req.file.path && fs.existsSync(oldPathToDelete)) {
+        try {
+          const resolvedOld = path.resolve(oldPathToDelete);
+          if (resolvedOld.startsWith(SYLLABUS_BASE_DIR)) {
+            fs.unlinkSync(resolvedOld);
+          }
+        } catch (cleanupErr) {
+          console.warn("Could not delete old syllabus file:", cleanupErr.message);
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `${config.yearTitle} syllabus replaced successfully.`,
+        syllabus: formatSyllabus(existing)
+      });
+    } catch (saveErr) {
+      if (fs.existsSync(uploadedFilePath)) {
+        try { fs.unlinkSync(uploadedFilePath); } catch (_) {}
+      }
+      console.error("Replace syllabus error:", saveErr);
+      return res.status(500).json({ success: false, message: "Failed to replace syllabus." });
+    }
+  });
+});
+
+// DELETE /api/syllabus/:yearLevel - Admin-only deletion of syllabus PDF
+app.delete("/api/syllabus/:yearLevel", requireAuth(["admin"]), async (req, res) => {
+  try {
+    const yearLevel = resolveYearLevel(req.params.yearLevel);
+    if (!yearLevel) {
+      return res.status(400).json({ success: false, message: "Invalid year level: Must be 1, 2, or 3." });
+    }
+
+    const doc = await Syllabus.findOne({ yearLevel });
+    if (!doc) {
+      return res.status(404).json({ success: false, message: `Syllabus not found for Year ${yearLevel}.` });
+    }
+
+    if (doc.storagePath) {
+      try {
+        const resolved = path.resolve(doc.storagePath);
+        if (resolved.startsWith(SYLLABUS_BASE_DIR) && fs.existsSync(resolved)) {
+          fs.unlinkSync(resolved);
+        }
+      } catch (err) {
+        console.warn("Could not unlink syllabus file:", err.message);
+      }
+    }
+
+    await Syllabus.deleteOne({ yearLevel });
+
+    return res.status(200).json({
+      success: true,
+      message: `${doc.yearTitle || `Year ${yearLevel}`} syllabus deleted successfully.`
+    });
+  } catch (error) {
+    console.error("Delete syllabus error:", error);
+    res.status(500).json({ success: false, message: "Failed to delete syllabus." });
+  }
+});
+
 // Catch-all for unhandled API routes across all HTTP methods
 app.use("/api", (req, res) => {
   res.status(404).json({ success: false, message: "API endpoint not found." });
@@ -3498,10 +4378,21 @@ app.use((err, req, res, next) => {
   }
 
   // Handle payload too large (413)
-  if (err.type === "entity.too.large" || err.status === 413) {
+  if (err.type === "entity.too.large" || err.status === 413 || err.code === "LIMIT_FILE_SIZE") {
+    const isSyllabus = req.path && req.path.includes("/syllabus");
     return res.status(413).json({
       success: false,
-      message: "Payload too large. Maximum allowed size is 1MB (15MB for academic sync)."
+      message: isSyllabus
+        ? `The selected PDF exceeds the maximum allowed size of ${SYLLABUS_MAX_FILE_SIZE_MB} MB.`
+        : "Payload too large. Maximum allowed size is 1MB (15MB for academic sync)."
+    });
+  }
+
+  // Handle unsupported file type (415)
+  if (err.code === "INVALID_FILE_TYPE" || err.status === 415) {
+    return res.status(415).json({
+      success: false,
+      message: err.message || "Only PDF files are allowed."
     });
   }
 

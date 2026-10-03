@@ -4074,8 +4074,8 @@ function checkPromptDesktopNotifications() {
 function buildNav() {
   const isStudentOrFaculty = currentUser && (currentUser.role === "student" || currentUser.role === "faculty");
   const items = isStudentOrFaculty
-    ? [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Profile"], ["attendance", "📊", "Attendance"], ["marks", "📈", "Marks"], ["assignments", "📝", "Assignments"], ["notes", "📚", "Notes"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"]]
-    : [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Admin Profile"], ["divisions", "🏫", "Divisions"], ["subjects", "📚", "Semester Subjects"], ["students", "👥", "Students"], ["faculty", "🧑‍🏫", "Faculty"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"]];
+    ? [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Profile"], ["attendance", "📊", "Attendance"], ["marks", "📈", "Marks"], ["assignments", "📝", "Assignments"], ["notes", "📚", "Notes"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"], ["syllabus", "📖", "Courses & Syllabus"]]
+    : [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Admin Profile"], ["divisions", "🏫", "Divisions"], ["subjects", "📚", "Semester Subjects"], ["students", "👥", "Students"], ["faculty", "🧑‍🏫", "Faculty"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"], ["syllabus", "📖", "Courses & Syllabus"]];
 
   const unreadNoticeCount = getUnreadNoticeCount();
   const unreadNotesCount = getUnreadNotesCount();
@@ -4176,7 +4176,8 @@ function navigate(page, updateHash = true) {
   const titles = {
     dashboard: "Dashboard", profile: (currentUser && currentUser.role === "admin") ? "Admin Profile & Credentials" : "My Profile", attendance: "Attendance", marks: "Marks",
     assignments: "Assignments", notes: "Subject Notes", timetable: "Timetable", notices: "Notices",
-    students: "Students", faculty: "Faculty", subjects: "Semester-wise Subjects", divisions: "Class Divisions Management"
+    students: "Students", faculty: "Faculty", subjects: "Semester-wise Subjects", divisions: "Class Divisions Management",
+    syllabus: (currentUser && currentUser.role === "admin") ? "Courses & Syllabus Management" : "Courses & Syllabus"
   };
   $("pageEyebrow").textContent = roleLabel(currentUser ? currentUser.role : "", currentUser ? currentUser.subject : "");
   $("pageTitle").textContent = titles[page] || "Dashboard";
@@ -4257,6 +4258,9 @@ function initPage(page) {
         }
       }
     }).catch(e => console.warn("Background faculty list hydration failed:", e));
+  }
+  if (page === "syllabus") {
+    initSyllabusPage();
   }
 }
 
@@ -7680,9 +7684,19 @@ function initTimetablePage() {
   if (semSelect) {
     semSelect.addEventListener("change", () => {
       activeTimetableSemester = semSelect.value;
+      const semYr = getCourseYearForSemester(activeTimetableSemester);
+      const available = getAvailableDivisions(semYr);
+      if (!available.includes(activeTimetableDivision)) {
+        activeTimetableDivision = available[0] || "Div A";
+      }
+      const divSelect = $("timetableDivisionSelect");
+      if (divSelect) {
+        divSelect.innerHTML = renderDivisionSelectOptions(activeTimetableDivision, false, "All Divisions", semYr);
+        divSelect.value = activeTimetableDivision;
+      }
       isTimetableEditMode = false;
       selectedTimetableCells = [];
-      loadTimetableDoc(activeTimetableSemester, activeTimetableDivision || targetDivision);
+      loadTimetableDoc(activeTimetableSemester, activeTimetableDivision);
     });
   }
 
@@ -9610,7 +9624,7 @@ const pages = {
             <div style="display:flex; align-items:center; gap:6px;">
               <label style="font-size:12px; font-weight:700; color:#475569;">Division:</label>
               <select id="timetableDivisionSelect" class="filter-select" style="padding:4px 10px; font-size:12px; font-weight:700; border-radius:8px;">
-                ${renderDivisionSelectOptions(displayDivision)}
+                ${renderDivisionSelectOptions(displayDivision, false, "All Divisions", getCourseYearForSemester(displaySemester))}
               </select>
             </div>
           ` : `
@@ -9959,6 +9973,9 @@ const pages = {
   },
   divisions() {
     return adminDivisions();
+  },
+  syllabus() {
+    return renderSyllabusPageHtml();
   }
 };
 
@@ -11225,6 +11242,309 @@ function closeAddDivisionModal() {
   if (modal) modal.classList.add("hidden");
 }
 
+function refreshAllDivisionDropdowns() {
+  // 1. Signup division select (modal and pages)
+  if (typeof populateSignupDivisionSelect === "function") {
+    populateSignupDivisionSelect();
+  }
+  if (typeof populatePageDivisionSelect === "function") {
+    const curDiv = $("pageSignupDivision") ? $("pageSignupDivision").value : "";
+    const curYr = $("pageSignupCourseYear") ? $("pageSignupCourseYear").value : null;
+    populatePageDivisionSelect(curDiv, curYr);
+  }
+
+  // 2. Student Edit Profile modal
+  if ($("editProfileDivision") && currentUser && currentUser.role === "student") {
+    const yr = $("editProfileCourseYear") ? $("editProfileCourseYear").value : (currentUser.courseYear || "1st Year");
+    const curVal = $("editProfileDivision").value || currentUser.division || "";
+    const available = getAvailableDivisions(yr);
+    $("editProfileDivision").innerHTML = `<option value="">Select Division</option>` + renderDivisionSelectOptions(curVal, false, "All Divisions", yr);
+    if (available.includes(curVal)) {
+      $("editProfileDivision").value = curVal;
+    }
+  }
+
+  // 3. Faculty Profile Assigned Division select
+  if ($("facultyProfileDivision") && currentUser && currentUser.role === "faculty") {
+    const curVal = currentUser.division || "Both Divisions";
+    $("facultyProfileDivision").innerHTML = renderFacultyDivisionSelectOptions(curVal);
+    $("facultyProfileDivision").value = curVal;
+  }
+
+  // 4. Admin Edit Faculty modal
+  if ($("adminEditFacultyDivision")) {
+    const curVal = $("adminEditFacultyDivision").value || "Both Divisions";
+    $("adminEditFacultyDivision").innerHTML = renderFacultyDivisionSelectOptions(curVal);
+    $("adminEditFacultyDivision").value = curVal;
+  }
+
+  // 5. Timetable division select
+  if ($("timetableDivisionSelect")) {
+    const sem = activeTimetableSemester || (currentUser && currentUser.semester) || "1st Semester";
+    const semYr = getCourseYearForSemester(sem);
+    const curVal = $("timetableDivisionSelect").value || activeTimetableDivision || "Div A";
+    $("timetableDivisionSelect").innerHTML = renderDivisionSelectOptions(curVal, false, "All Divisions", semYr);
+    if (getAvailableDivisions(semYr).includes(curVal)) {
+      $("timetableDivisionSelect").value = curVal;
+    }
+  }
+
+  // 6. Attendance division select
+  if ($("attDivisionSelect")) {
+    const yr = attendanceFilterCourseYear || "1st Year";
+    const available = getAvailableDivisions(yr);
+    const curVal = attendanceFilterDivision || "";
+    const isBoth = !currentUser || !currentUser.division || currentUser.division === "Both Divisions" || currentUser.division === "All Divisions";
+    if (isBoth) {
+      $("attDivisionSelect").innerHTML = `<option value="" ${!curVal ? "selected" : ""}>-- Select Division --</option>` +
+        available.map(d => `<option value="${escapeHtml(d)}" ${curVal === d ? "selected" : ""}>${escapeHtml(d)}</option>`).join("");
+      if (curVal && available.includes(curVal)) {
+        $("attDivisionSelect").value = curVal;
+      }
+    }
+  }
+
+  // 7. Generic data-populate-divisions elements
+  document.querySelectorAll("[data-populate-divisions]").forEach(el => {
+    const yr = el.dataset.divisionYear || null;
+    const curVal = el.value || "";
+    el.innerHTML = renderDivisionSelectOptions(curVal, el.hasAttribute("data-include-all"), el.dataset.allLabel || "All Divisions", yr);
+    el.value = curVal;
+  });
+}
+
+async function cascadeDivisionSync({ action, courseYear, oldDivision, newDivision, fallbackDivision }) {
+  const yr = courseYear || "1st Year";
+  const targetYears = yr === "All Years" ? ["1st Year", "2nd Year", "3rd Year"] : [yr];
+  const targetSemesters = targetYears.flatMap(y => getSemestersForCourseYear(y));
+
+  // 1. Update ACADEMIC.divisions store
+  if (!ACADEMIC.divisions || typeof ACADEMIC.divisions !== "object" || Array.isArray(ACADEMIC.divisions)) {
+    ACADEMIC.divisions = normalizeAcademicDivisions(ACADEMIC.divisions);
+  }
+
+  if (action === "add") {
+    targetYears.forEach(y => {
+      if (!Array.isArray(ACADEMIC.divisions[y])) ACADEMIC.divisions[y] = ["Div A", "Div B"];
+      if (!ACADEMIC.divisions[y].some(d => d.toLowerCase() === newDivision.toLowerCase())) {
+        ACADEMIC.divisions[y].push(newDivision);
+      }
+    });
+  } else if (action === "rename") {
+    targetYears.forEach(y => {
+      if (Array.isArray(ACADEMIC.divisions[y])) {
+        ACADEMIC.divisions[y] = ACADEMIC.divisions[y].map(d => d.toLowerCase() === oldDivision.toLowerCase() ? newDivision : d);
+      }
+    });
+  } else if (action === "delete") {
+    targetYears.forEach(y => {
+      if (Array.isArray(ACADEMIC.divisions[y])) {
+        ACADEMIC.divisions[y] = ACADEMIC.divisions[y].filter(d => d.toLowerCase() !== oldDivision.toLowerCase());
+      }
+    });
+  }
+
+  // 2. Cascade enrolled students in USERS.student
+  if (Array.isArray(USERS.student) && (action === "rename" || action === "delete")) {
+    const replacementDiv = action === "rename" ? newDivision : fallbackDivision;
+    const modifiedStudents = [];
+
+    USERS.student.forEach(s => {
+      const sYr = s.courseYear || (typeof getCourseYearForSemester === "function" ? getCourseYearForSemester(s.semester || "1st Semester") : "1st Year");
+      const inScope = targetYears.includes(sYr) || (s.semester && targetSemesters.includes(s.semester));
+      if (inScope && (s.division || "Div A").toLowerCase() === oldDivision.toLowerCase()) {
+        s.division = replacementDiv;
+        modifiedStudents.push(s);
+      }
+    });
+
+    if (ACADEMIC.students && typeof ACADEMIC.students === "object") {
+      Object.keys(ACADEMIC.students).forEach(uName => {
+        const stRec = ACADEMIC.students[uName];
+        if (stRec && stRec.division && stRec.division.toLowerCase() === oldDivision.toLowerCase()) {
+          stRec.division = replacementDiv;
+        }
+      });
+    }
+
+    // Persist students to MongoDB
+    for (const st of modifiedStudents) {
+      if (typeof updateUserOnServer === "function") {
+        updateUserOnServer("student", st.username, st).catch(err => console.warn(`[DivisionSync] Student ${st.username} server update:`, err.message));
+      }
+    }
+  }
+
+  // 3. Cascade faculty assignments in USERS.faculty
+  if (Array.isArray(USERS.faculty) && (action === "rename" || action === "delete")) {
+    const replacementDiv = action === "rename" ? newDivision : fallbackDivision;
+    const modifiedFaculty = [];
+
+    USERS.faculty.forEach(f => {
+      let changed = false;
+      if (f.division && f.division.toLowerCase() === oldDivision.toLowerCase()) {
+        f.division = replacementDiv;
+        changed = true;
+      }
+      if (f.subjectDivisions && typeof f.subjectDivisions === "object") {
+        Object.keys(f.subjectDivisions).forEach(subKey => {
+          if (f.subjectDivisions[subKey] && f.subjectDivisions[subKey].toLowerCase() === oldDivision.toLowerCase()) {
+            f.subjectDivisions[subKey] = replacementDiv;
+            changed = true;
+          }
+        });
+      }
+      if (changed) {
+        modifiedFaculty.push(f);
+      }
+    });
+
+    for (const fac of modifiedFaculty) {
+      if (typeof updateUserOnServer === "function") {
+        updateUserOnServer("faculty", fac.username, fac).catch(err => console.warn(`[DivisionSync] Faculty ${fac.username} server update:`, err.message));
+      }
+    }
+  }
+
+  // 4. Cascade Timetable entries in ACADEMIC.timetable & active doc
+  if (Array.isArray(ACADEMIC.timetable) && (action === "rename" || action === "delete")) {
+    const replacementDiv = action === "rename" ? newDivision : fallbackDivision;
+    ACADEMIC.timetable.forEach(t => {
+      if (t && (t.division || "").toLowerCase() === oldDivision.toLowerCase()) {
+        if (!t.semester || targetSemesters.includes(t.semester)) {
+          t.division = replacementDiv;
+        }
+      }
+    });
+  }
+  if (typeof currentTimetableDoc !== "undefined" && currentTimetableDoc && (action === "rename" || action === "delete")) {
+    if ((currentTimetableDoc.division || "").toLowerCase() === oldDivision.toLowerCase()) {
+      currentTimetableDoc.division = (action === "rename" ? newDivision : fallbackDivision);
+    }
+  }
+
+  // 5. Cascade Assignments in ACADEMIC.assignments
+  if (Array.isArray(ACADEMIC.assignments) && (action === "rename" || action === "delete")) {
+    const replacementDiv = action === "rename" ? newDivision : "All Divisions";
+    ACADEMIC.assignments.forEach(a => {
+      if (a && (a.targetDivision || "").toLowerCase() === oldDivision.toLowerCase()) {
+        a.targetDivision = replacementDiv;
+      }
+    });
+  }
+
+  // 6. Cascade Daily Attendance in ACADEMIC.dailyAttendance
+  if (Array.isArray(ACADEMIC.dailyAttendance) && (action === "rename" || action === "delete")) {
+    const replacementDiv = action === "rename" ? newDivision : fallbackDivision;
+    ACADEMIC.dailyAttendance.forEach(att => {
+      if (att && (att.division || "").toLowerCase() === oldDivision.toLowerCase()) {
+        if (!att.courseYear || targetYears.includes(att.courseYear)) {
+          att.division = replacementDiv;
+        }
+      }
+    });
+  }
+
+  // 7. Cascade Study Notes in ACADEMIC.notes
+  if (Array.isArray(ACADEMIC.notes) && (action === "rename" || action === "delete")) {
+    const replacementDiv = action === "rename" ? newDivision : "All Divisions";
+    ACADEMIC.notes.forEach(n => {
+      if (n && (n.division || "").toLowerCase() === oldDivision.toLowerCase()) {
+        n.division = replacementDiv;
+      }
+    });
+  }
+
+  // 8. Cascade Notices in ACADEMIC.notices
+  if (Array.isArray(ACADEMIC.notices) && (action === "rename" || action === "delete")) {
+    const replacementDiv = action === "rename" ? newDivision : "all";
+    ACADEMIC.notices.forEach(n => {
+      if (n && (n.targetDivision || "").toLowerCase() === oldDivision.toLowerCase()) {
+        n.targetDivision = replacementDiv;
+      }
+    });
+  }
+
+  // 9. Cascade currentUser session
+  if (currentUser && (action === "rename" || action === "delete")) {
+    let sessionChanged = false;
+    const replacementDiv = action === "rename" ? newDivision : fallbackDivision;
+    if ((currentUser.division || "").toLowerCase() === oldDivision.toLowerCase()) {
+      currentUser.division = replacementDiv;
+      sessionChanged = true;
+    }
+    if (currentUser.role === "faculty" && currentUser.subjectDivisions) {
+      Object.keys(currentUser.subjectDivisions).forEach(subKey => {
+        if (currentUser.subjectDivisions[subKey] && currentUser.subjectDivisions[subKey].toLowerCase() === oldDivision.toLowerCase()) {
+          currentUser.subjectDivisions[subKey] = replacementDiv;
+          sessionChanged = true;
+        }
+      });
+    }
+    if (sessionChanged) {
+      sessionStorage.setItem("portalUser", JSON.stringify(currentUser));
+    }
+  }
+
+  // 10. Cascade active filter variables
+  if (action === "rename" || action === "delete") {
+    const repDiv = action === "rename" ? newDivision : fallbackDivision;
+    if (typeof activeTimetableDivision !== "undefined" && activeTimetableDivision.toLowerCase() === oldDivision.toLowerCase()) {
+      activeTimetableDivision = repDiv;
+    }
+    if (typeof activeAttendanceDivision !== "undefined" && activeAttendanceDivision.toLowerCase() === oldDivision.toLowerCase()) {
+      activeAttendanceDivision = repDiv;
+    }
+    if (typeof attendanceFilterDivision !== "undefined" && attendanceFilterDivision.toLowerCase() === oldDivision.toLowerCase()) {
+      attendanceFilterDivision = repDiv;
+    }
+    if (typeof assignmentFilterDivision !== "undefined" && assignmentFilterDivision.toLowerCase() === oldDivision.toLowerCase()) {
+      assignmentFilterDivision = action === "rename" ? newDivision : "All Divisions";
+    }
+  }
+
+  // 11. Save locally
+  saveAcademicData();
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  // 12. Atomic Backend Cascade API Call
+  try {
+    const cascadeRes = await authenticatedFetch(`${API_BASE_URL}/api/academic/divisions/cascade`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        courseYear: yr,
+        oldDivision,
+        newDivision,
+        fallbackDivision
+      })
+    });
+    if (!cascadeRes.ok) {
+      console.warn("Server division cascade warning, status:", cascadeRes.status);
+    }
+  } catch (err) {
+    console.warn("Server division cascade network notice:", err);
+  }
+
+  // Safeguard: sync full store
+  if (typeof syncAcademicDataToBackend === "function") {
+    await syncAcademicDataToBackend();
+  }
+
+  // 13. Auto-refresh all UI selects across the application
+  refreshAllDivisionDropdowns();
+
+  // 14. Dispatch custom event for reactive components
+  try {
+    window.dispatchEvent(new CustomEvent("campussphere:divisions-updated", {
+      detail: { action, courseYear: yr, oldDivision, newDivision, fallbackDivision }
+    }));
+  } catch (_) {}
+}
+
 function deleteDivision(divName, courseYear) {
   if (!divName) return;
   const yr = courseYear || "1st Year";
@@ -11236,24 +11556,32 @@ function deleteDivision(divName, courseYear) {
 
   const enrolledStudents = (USERS.student || []).filter(s => {
     const sYr = s.courseYear || getCourseYearForSemester(s.semester || "1st Semester");
-    return sYr === yr && (s.division || "Div A") === divName;
+    return sYr === yr && (s.division || "Div A").toLowerCase() === divName.toLowerCase();
   });
+
+  const remaining = currentDivs.filter(d => d.toLowerCase() !== divName.toLowerCase());
+  const fallbackDiv = remaining[0] || "Div A";
 
   let msg = `Are you sure you want to remove "${divName}" from ${yr}?`;
   if (enrolledStudents.length > 0) {
-    msg = `WARNING: There are currently ${enrolledStudents.length} student(s) in ${yr} assigned to "${divName}".\n\nRemoving this division will remove it from available options for ${yr}. Are you sure you want to proceed?`;
+    msg = `WARNING: There are currently ${enrolledStudents.length} student(s) in ${yr} assigned to "${divName}".\n\nRemoving this division will automatically reassign those students to "${fallbackDiv}" and synchronize all academic records.\n\nAre you sure you want to proceed?`;
   }
 
   if (!confirm(msg)) return;
 
-  if (!ACADEMIC.divisions || typeof ACADEMIC.divisions !== "object" || Array.isArray(ACADEMIC.divisions)) {
-    ACADEMIC.divisions = normalizeAcademicDivisions(ACADEMIC.divisions);
-  }
-
-  ACADEMIC.divisions[yr] = currentDivs.filter(d => d.toLowerCase() !== divName.toLowerCase());
-  saveAcademicData();
-  syncAcademicDataToBackend();
-  render();
+  cascadeDivisionSync({
+    action: "delete",
+    courseYear: yr,
+    oldDivision: divName,
+    fallbackDivision: fallbackDiv
+  }).then(() => {
+    showToast(`Division '${divName}' removed. Students and academic records reassigned to '${fallbackDiv}'.`, "success");
+    render();
+  }).catch(err => {
+    console.error("Division deletion error:", err);
+    showToast(`Failed to remove division: ${err.message}`, "error");
+    render();
+  });
 }
 
 async function renameDivision(divName, courseYear) {
@@ -11282,32 +11610,18 @@ async function renameDivision(divName, courseYear) {
     return;
   }
 
-  ACADEMIC.divisions[yr] = currentDivs.map(d => d.toLowerCase() === divName.toLowerCase() ? formattedName : d);
-
-  // Cascade to enrolled students in USERS.student
-  if (Array.isArray(USERS.student)) {
-    USERS.student.forEach(s => {
-      const sYr = s.courseYear || (typeof getCourseYearForSemester === "function" ? getCourseYearForSemester(s.semester || "1st Semester") : "1st Year");
-      if (sYr === yr && (s.division || "Div A").toLowerCase() === divName.toLowerCase()) {
-        s.division = formattedName;
-        if (typeof syncUserToBackend === "function") {
-          syncUserToBackend("student", s.username, s);
-        }
-      }
+  try {
+    await cascadeDivisionSync({
+      action: "rename",
+      courseYear: yr,
+      oldDivision: divName,
+      newDivision: formattedName
     });
+    showToast(`Division '${divName}' renamed to '${formattedName}' and synchronized across all records.`, "success");
+  } catch (err) {
+    console.error("Division rename error:", err);
+    showToast(`Failed to rename division: ${err.message}`, "error");
   }
-
-  // Cascade to timetable entries
-  if (Array.isArray(ACADEMIC.timetable)) {
-    ACADEMIC.timetable.forEach(t => {
-      if ((t.division || "").toLowerCase() === divName.toLowerCase()) {
-        t.division = formattedName;
-      }
-    });
-  }
-
-  saveAcademicData();
-  await syncAcademicDataToBackend();
   render();
 }
 
@@ -11356,19 +11670,11 @@ function bindDivisionEvents() {
 
       const submitBtn = form.querySelector('button[type="submit"]');
       await withActionLock(submitBtn, async () => {
-        targetYears.forEach(yr => {
-          if (!Array.isArray(ACADEMIC.divisions[yr])) {
-            ACADEMIC.divisions[yr] = ["Div A", "Div B"];
-          }
-          if (!ACADEMIC.divisions[yr].some(d => d.toLowerCase() === formattedName.toLowerCase())) {
-            ACADEMIC.divisions[yr].push(formattedName);
-          }
+        await cascadeDivisionSync({
+          action: "add",
+          courseYear: targetYear,
+          newDivision: formattedName
         });
-
-        saveAcademicData();
-        if (typeof syncAcademicDataToBackend === "function") {
-          await syncAcademicDataToBackend();
-        }
         showToast(`Division '${formattedName}' added successfully!`, "success");
         closeAddDivisionModal();
         render();
@@ -12481,3 +12787,762 @@ window.addEventListener("pageshow", () => {
     }
   };
 })();
+
+/* ============================================================================
+   CAMPUSSPHERE — COURSES & SYLLABUS MANAGEMENT MODULE
+   Admin management (Upload, Replace, Delete, View, Download)
+   Student & Faculty access (View, Download)
+   Academic Structure:
+     First Year BCA (2025–26): Semester 1, Semester 2
+     Second Year BCA (2026–27): Semester 3, Semester 4
+     Third Year BCA (2027–28): Semester 5, Semester 6
+   ============================================================================ */
+
+const SYLLABUS_ACADEMIC_YEARS = [
+  {
+    yearLevel: 1,
+    yearTitle: "First Year BCA",
+    academicYear: "2025–26",
+    semesters: [
+      { semester: 1, title: "Semester 1", roman: "Semester I" },
+      { semester: 2, title: "Semester 2", roman: "Semester II" }
+    ]
+  },
+  {
+    yearLevel: 2,
+    yearTitle: "Second Year BCA",
+    academicYear: "2026–27",
+    semesters: [
+      { semester: 3, title: "Semester 3", roman: "Semester III" },
+      { semester: 4, title: "Semester 4", roman: "Semester IV" }
+    ]
+  },
+  {
+    yearLevel: 3,
+    yearTitle: "Third Year BCA",
+    academicYear: "2027–28",
+    semesters: [
+      { semester: 5, title: "Semester 5", roman: "Semester V" },
+      { semester: 6, title: "Semester 6", roman: "Semester VI" }
+    ]
+  }
+];
+
+window.__cachedSyllabi = [];
+window.__syllabusMaxFileSizeMb = 100;
+
+function formatSyllabusFileSize(bytes) {
+  if (bytes === null || bytes === undefined || isNaN(bytes)) return "--";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+}
+
+function renderSyllabusPageHtml() {
+  const isAdmin = currentUser && currentUser.role === "admin";
+  return `
+    <div class="syllabus-mgmt-page">
+      <div class="welcome" style="margin-bottom: 24px;">
+        <div>
+          <p class="eyebrow">${isAdmin ? "Curriculum Administration" : "Academic Curriculum"}</p>
+          <h1>Courses &amp; Syllabus Management</h1>
+          <p>${isAdmin
+            ? "Manage BCA syllabus PDFs for all six semesters."
+            : "Access official BCA curriculum guidelines and download semester-wise syllabus PDFs."}</p>
+        </div>
+        <div class="welcome-icon">📖</div>
+      </div>
+
+      <div id="syllabusContentContainer" class="syllabus-content-container">
+        <div class="syllabus-loading-state">
+          <div class="spinner"></div>
+          <p>Loading syllabus curriculum...</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function initSyllabusPage() {
+  await loadSyllabusData();
+}
+
+async function loadSyllabusData() {
+  const container = $("syllabusContentContainer");
+  if (!container) return;
+
+  try {
+    const res = await authenticatedFetch(`${API_BASE_URL}/api/syllabus`);
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.message || `Failed to fetch syllabus data (${res.status})`);
+    }
+
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to load syllabus records.");
+    }
+
+    window.__cachedSyllabi = data.syllabi || [];
+    window.__syllabusMaxFileSizeMb = data.maxFileSizeMb || 100;
+
+    renderSyllabusCards(window.__cachedSyllabi, window.__syllabusMaxFileSizeMb);
+  } catch (error) {
+    console.error("Error loading syllabus:", error);
+    if (container) {
+      container.innerHTML = `
+        <div class="syllabus-error-card">
+          <div style="font-size: 32px; margin-bottom: 10px;">⚠️</div>
+          <h3 style="color: #0f172a; margin: 0 0 6px 0;">Unable to Load Syllabus</h3>
+          <p style="color: #64748b; margin: 0 0 16px 0; font-size: 14px;">${escapeHtml(error.message || "Please check your network connection.")}</p>
+          <button type="button" class="primary-btn" onclick="loadSyllabusData()">Retry</button>
+        </div>
+      `;
+    }
+  }
+}
+
+function renderSyllabusCards(syllabi, maxMb) {
+  const container = $("syllabusContentContainer");
+  if (!container) return;
+
+  const isAdmin = currentUser && currentUser.role === "admin";
+  const syllabiMap = new Map();
+  (syllabi || []).forEach(s => syllabiMap.set(Number(s.yearLevel || s.semester), s));
+
+  if (isAdmin) {
+    // ADMIN LANDING VIEW: Exactly THREE cards, 1 PDF per Year Card
+    let html = `<div class="syllabus-grid admin-syllabus-grid">`;
+
+    SYLLABUS_ACADEMIC_YEARS.forEach(yearGroup => {
+      const doc = syllabiMap.get(yearGroup.yearLevel);
+      const isUp = Boolean(doc && doc.isUploaded && doc.storedFilename);
+
+      html += `
+        <article class="syllabus-card admin-year-card" data-year-level="${yearGroup.yearLevel}">
+          <div class="admin-card-top-content">
+            <span class="semester-tag">${escapeHtml(yearGroup.semesterLabel)}</span>
+            <div class="syllabus-card-header">
+              <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
+                <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
+              </svg>
+              <div>
+                <h2 class="syllabus-card-title">${escapeHtml(yearGroup.yearTitle)}</h2>
+                <small class="admin-year-sub">Academic Year: ${escapeHtml(yearGroup.academicYear)}</small>
+              </div>
+            </div>
+
+            <div class="admin-sem-status-list">
+              <div class="admin-sem-status-row">
+                <span class="sem-name">Syllabus PDF</span>
+                <span class="sem-badge ${isUp ? "is-uploaded" : "is-pending"}">
+                  ${isUp ? "✓ Uploaded" : "Not Uploaded"}
+                </span>
+              </div>
+              ${isUp ? `
+                <div class="admin-year-file-summary text-truncate" title="${escapeHtml(doc.originalFilename || '')}">
+                  📄 ${escapeHtml(doc.originalFilename || 'Syllabus.pdf')} (${escapeHtml(doc.formattedSize || formatSyllabusFileSize(doc.fileSize))})
+                </div>
+              ` : `
+                <div class="admin-year-file-summary text-muted">
+                  No syllabus PDF uploaded for this academic year yet.
+                </div>
+              `}
+            </div>
+          </div>
+
+          <button type="button" class="syllabus-download-btn admin-upload-btn" onclick="openAdminYearSyllabusModal(${yearGroup.yearLevel})" aria-label="Upload Syllabus for ${escapeHtml(yearGroup.yearTitle)}">
+            ${isUp ? "MANAGE / REPLACE SYLLABUS" : "UPLOAD SYLLABUS"}
+          </button>
+        </article>
+      `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+    return;
+  }
+
+  // STUDENT & FACULTY VIEW: 3 clean cards with 1 DOWNLOAD SYLLABUS action per year card
+  let html = `<div class="syllabus-grid">`;
+  SYLLABUS_ACADEMIC_YEARS.forEach(yearGroup => {
+    const doc = syllabiMap.get(yearGroup.yearLevel);
+    const isUp = Boolean(doc && doc.isUploaded && doc.storedFilename);
+
+    html += `
+      <article class="syllabus-card" data-year-level="${yearGroup.yearLevel}">
+        <div class="admin-card-top-content">
+          <span class="semester-tag">${escapeHtml(yearGroup.semesterLabel)} • ${escapeHtml(yearGroup.academicYear)}</span>
+          <div class="syllabus-card-header">
+            <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
+              <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
+            </svg>
+            <div>
+              <h2 class="syllabus-card-title">${escapeHtml(yearGroup.yearTitle)}</h2>
+              <small class="admin-year-sub">RCUB NEP Curriculum</small>
+            </div>
+          </div>
+
+          <div class="admin-sem-status-list">
+            <div class="admin-sem-status-row">
+              <span class="sem-name">Curriculum Guidelines</span>
+              <span class="sem-badge ${isUp ? "is-uploaded" : "is-pending"}">
+                ${isUp ? "✓ Available" : "Pending Upload"}
+              </span>
+            </div>
+            ${isUp ? `
+              <div class="admin-year-file-summary text-truncate" title="${escapeHtml(doc.originalFilename || '')}">
+                📄 ${escapeHtml(doc.originalFilename || 'Syllabus.pdf')} (${escapeHtml(doc.formattedSize || formatSyllabusFileSize(doc.fileSize))})
+              </div>
+            ` : `
+              <div class="admin-year-file-summary text-muted">
+                Official syllabus PDF will be available soon.
+              </div>
+            `}
+          </div>
+        </div>
+
+        <button type="button" class="syllabus-download-btn full-width" ${!isUp ? "disabled" : ""} onclick="downloadSyllabusPdf(${yearGroup.yearLevel}, '${escapeHtml(doc?.originalFilename || "")}')" aria-label="Download Syllabus for ${escapeHtml(yearGroup.yearTitle)}">
+          ${isUp ? "📥 DOWNLOAD SYLLABUS" : "⏳ PENDING UPLOAD"}
+        </button>
+      </article>
+    `;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+let currentAdminModalYearLevel = 1;
+let isSyllabusReplaceMode = false;
+
+function openAdminYearSyllabusModal(yearLevel) {
+  ensureSyllabusModalsInDom();
+
+  currentAdminModalYearLevel = Number(yearLevel || 1);
+  isSyllabusReplaceMode = false;
+  clearSyllabusSelectedFile();
+  renderAdminModalContent();
+
+  const modal = $("syllabusUploadModalBackdrop");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function setAdminModalReplaceMode(isReplacing) {
+  isSyllabusReplaceMode = Boolean(isReplacing);
+  clearSyllabusSelectedFile();
+  renderAdminModalContent();
+}
+
+function renderAdminModalContent() {
+  const container = $("adminModalDynamicContent");
+  if (!container) return;
+
+  const yearGroup = SYLLABUS_ACADEMIC_YEARS.find(y => y.yearLevel === currentAdminModalYearLevel) || SYLLABUS_ACADEMIC_YEARS[0];
+  const titleEl = $("syllabusUploadModalTitle");
+  const subEl = $("syllabusUploadModalSubtitle");
+
+  if (titleEl) titleEl.textContent = `Upload & Manage Syllabus`;
+  if (subEl) subEl.textContent = `${yearGroup.yearTitle} • ${yearGroup.semesterLabel} (Academic Year: ${yearGroup.academicYear})`;
+
+  const syllabiMap = new Map();
+  (window.__cachedSyllabi || []).forEach(s => syllabiMap.set(Number(s.yearLevel || s.semester), s));
+
+  const currentDoc = syllabiMap.get(currentAdminModalYearLevel);
+  const isUploaded = Boolean(currentDoc && currentDoc.isUploaded && currentDoc.storedFilename);
+
+  let html = "";
+
+  if (isUploaded && !isSyllabusReplaceMode) {
+    const uploadDateStr = currentDoc.updatedAt || currentDoc.createdAt;
+    const formattedDate = uploadDateStr
+      ? new Date(uploadDateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "--";
+
+    html = `
+      <div class="admin-modal-current-syl-box">
+        <div class="current-syl-status-header">
+          <span class="syllabus-status-pill uploaded"><span class="pill-dot"></span> ✓ Published</span>
+          <span class="current-syl-sem-title">${escapeHtml(yearGroup.yearTitle)} Syllabus</span>
+        </div>
+
+        <div class="current-syl-file-details">
+          <div class="syl-meta-row">
+            <span class="meta-label">Academic Year:</span>
+            <strong class="meta-value">${escapeHtml(yearGroup.academicYear)} (${escapeHtml(yearGroup.semesterLabel)})</strong>
+          </div>
+          <div class="syl-meta-row">
+            <span class="meta-label">File:</span>
+            <strong class="meta-value text-truncate" title="${escapeHtml(currentDoc.originalFilename || '')}">
+              ${escapeHtml(currentDoc.originalFilename || 'Syllabus.pdf')}
+            </strong>
+          </div>
+          <div class="syl-meta-row">
+            <span class="meta-label">Size:</span>
+            <span class="meta-value">${escapeHtml(currentDoc.formattedSize || formatSyllabusFileSize(currentDoc.fileSize))}</span>
+          </div>
+          <div class="syl-meta-row">
+            <span class="meta-label">Updated:</span>
+            <span class="meta-value">${escapeHtml(formattedDate)}</span>
+          </div>
+          ${currentDoc.uploadedBy ? `
+            <div class="syl-meta-row">
+              <span class="meta-label">Uploaded By:</span>
+              <span class="meta-value">${escapeHtml(currentDoc.uploadedBy)}</span>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="admin-modal-action-bar">
+          <button type="button" class="syllabus-btn syllabus-btn-view" onclick="previewSyllabusPdf(${currentAdminModalYearLevel})" title="View PDF in new tab">
+            👁️ View
+          </button>
+          <button type="button" class="syllabus-btn syllabus-btn-download" onclick="downloadSyllabusPdf(${currentAdminModalYearLevel}, '${escapeHtml(currentDoc.originalFilename || '')}')" title="Download PDF file">
+            📥 Download
+          </button>
+          <button type="button" class="syllabus-btn syllabus-btn-replace" onclick="setAdminModalReplaceMode(true)" title="Replace with a new PDF file">
+            🔄 Replace
+          </button>
+          <button type="button" class="syllabus-btn syllabus-btn-delete" onclick="confirmDeleteSyllabus(${currentAdminModalYearLevel}, '${escapeHtml(currentDoc.originalFilename || '')}')" title="Delete this syllabus PDF">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 16px; display: flex; justify-content: flex-end;">
+        <button type="button" class="secondary-btn" onclick="closeSyllabusUploadModal()">Close</button>
+      </div>
+    `;
+  } else {
+    // Upload or Replace file form
+    html = `
+      <form id="syllabusUploadForm" class="syllabus-upload-form" onsubmit="handleSyllabusUploadSubmit(event)">
+        <div class="admin-upload-prompt-text" style="margin-bottom: 14px; font-size: 13.5px; color: #334155;">
+          ${isSyllabusReplaceMode 
+            ? `<strong>Replace Syllabus:</strong> Select a new genuine PDF file to replace the existing syllabus for <em>${escapeHtml(yearGroup.yearTitle)} (${escapeHtml(yearGroup.semesterLabel)})</em>.` 
+            : `<strong>Upload Syllabus:</strong> Select the official curriculum PDF for <em>${escapeHtml(yearGroup.yearTitle)} (${escapeHtml(yearGroup.semesterLabel)} • ${escapeHtml(yearGroup.academicYear)})</em>.`}
+        </div>
+
+        <div class="form-group">
+          <div id="syllabusDropzone" class="syllabus-dropzone" tabindex="0" role="button" aria-label="Click or drag PDF file here to upload">
+            <input type="file" id="syllabusFileInput" accept=".pdf,application/pdf" class="syllabus-file-input" />
+            <div class="dropzone-content">
+              <span class="dropzone-icon">📄</span>
+              <p class="dropzone-prompt"><strong>Click to browse</strong> or drag & drop PDF here</p>
+              <span class="dropzone-hint">Strictly genuine PDF files only (.pdf) • Max size: <span id="syllabusMaxSizeDisplay">${window.__syllabusMaxFileSizeMb || 100}</span> MB</span>
+            </div>
+          </div>
+
+          <div id="syllabusSelectedFileInfo" class="syllabus-selected-file hidden">
+            <span class="file-icon">📑</span>
+            <div class="file-details">
+              <strong id="syllabusSelectedFileName">document.pdf</strong>
+              <span id="syllabusSelectedFileSize">0 MB</span>
+            </div>
+            <button type="button" class="remove-file-btn" onclick="clearSyllabusSelectedFile()" aria-label="Remove selected file">&times;</button>
+          </div>
+        </div>
+
+        <div id="syllabusUploadProgressWrap" class="syllabus-progress-wrap hidden">
+          <div class="progress-bar-bg">
+            <div id="syllabusProgressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <span id="syllabusProgressText" class="progress-text">Uploading... 0%</span>
+        </div>
+
+        <div id="syllabusUploadAlert" class="message hidden" role="alert"></div>
+
+        <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          ${isSyllabusReplaceMode ? `
+            <button type="button" class="secondary-btn" onclick="setAdminModalReplaceMode(false)">Back to Details</button>
+            <button type="submit" id="syllabusUploadSubmitBtn" class="primary-btn">
+              <span>🔄</span> <span id="syllabusUploadSubmitText">Replace Syllabus</span>
+            </button>
+          ` : `
+            <button type="button" class="secondary-btn" onclick="closeSyllabusUploadModal()">Cancel</button>
+            <button type="submit" id="syllabusUploadSubmitBtn" class="primary-btn">
+              <span>📤</span> <span id="syllabusUploadSubmitText">Upload Syllabus</span>
+            </button>
+          `}
+        </div>
+      </form>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  const dropzone = $("syllabusDropzone");
+  const fileInput = $("syllabusFileInput");
+  if (dropzone && fileInput) {
+    dropzone.onclick = () => fileInput.click();
+    dropzone.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        fileInput.click();
+      }
+    };
+    dropzone.ondragover = (e) => {
+      e.preventDefault();
+      dropzone.classList.add("drag-over");
+    };
+    dropzone.ondragleave = (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("drag-over");
+    };
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("drag-over");
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        handleSyllabusFileSelected(e.dataTransfer.files[0]);
+      }
+    };
+    fileInput.onchange = () => {
+      if (fileInput.files && fileInput.files[0]) {
+        handleSyllabusFileSelected(fileInput.files[0]);
+      }
+    };
+  }
+}
+
+function ensureSyllabusModalsInDom() {
+  if (!$("syllabusUploadModalBackdrop")) {
+    const uploadModal = document.createElement("div");
+    uploadModal.id = "syllabusUploadModalBackdrop";
+    uploadModal.className = "modal-backdrop hidden";
+    uploadModal.setAttribute("role", "dialog");
+    uploadModal.setAttribute("aria-modal", "true");
+    uploadModal.setAttribute("aria-labelledby", "syllabusUploadModalTitle");
+    uploadModal.innerHTML = `
+      <div class="modal syllabus-upload-modal">
+        <div class="modal-header">
+          <div>
+            <h3 id="syllabusUploadModalTitle">Upload &amp; Manage Syllabus</h3>
+            <p id="syllabusUploadModalSubtitle" class="modal-sub">First Year BCA • Academic Year: 2025–26</p>
+          </div>
+          <button type="button" class="modal-close" onclick="closeSyllabusUploadModal()" aria-label="Close dialog">&times;</button>
+        </div>
+        <div id="adminModalDynamicContent" style="padding: 16px 0 0 0;"></div>
+      </div>
+    `;
+    document.body.appendChild(uploadModal);
+  }
+
+  if (!$("syllabusDeleteModalBackdrop")) {
+    const deleteModal = document.createElement("div");
+    deleteModal.id = "syllabusDeleteModalBackdrop";
+    deleteModal.className = "modal-backdrop hidden";
+    deleteModal.setAttribute("role", "dialog");
+    deleteModal.setAttribute("aria-modal", "true");
+    deleteModal.setAttribute("aria-labelledby", "syllabusDeleteModalTitle");
+    deleteModal.innerHTML = `
+      <div class="modal syllabus-delete-modal">
+        <div class="modal-header">
+          <h3 id="syllabusDeleteModalTitle">Delete Syllabus PDF</h3>
+          <button type="button" class="modal-close" onclick="closeDeleteSyllabusModal()" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 16px 0;">
+          <p style="color: #334155; margin-bottom: 12px; font-size: 14px;">
+            Are you sure you want to permanently delete the syllabus PDF for <strong id="deleteModalSemesterName">First Year BCA</strong>?
+          </p>
+          <div class="syllabus-file-meta-box" style="margin-bottom: 14px;">
+            <div class="syllabus-file-row">
+              <span class="syllabus-file-icon">📄</span>
+              <strong id="deleteModalFileName" class="syllabus-file-name" style="font-size: 13px;">file.pdf</strong>
+            </div>
+          </div>
+          <p style="color: #dc2626; font-size: 13px; font-weight: 600; margin: 0;">
+            ⚠️ This will remove the PDF from server storage and make it unavailable to students and faculty. This action cannot be undone.
+          </p>
+        </div>
+        <div id="syllabusDeleteAlert" class="message hidden" role="alert"></div>
+        <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="secondary-btn" onclick="closeDeleteSyllabusModal()">Cancel</button>
+          <button type="button" id="confirmDeleteSyllabusBtn" class="danger-btn">
+            <span>🗑️</span> Delete Syllabus
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(deleteModal);
+  }
+}
+
+function handleSyllabusFileSelected(file) {
+  const alertEl = $("syllabusUploadAlert");
+  const selectedInfo = $("syllabusSelectedFileInfo");
+  const nameEl = $("syllabusSelectedFileName");
+  const sizeEl = $("syllabusSelectedFileSize");
+  const dropzone = $("syllabusDropzone");
+
+  if (alertEl) {
+    alertEl.className = "message hidden";
+    alertEl.textContent = "";
+  }
+
+  if (!file) return;
+
+  const ext = file.name ? file.name.split(".").pop().toLowerCase() : "";
+  if (ext !== "pdf" && file.type !== "application/pdf") {
+    if (alertEl) {
+      alertEl.className = "message error";
+      alertEl.textContent = "Invalid file type. Only genuine PDF files (.pdf) are allowed.";
+    }
+    clearSyllabusSelectedFile();
+    return;
+  }
+
+  const maxBytes = (window.__syllabusMaxFileSizeMb || 100) * 1024 * 1024;
+  if (file.size > maxBytes) {
+    if (alertEl) {
+      alertEl.className = "message error";
+      alertEl.textContent = `The selected PDF exceeds the maximum allowed size of ${window.__syllabusMaxFileSizeMb || 100} MB.`;
+    }
+    clearSyllabusSelectedFile();
+    return;
+  }
+
+  if (nameEl) nameEl.textContent = file.name;
+  if (sizeEl) sizeEl.textContent = formatSyllabusFileSize(file.size);
+  if (selectedInfo) selectedInfo.classList.remove("hidden");
+  if (dropzone) dropzone.classList.add("has-file");
+}
+
+function clearSyllabusSelectedFile() {
+  const fileInput = $("syllabusFileInput");
+  if (fileInput) fileInput.value = "";
+  const selectedInfo = $("syllabusSelectedFileInfo");
+  if (selectedInfo) selectedInfo.classList.add("hidden");
+  const dropzone = $("syllabusDropzone");
+  if (dropzone) dropzone.classList.remove("has-file");
+}
+
+function openSyllabusUploadModal(yearOrSemester = 1, isReplace = false) {
+  const num = Number(yearOrSemester || 1);
+  const yr = num <= 3 ? num : (num <= 4 ? 2 : 3);
+  openAdminYearSyllabusModal(yr);
+  if (isReplace) {
+    setAdminModalReplaceMode(true);
+  }
+}
+
+function closeSyllabusUploadModal() {
+  const modal = $("syllabusUploadModalBackdrop");
+  if (modal) modal.classList.add("hidden");
+  clearSyllabusSelectedFile();
+  isSyllabusReplaceMode = false;
+}
+
+function handleSyllabusUploadSubmit(e) {
+  e.preventDefault();
+
+  const yearLevel = currentAdminModalYearLevel;
+  const fileInput = $("syllabusFileInput");
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+  const alertEl = $("syllabusUploadAlert");
+  const submitBtn = $("syllabusUploadSubmitBtn");
+  const progressWrap = $("syllabusUploadProgressWrap");
+  const progressFill = $("syllabusProgressBarFill");
+  const progressText = $("syllabusProgressText");
+
+  if (!yearLevel || isNaN(yearLevel) || yearLevel < 1 || yearLevel > 3) {
+    if (alertEl) {
+      alertEl.className = "message error";
+      alertEl.textContent = "Please select a valid academic year (1, 2, or 3).";
+    }
+    return;
+  }
+
+  if (!file) {
+    if (alertEl) {
+      alertEl.className = "message error";
+      alertEl.textContent = "Please select a PDF file to upload.";
+    }
+    return;
+  }
+
+  const token = getStoredAuthToken();
+  if (!token) {
+    if (alertEl) {
+      alertEl.className = "message error";
+      alertEl.textContent = "Authentication required. Please sign in as administrator.";
+    }
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("yearLevel", String(yearLevel));
+
+  const endpoint = isSyllabusReplaceMode
+    ? `${API_BASE_URL}/api/syllabus/${yearLevel}`
+    : `${API_BASE_URL}/api/syllabus`;
+  const method = isSyllabusReplaceMode ? "PUT" : "POST";
+
+  if (submitBtn) submitBtn.disabled = true;
+  if (progressWrap) progressWrap.classList.remove("hidden");
+  if (progressFill) progressFill.style.width = "0%";
+  if (progressText) progressText.textContent = "Uploading... 0%";
+
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, endpoint);
+  xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+  xhr.upload.onprogress = (evt) => {
+    if (evt.lengthComputable) {
+      const pct = Math.round((evt.loaded / evt.total) * 100);
+      if (progressFill) progressFill.style.width = `${pct}%`;
+      if (progressText) progressText.textContent = `Uploading... ${pct}%`;
+    }
+  };
+
+  xhr.onload = async () => {
+    if (submitBtn) submitBtn.disabled = false;
+    let json = {};
+    try {
+      json = JSON.parse(xhr.responseText || "{}");
+    } catch (_) {}
+
+    if (xhr.status >= 200 && xhr.status < 300 && json.success) {
+      const yrConfig = SYLLABUS_ACADEMIC_YEARS.find(y => y.yearLevel === yearLevel);
+      const yrTitle = yrConfig ? yrConfig.yearTitle : `Year ${yearLevel}`;
+      showToast(isSyllabusReplaceMode ? `${yrTitle} syllabus replaced successfully.` : `${yrTitle} syllabus uploaded successfully.`, "success");
+      isSyllabusReplaceMode = false;
+      await loadSyllabusData();
+      renderAdminModalContent();
+    } else {
+      const msg = json.message || (xhr.status === 413
+        ? `The selected PDF exceeds the maximum allowed size of ${window.__syllabusMaxFileSizeMb || 100} MB.`
+        : (xhr.status === 415 ? "Invalid file type. Only genuine PDF files are accepted." : "Failed to upload syllabus."));
+      if (alertEl) {
+        alertEl.className = "message error";
+        alertEl.textContent = msg;
+      }
+      showToast(msg, "error");
+    }
+  };
+
+  xhr.onerror = () => {
+    if (submitBtn) submitBtn.disabled = false;
+    const msg = "Network error during syllabus upload. Please verify your connection.";
+    if (alertEl) {
+      alertEl.className = "message error";
+      alertEl.textContent = msg;
+    }
+    showToast(msg, "error");
+  };
+
+  xhr.send(formData);
+}
+
+let activeDeleteYearLevel = null;
+
+function confirmDeleteSyllabus(yearLevel, originalFilename) {
+  ensureSyllabusModalsInDom();
+
+  activeDeleteYearLevel = Number(yearLevel);
+  const yrConfig = SYLLABUS_ACADEMIC_YEARS.find(y => y.yearLevel === activeDeleteYearLevel);
+  const modal = $("syllabusDeleteModalBackdrop");
+  const semNameEl = $("deleteModalSemesterName");
+  const fileNameEl = $("deleteModalFileName");
+  const alertEl = $("syllabusDeleteAlert");
+  const confirmBtn = $("confirmDeleteSyllabusBtn");
+
+  if (alertEl) alertEl.className = "message hidden";
+  if (semNameEl) semNameEl.textContent = yrConfig ? `${yrConfig.yearTitle} (${yrConfig.semesterLabel})` : `Year ${yearLevel}`;
+  if (fileNameEl) fileNameEl.textContent = originalFilename || `Year_${yearLevel}_Syllabus.pdf`;
+
+  if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.onclick = () => handleDeleteSyllabusSubmit(activeDeleteYearLevel);
+  }
+
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeDeleteSyllabusModal() {
+  const modal = $("syllabusDeleteModalBackdrop");
+  if (modal) modal.classList.add("hidden");
+  activeDeleteYearLevel = null;
+}
+
+async function handleDeleteSyllabusSubmit(yearLevel) {
+  const confirmBtn = $("confirmDeleteSyllabusBtn");
+  const alertEl = $("syllabusDeleteAlert");
+
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  try {
+    const res = await authenticatedFetch(`${API_BASE_URL}/api/syllabus/${yearLevel}`, {
+      method: "DELETE"
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.success) {
+      const yrConfig = SYLLABUS_ACADEMIC_YEARS.find(y => y.yearLevel === yearLevel);
+      showToast(`${yrConfig ? yrConfig.yearTitle : `Year ${yearLevel}`} syllabus deleted successfully.`, "success");
+      closeDeleteSyllabusModal();
+      await loadSyllabusData();
+      const uploadModal = $("syllabusUploadModalBackdrop");
+      if (uploadModal && !uploadModal.classList.contains("hidden")) {
+        renderAdminModalContent();
+      }
+    } else {
+      const msg = json.message || "Failed to delete syllabus.";
+      if (alertEl) {
+        alertEl.className = "message error";
+        alertEl.textContent = msg;
+      }
+      showToast(msg, "error");
+      if (confirmBtn) confirmBtn.disabled = false;
+    }
+  } catch (err) {
+    const msg = err.message || "Network error deleting syllabus.";
+    if (alertEl) {
+      alertEl.className = "message error";
+      alertEl.textContent = msg;
+    }
+    showToast(msg, "error");
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
+}
+
+function previewSyllabusPdf(yearLevel) {
+  const token = getStoredAuthToken();
+  if (!token) {
+    showToast("Please sign in to view the syllabus.", "warning");
+    return;
+  }
+  const url = `${API_BASE_URL}/api/syllabus/${yearLevel}/download?inline=1&token=${encodeURIComponent(token)}`;
+  window.open(url, "_blank");
+}
+
+function downloadSyllabusPdf(yearLevel, filename) {
+  const token = getStoredAuthToken();
+  if (!token) {
+    showToast("Please sign in to download the syllabus.", "warning");
+    return;
+  }
+  showToast("Downloading syllabus PDF...", "info");
+  const url = `${API_BASE_URL}/api/syllabus/${yearLevel}/download?token=${encodeURIComponent(token)}`;
+  const a = document.createElement("a");
+  a.href = url;
+  if (filename) a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+window.openAdminYearSyllabusModal = openAdminYearSyllabusModal;
+window.setAdminModalReplaceMode = setAdminModalReplaceMode;
+window.openSyllabusUploadModal = openSyllabusUploadModal;
+window.closeSyllabusUploadModal = closeSyllabusUploadModal;
+window.handleSyllabusUploadSubmit = handleSyllabusUploadSubmit;
+window.clearSyllabusSelectedFile = clearSyllabusSelectedFile;
+window.confirmDeleteSyllabus = confirmDeleteSyllabus;
+window.closeDeleteSyllabusModal = closeDeleteSyllabusModal;
+window.previewSyllabusPdf = previewSyllabusPdf;
+window.downloadSyllabusPdf = downloadSyllabusPdf;
+
