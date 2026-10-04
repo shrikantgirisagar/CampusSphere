@@ -332,8 +332,54 @@ async function run() {
     const noticeAfterDel = await Notice.findOne({ noticeId: `notice_test_${timestamp}` });
     assert(noticeAfterDel && noticeAfterDel.targetDivision === "all", `7. Notice targetDivision reassigned to 'all'`);
 
+    // -------------------------------------------------------------
+    // SECTION 5: "All Years" Universal Cascade & Public Divisions
+    // -------------------------------------------------------------
+    console.log("\n--- SECTION 5: 'All Years' Universal Cascade & Public API ---");
+    const publicDivsRes = await request("GET", "/api/academic/divisions");
+    assert(publicDivsRes.status === 200, "Public GET /api/academic/divisions returned 200");
+    assert(publicDivsRes.body?.divisions?.["1st Year"] && publicDivsRes.body?.divisions?.["2nd Year"] && publicDivsRes.body?.divisions?.["3rd Year"],
+      "Public endpoint returns full divisions configuration across 1st, 2nd, and 3rd Year");
+
+    const allYearsDivName = `Div All${timestamp % 1000}`;
+    const addAllRes = await request("POST", "/api/academic/divisions/cascade", {
+      action: "add",
+      courseYear: "All Years",
+      newDivision: allYearsDivName
+    }, adminToken);
+    assert(addAllRes.status === 200, `Admin successfully added '${allYearsDivName}' to All Years`);
+    assert(addAllRes.body?.divisions?.["1st Year"]?.includes(allYearsDivName) &&
+           addAllRes.body?.divisions?.["2nd Year"]?.includes(allYearsDivName) &&
+           addAllRes.body?.divisions?.["3rd Year"]?.includes(allYearsDivName),
+      `'${allYearsDivName}' successfully added across 1st Year, 2nd Year, and 3rd Year`);
+
+    const allRenamedDivName = `Div AllRen${timestamp % 1000}`;
+    const renAllRes = await request("POST", "/api/academic/divisions/cascade", {
+      action: "rename",
+      courseYear: "All Years",
+      oldDivision: allYearsDivName,
+      newDivision: allRenamedDivName
+    }, adminToken);
+    assert(renAllRes.status === 200, `Admin successfully renamed '${allYearsDivName}' to '${allRenamedDivName}' across All Years`);
+    assert(renAllRes.body?.divisions?.["1st Year"]?.includes(allRenamedDivName) &&
+           renAllRes.body?.divisions?.["2nd Year"]?.includes(allRenamedDivName) &&
+           renAllRes.body?.divisions?.["3rd Year"]?.includes(allRenamedDivName),
+      `'${allRenamedDivName}' successfully renamed across all 3 course years`);
+
+    const delAllRes = await request("POST", "/api/academic/divisions/cascade", {
+      action: "delete",
+      courseYear: "All Years",
+      oldDivision: allRenamedDivName,
+      fallbackDivision: "Div A"
+    }, adminToken);
+    assert(delAllRes.status === 200, `Admin successfully removed '${allRenamedDivName}' from All Years`);
+    assert(!delAllRes.body?.divisions?.["1st Year"]?.includes(allRenamedDivName) &&
+           !delAllRes.body?.divisions?.["2nd Year"]?.includes(allRenamedDivName) &&
+           !delAllRes.body?.divisions?.["3rd Year"]?.includes(allRenamedDivName),
+      `'${allRenamedDivName}' successfully removed from all 3 course years`);
+
     // Clean up test documents
-    console.log("\n--- SECTION 5: Cleanup Test Artifacts ---");
+    console.log("\n--- SECTION 6: Cleanup Test Artifacts ---");
     await User.deleteMany({ username: { $in: [studentUsername, facultyUsername, adminUsername] } });
     await Timetable.deleteMany({ semester: "1st Semester", division: { $in: [testDivName, renamedDivName] } });
     await Attendance.deleteMany({ attendanceId: `att_test_${timestamp}` });

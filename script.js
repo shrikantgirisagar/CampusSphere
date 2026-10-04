@@ -11055,7 +11055,7 @@ function bindSubjectEvents() {
   }
 }
 
-let activeDivisionYearFilter = "1st Year";
+let activeDivisionYearFilter = "All Years";
 
 function adminDivisions() {
   const divsObj = (ACADEMIC && ACADEMIC.divisions) ? normalizeAcademicDivisions(ACADEMIC.divisions) : DEFAULT_COURSE_YEAR_DIVISIONS;
@@ -11065,10 +11065,14 @@ function adminDivisions() {
   const totalStudents = students.length;
 
   const totalUniqueDivisions = getAvailableDivisions().length;
-  const currentFilter = activeDivisionYearFilter || "1st Year";
+  const currentFilter = activeDivisionYearFilter || "All Years";
 
   const tabsMarkup = `
     <div class="subject-filter-tabs" style="margin-bottom: 20px;">
+      <button type="button" class="subject-tab-pill ${currentFilter === 'All Years' ? 'active' : ''}" data-div-year-tab="All Years">
+        <span>All Years</span>
+        <span class="tab-chip">${totalUniqueDivisions}</span>
+      </button>
       ${courseYears.map(yr => {
         const count = (divsObj[yr] || []).length;
         return `
@@ -11082,7 +11086,7 @@ function adminDivisions() {
   `;
 
   const yearBlocksMarkup = courseYears.map(yr => {
-    const isVisible = (currentFilter === yr);
+    const isVisible = (currentFilter === "All Years" || currentFilter === yr);
     const yrDivs = divsObj[yr] || [];
     const yrStudents = students.filter(s => {
       const sYr = s.courseYear || getCourseYearForSemester(s.semester || "1st Semester");
@@ -11174,7 +11178,13 @@ function adminDivisions() {
     <div class="welcome">
       <div>
         <p class="eyebrow">Academic Structure Control</p>
-        <h1>Class Divisions Management 🏫</h1>
+        <h1 style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <span>Class Divisions Management 🏫</span>
+          <span style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,0.2);"></span>
+            <span>Automatic Sync: ALWAYS ON</span>
+          </span>
+        </h1>
       </div>
       <div class="welcome-icon">🏫</div>
     </div>
@@ -11183,13 +11193,19 @@ function adminDivisions() {
       <div class="stat"><span>🏫</span><b>${totalUniqueDivisions}</b><small>Total Unique Divisions</small></div>
       <div class="stat"><span>👥</span><b>${totalStudents}</b><small>Total Enrolled Students</small></div>
       <div class="stat"><span>🧑‍🏫</span><b>${faculty.length}</b><small>Faculty Members</small></div>
+      <div class="stat" style="background:#f0fdf4; border-color:#bbf7d0;"><span>⚡</span><b style="color:#15803d;">Always ON</b><small style="color:#166534;">Auto-Sync Active (All)</small></div>
     </div>
 
     <section class="panel" style="margin-top: 18px;">
-      <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+      <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
         <div>
           <h3>Course Year-wise Class Divisions</h3>
-          <span class="badge">1st, 2nd & 3rd Year Sections</span>
+          <span class="badge" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-weight:700;">⚡ Multi-System Auto-Sync Active</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="primary-btn" onclick="openAddDivisionModal('All Years')" style="margin: 0; padding: 8px 16px; font-size: 13px; font-weight: 700; background: #0A2540;">
+            <span>+ Add Division to All Years</span>
+          </button>
         </div>
       </div>
 
@@ -11205,26 +11221,27 @@ function adminDivisions() {
 function initAdminDivisionsPage() {
   document.querySelectorAll("[data-div-year-tab]").forEach(btn => {
     btn.addEventListener("click", () => {
-      activeDivisionYearFilter = btn.dataset.divYearTab || "1st Year";
+      activeDivisionYearFilter = btn.dataset.divYearTab || "All Years";
       document.querySelectorAll("[data-div-year-tab]").forEach(b => b.classList.toggle("active", b === btn));
       const activeYear = activeDivisionYearFilter;
       document.querySelectorAll("[data-division-year-block]").forEach(block => {
         const yr = block.dataset.divisionYearBlock;
-        const matches = (activeYear === yr);
+        const matches = (activeYear === "All Years" || activeYear === yr);
         block.style.display = matches ? "" : "none";
       });
     });
   });
 }
 
-function openAddDivisionModal(defaultYear = "1st Year") {
+function openAddDivisionModal(defaultYear = "All Years") {
   const modal = $("divisionModal");
   if (!modal) return;
   const yrSelect = $("divisionCourseYearSelect");
   if (yrSelect) {
-    const targetYr = (defaultYear && ["1st Year", "2nd Year", "3rd Year"].includes(defaultYear))
+    const validYears = ["All Years", "1st Year", "2nd Year", "3rd Year"];
+    const targetYr = (defaultYear && validYears.includes(defaultYear))
       ? defaultYear
-      : (activeDivisionYearFilter && ["1st Year", "2nd Year", "3rd Year"].includes(activeDivisionYearFilter) ? activeDivisionYearFilter : "1st Year");
+      : (activeDivisionYearFilter && validYears.includes(activeDivisionYearFilter) ? activeDivisionYearFilter : "All Years");
     yrSelect.value = targetYr;
   }
   const input = $("divisionNameInput");
@@ -11537,7 +11554,13 @@ async function cascadeDivisionSync({ action, courseYear, oldDivision, newDivisio
   // 13. Auto-refresh all UI selects across the application
   refreshAllDivisionDropdowns();
 
-  // 14. Dispatch custom event for reactive components
+  // 14. Broadcast multi-tab synchronization event
+  try {
+    localStorage.setItem("campussphere_divisions_sync", String(Date.now()));
+    localStorage.setItem("campussphere_academic_sync", String(Date.now()));
+  } catch (_) {}
+
+  // 15. Dispatch custom event for reactive components
   try {
     window.dispatchEvent(new CustomEvent("campussphere:divisions-updated", {
       detail: { action, courseYear: yr, oldDivision, newDivision, fallbackDivision }
@@ -11548,23 +11571,28 @@ async function cascadeDivisionSync({ action, courseYear, oldDivision, newDivisio
 function deleteDivision(divName, courseYear) {
   if (!divName) return;
   const yr = courseYear || "1st Year";
-  const currentDivs = getAvailableDivisions(yr);
-  if (currentDivs.length <= 1) {
-    alert(`Cannot remove division: At least one division must remain configured for ${yr}.`);
-    return;
+  const targetYears = yr === "All Years" ? ["1st Year", "2nd Year", "3rd Year"] : [yr];
+
+  for (const y of targetYears) {
+    const yDivs = getAvailableDivisions(y);
+    if (yDivs.includes(divName) && yDivs.length <= 1) {
+      alert(`Cannot remove division: At least one division must remain configured for ${y}.`);
+      return;
+    }
   }
 
   const enrolledStudents = (USERS.student || []).filter(s => {
     const sYr = s.courseYear || getCourseYearForSemester(s.semester || "1st Semester");
-    return sYr === yr && (s.division || "Div A").toLowerCase() === divName.toLowerCase();
+    return targetYears.includes(sYr) && (s.division || "Div A").toLowerCase() === divName.toLowerCase();
   });
 
-  const remaining = currentDivs.filter(d => d.toLowerCase() !== divName.toLowerCase());
+  const remaining = getAvailableDivisions(targetYears[0]).filter(d => d.toLowerCase() !== divName.toLowerCase());
   const fallbackDiv = remaining[0] || "Div A";
 
-  let msg = `Are you sure you want to remove "${divName}" from ${yr}?`;
+  const yrLabel = yr === "All Years" ? "All Years (1st, 2nd & 3rd Year)" : yr;
+  let msg = `Are you sure you want to remove "${divName}" from ${yrLabel}?`;
   if (enrolledStudents.length > 0) {
-    msg = `WARNING: There are currently ${enrolledStudents.length} student(s) in ${yr} assigned to "${divName}".\n\nRemoving this division will automatically reassign those students to "${fallbackDiv}" and synchronize all academic records.\n\nAre you sure you want to proceed?`;
+    msg = `WARNING: There are currently ${enrolledStudents.length} student(s) in ${yrLabel} assigned to "${divName}".\n\nRemoving this division will automatically reassign those students to "${fallbackDiv}" and synchronize all academic records.\n\nAre you sure you want to proceed?`;
   }
 
   if (!confirm(msg)) return;
@@ -11575,7 +11603,7 @@ function deleteDivision(divName, courseYear) {
     oldDivision: divName,
     fallbackDivision: fallbackDiv
   }).then(() => {
-    showToast(`Division '${divName}' removed. Students and academic records reassigned to '${fallbackDiv}'.`, "success");
+    showToast(`Division '${divName}' removed from ${yrLabel}. Students and academic records reassigned to '${fallbackDiv}'.`, "success");
     render();
   }).catch(err => {
     console.error("Division deletion error:", err);
@@ -11587,7 +11615,9 @@ function deleteDivision(divName, courseYear) {
 async function renameDivision(divName, courseYear) {
   if (!divName) return;
   const yr = courseYear || "1st Year";
-  const newNameRaw = prompt(`Enter new division name for "${divName}" (${yr}):`, divName);
+  const targetYears = yr === "All Years" ? ["1st Year", "2nd Year", "3rd Year"] : [yr];
+  const yrLabel = yr === "All Years" ? "All Years" : yr;
+  const newNameRaw = prompt(`Enter new division name for "${divName}" (${yrLabel}):`, divName);
   if (!newNameRaw) return;
   const newNameTrim = newNameRaw.trim();
   if (!newNameTrim || newNameTrim.toLowerCase() === divName.toLowerCase()) return;
@@ -11604,10 +11634,12 @@ async function renameDivision(divName, courseYear) {
     ACADEMIC.divisions = normalizeAcademicDivisions(ACADEMIC.divisions);
   }
 
-  const currentDivs = getAvailableDivisions(yr);
-  if (currentDivs.some(d => d.toLowerCase() === formattedName.toLowerCase() && d.toLowerCase() !== divName.toLowerCase())) {
-    alert(`Division "${formattedName}" already exists in ${yr}.`);
-    return;
+  for (const y of targetYears) {
+    const currentDivs = getAvailableDivisions(y);
+    if (currentDivs.some(d => d.toLowerCase() === formattedName.toLowerCase() && d.toLowerCase() !== divName.toLowerCase())) {
+      alert(`Division "${formattedName}" already exists in ${y}.`);
+      return;
+    }
   }
 
   try {
@@ -11664,6 +11696,12 @@ function bindDivisionEvents() {
         const existingYearDivs = ACADEMIC.divisions[targetYear] || [];
         if (existingYearDivs.some(d => d.toLowerCase() === formattedName.toLowerCase())) {
           showToast(`Division "${formattedName}" already exists in ${targetYear}.`, "warning");
+          return;
+        }
+      } else {
+        const allAlreadyHaveIt = targetYears.every(y => (ACADEMIC.divisions[y] || []).some(d => d.toLowerCase() === formattedName.toLowerCase()));
+        if (allAlreadyHaveIt) {
+          showToast(`Division "${formattedName}" already exists in all course years.`, "warning");
           return;
         }
       }
@@ -11825,6 +11863,73 @@ window.addEventListener("pageshow", () => {
     resetLoginForm();
   }
 });
+
+// ============================================================================
+// CONTINUOUS BACKGROUND AUTOMATIC SYNCHRONIZATION ENGINE (ALWAYS ON)
+// Keeps class divisions, academic structures, user profiles, timetable,
+// and forms automatically synchronized in real-time across tabs, windows & devices.
+// ============================================================================
+let isUniversalSyncInProgress = false;
+
+async function executeUniversalAutoSync(force = false) {
+  if (isUniversalSyncInProgress) return;
+  isUniversalSyncInProgress = true;
+  try {
+    if (getStoredAuthToken() && currentUser) {
+      await Promise.allSettled([
+        hydrateAcademicDataFromServer(),
+        hydrateUsersFromServer()
+      ]);
+    } else {
+      // Unauthenticated / public visitor: sync latest public divisions
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/academic/divisions`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.divisions) {
+            if (!ACADEMIC || typeof ACADEMIC !== "object") ACADEMIC = {};
+            ACADEMIC.divisions = normalizeAcademicDivisions(json.divisions);
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Refresh all division dropdowns across the portal and signup forms
+    refreshAllDivisionDropdowns();
+
+    // If currently viewing admin divisions management, update the view
+    if (typeof currentPage !== "undefined" && currentPage === "divisions" && typeof render === "function") {
+      render();
+    }
+  } catch (err) {
+    console.warn("[AutoSync] Heartbeat sync notice:", err.message);
+  } finally {
+    isUniversalSyncInProgress = false;
+  }
+}
+
+// 1. Cross-tab synchronization via localStorage events
+window.addEventListener("storage", (e) => {
+  if (e.key === "campussphere_divisions_sync" || e.key === "campussphere_academic_sync" || e.key === "campussphere_users_sync") {
+    executeUniversalAutoSync(true);
+  }
+});
+
+// 2. Tab focus & visibility wake-up synchronization
+window.addEventListener("focus", () => executeUniversalAutoSync());
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    executeUniversalAutoSync();
+  }
+});
+
+// 3. Continuous background heartbeat (Every 12 seconds - Always ON)
+setInterval(() => {
+  executeUniversalAutoSync();
+}, 12000);
+
+// Run initial universal auto-sync on load
+executeUniversalAutoSync();
 
 
 
@@ -12160,6 +12265,8 @@ window.addEventListener("pageshow", () => {
       }
     }
   };
+
+  window.populatePageDivisionSelect = populatePageDivisionSelect;
 
   const pageYearPillBtns = document.querySelectorAll(".year-pill-btn");
   const setPageSignupCourseYearValue = (year) => {

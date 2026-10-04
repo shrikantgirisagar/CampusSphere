@@ -2781,6 +2781,17 @@ function normalizeStoreDivisions(divisions) {
   return defaultDivs;
 }
 
+// Public endpoint for reading class divisions configuration
+app.get("/api/academic/divisions", async (req, res) => {
+  try {
+    let store = await AcademicStore.findOne({ storeKey: "default_academic_store" }).lean();
+    const divisions = store ? normalizeStoreDivisions(store.divisions) : DEFAULT_COURSE_YEAR_DIVISIONS;
+    return res.json({ success: true, divisions });
+  } catch (err) {
+    return res.json({ success: true, divisions: DEFAULT_COURSE_YEAR_DIVISIONS });
+  }
+});
+
 app.get("/api/academic/data", requireAuth(), async (req, res) => {
   try {
     let store = await AcademicStore.findOne({ storeKey: "default_academic_store" }).lean();
