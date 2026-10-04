@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "6ab931848f43f70095f2b160",
+    "semester": "1st Semester",
+    "division": "Div A",
+    "day": "Monday",
+    "time": "10:00 AM",
+    "subject": "math",
+    "subjectText": "Mathematics",
+    "faculty": "carol_fac_1790521725935",
+    "createdAt": "2026-09-27T15:08:52.952Z",
+    "updatedAt": "2026-09-27T15:08:52.952Z"
+  }
+]

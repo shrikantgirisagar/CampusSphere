@@ -1,3 +1,5 @@
+const dns = require('dns');
+try { dns.setDefaultResultOrder('ipv4first'); } catch (_) {}
 const mongoose = require('mongoose');
 require('dotenv').config();
 const User = require('../models/User');
@@ -25,7 +27,7 @@ async function verifyPassword(password, stored) {
 
 async function runTests() {
   console.log('--- Testing MongoDB Direct User Storage ---');
-  await mongoose.connect(process.env.MONGODB_URI, { dbName: 'CampusSphere', serverSelectionTimeoutMS: 8000 });
+  await mongoose.connect(process.env.MONGODB_URI, { dbName: 'CampusSphere', serverSelectionTimeoutMS: 20000 });
   console.log('1. Connected to MongoDB database: CampusSphere');
 
   // 1. Seed Admin if needed

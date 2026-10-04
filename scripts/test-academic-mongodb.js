@@ -1,3 +1,5 @@
+const dns = require('dns');
+try { dns.setDefaultResultOrder('ipv4first'); } catch (_) {}
 const mongoose = require('mongoose');
 require('dotenv').config();
 const AcademicStore = require('../models/AcademicStore');
@@ -5,7 +7,7 @@ const User = require('../models/User');
 
 async function testAcademicPersistence() {
   console.log('--- Testing MongoDB Academic & Faculty Direct Storage ---');
-  await mongoose.connect(process.env.MONGODB_URI, { dbName: 'CampusSphere', serverSelectionTimeoutMS: 8000 });
+  await mongoose.connect(process.env.MONGODB_URI, { dbName: 'CampusSphere', serverSelectionTimeoutMS: 20000 });
   console.log('1. Connected to MongoDB database: CampusSphere');
 
   // 1. Fetch or initialize AcademicStore

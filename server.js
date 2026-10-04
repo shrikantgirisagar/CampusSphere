@@ -1,4 +1,6 @@
 require("dotenv").config();
+const dns = require("dns");
+try { dns.setDefaultResultOrder("ipv4first"); } catch (_) {}
 
 const express = require("express");
 const cors = require("cors");
@@ -21,6 +23,7 @@ const Syllabus = require("./models/Syllabus");
 const { VALID_YEAR_CONFIG, VALID_SEMESTER_YEAR_MAP } = require("./models/Syllabus");
 const multer = require("multer");
 const pushService = require("./services/pushNotificationService");
+const fileSyncService = require("./services/fileSyncService");
 
 // Initialize Web Push VAPID configuration
 pushService.initWebPush();
@@ -668,11 +671,15 @@ function requireAuth(roles = []) {
 // Connect to MongoDB & Seed Initial Accounts
 async function initDatabase() {
   try {
-    await mongoose.connect(MONGODB_URI, {
-      dbName: "CampusSphere",
-      serverSelectionTimeoutMS: 15000
-    });
-    console.log("Connected to MongoDB successfully.");
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(MONGODB_URI, {
+        dbName: "CampusSphere",
+        serverSelectionTimeoutMS: 15000
+      });
+      console.log("Connected to MongoDB successfully.");
+    } else if (mongoose.connection.readyState === 2) {
+      await new Promise(resolve => mongoose.connection.once("open", resolve));
+    }
     await Attendance.syncIndexes().catch(err => {
       console.warn("Attendance index sync warning:", err.message);
     });
@@ -753,6 +760,11 @@ async function initDatabase() {
     try {
       await getCachedUserCounts(true);
     } catch (_) {}
+    try {
+      await fileSyncService.syncFromMongoToFiles();
+    } catch (fsErr) {
+      console.warn("[FileSync] Initial sync warning:", fsErr.message);
+    }
   } catch (error) {
     console.error("MongoDB Connection Error:", error.message);
     console.log("Note: Please make sure MongoDB is running locally or set MONGODB_URI in your .env file.");
@@ -1148,6 +1160,7 @@ app.post("/api/users", rateLimitRegistration, async (req, res) => {
 
     const createdUser = await User.create(userObj);
     invalidateUserCountsCache();
+    fileSyncService.triggerSync();
     const token = generateAuthToken(createdUser);
     res.status(201).json({ success: true, token, user: sanitizeUser(createdUser) });
   } catch (error) {
@@ -1335,6 +1348,7 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
     }
 
     await user.save();
+    fileSyncService.triggerSync();
     res.json({ success: true, user: sanitizeUser(user) });
   } catch (error) {
     if (error.code === 11000) {
@@ -1370,6 +1384,7 @@ app.delete("/api/users/:role/:username", requireAuth(["admin"]), async (req, res
 
     if (result.deletedCount === 0) return res.status(404).json({ success: false, message: "Account not found." });
     invalidateUserCountsCache();
+    fileSyncService.triggerSync();
 
     // Clean up academic records if student
     if (targetRole === "student") {
@@ -2114,6 +2129,7 @@ async function handleSaveTimetable(req, res) {
       ? sanitizeTimetableForFaculty(updated.toObject ? updated.toObject() : updated, req.user)
       : updated;
 
+    fileSyncService.triggerSync();
     res.json({ success: true, message: "Timetable saved successfully.", timetable: returnDoc });
   } catch (error) {
     console.error("Save timetable error:", error);
@@ -2144,6 +2160,7 @@ app.delete("/api/timetable", rateLimitExpensive, requireAuth(["faculty", "admin"
       return res.status(404).json({ success: false, message: "No timetable found for the specified Semester and Division." });
     }
 
+    fileSyncService.triggerSync();
     res.json({ success: true, message: "Timetable deleted successfully." });
   } catch (error) {
     console.error("Delete timetable error:", error);
@@ -2216,6 +2233,7 @@ app.post("/api/timetable/sync", rateLimitExpensive, requireAuth(["faculty", "adm
       await Timetable.bulkWrite(ops, { ordered: false });
     }
 
+    fileSyncService.triggerSync();
     res.json({ success: true, message: "Timetable synchronized safely." });
   } catch (error) {
     console.error("Sync timetable error:", error);
@@ -3568,10 +3586,79 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
       }
     }
 
+    fileSyncService.triggerSync();
     res.json({ success: true, message: "Academic data permanently saved to MongoDB!" });
   } catch (error) {
     console.error("Sync academic data error:", error);
     res.status(500).json({ success: false, message: "Failed to sync academic data." });
+  }
+});
+
+// --- Student & Faculty Assignment Submission Status Update ---
+app.post("/api/academic/assignment-status", rateLimitExpensive, requireAuth(), async (req, res) => {
+  try {
+    const { studentUsername, title, subject, due, status } = req.body || {};
+    if (!studentUsername || !title || !status) {
+      return res.status(400).json({ success: false, message: "studentUsername, title, and status are required." });
+    }
+    const cleanStatus = stripHtmlTags(String(status)).trim();
+    if (!["Pending", "Submitted"].includes(cleanStatus)) {
+      return res.status(400).json({ success: false, message: "Status must be 'Pending' or 'Submitted'." });
+    }
+
+    const isStudent = req.user.role === "student";
+    // Students can strictly only update their own assignments
+    if (isStudent && req.user.username.toLowerCase() !== String(studentUsername).trim().toLowerCase()) {
+      return res.status(403).json({ success: false, message: "Forbidden: Students can only update their own assignments." });
+    }
+
+    const normUser = String(studentUsername).trim().toLowerCase();
+    const normTitle = String(title).trim().toLowerCase();
+    const todayISO = new Date().toISOString().split("T")[0];
+
+    // 1. Update in AcademicStore.assignments
+    const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+    let updatedAssign = null;
+    if (store && Array.isArray(store.assignments)) {
+      const target = store.assignments.find(a =>
+        String(a.student || "").trim().toLowerCase() === normUser &&
+        String(a.title || "").trim().toLowerCase() === normTitle &&
+        (!due || String(a.due || "").trim() === String(due).trim())
+      );
+      if (target) {
+        target.status = cleanStatus;
+        target.submittedDate = cleanStatus === "Submitted" ? (target.submittedDate || todayISO) : "";
+        store.markModified("assignments");
+        await store.save();
+        updatedAssign = target;
+      }
+    }
+
+    // 2. Update in dedicated Assignment collection
+    await Assignment.updateOne(
+      {
+        student: new RegExp(`^${escapeRegex(studentUsername)}$`, "i"),
+        title: new RegExp(`^${escapeRegex(title)}$`, "i")
+      },
+      {
+        $set: {
+          status: cleanStatus,
+          submittedDate: cleanStatus === "Submitted" ? todayISO : ""
+        }
+      }
+    );
+
+    // 3. Automatically sync to code files in repository
+    fileSyncService.triggerSync();
+
+    return res.json({
+      success: true,
+      message: `Assignment status updated to '${cleanStatus}'.`,
+      assignment: updatedAssign
+    });
+  } catch (err) {
+    console.error("Assignment status update error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update assignment status." });
   }
 });
 
@@ -3621,6 +3708,7 @@ app.post("/api/academic/divisions/cascade", rateLimitExpensive, requireAuth(["ad
       store.markModified("divisions");
       await store.save();
 
+      fileSyncService.triggerSync();
       return res.json({
         success: true,
         message: `Division '${cleanNewDiv}' added successfully.`,
@@ -3768,6 +3856,7 @@ app.post("/api/academic/divisions/cascade", rateLimitExpensive, requireAuth(["ad
         { $set: { targetDivision: cleanNewDiv } }
       );
 
+      fileSyncService.triggerSync();
       return res.json({
         success: true,
         message: `Division '${cleanOldDiv}' successfully renamed to '${cleanNewDiv}' and synchronized across all records.`,
@@ -3926,6 +4015,7 @@ app.post("/api/academic/divisions/cascade", rateLimitExpensive, requireAuth(["ad
         { $set: { targetDivision: "all" } }
       );
 
+      fileSyncService.triggerSync();
       return res.json({
         success: true,
         message: `Division '${cleanOldDiv}' successfully deleted. Students and academic records reassigned to '${effectiveFallback}'.`,
@@ -4216,6 +4306,7 @@ app.post("/api/syllabus", requireAuth(["admin"]), (req, res) => {
         }
       }
 
+      fileSyncService.triggerSync();
       return res.status(200).json({
         success: true,
         message: `${config.yearTitle} syllabus uploaded successfully.`,
@@ -4321,6 +4412,7 @@ app.put("/api/syllabus/:yearLevel", requireAuth(["admin"]), (req, res) => {
         }
       }
 
+      fileSyncService.triggerSync();
       return res.status(200).json({
         success: true,
         message: `${config.yearTitle} syllabus replaced successfully.`,
@@ -4361,6 +4453,7 @@ app.delete("/api/syllabus/:yearLevel", requireAuth(["admin"]), async (req, res) 
     }
 
     await Syllabus.deleteOne({ yearLevel });
+    fileSyncService.triggerSync();
 
     return res.status(200).json({
       success: true,

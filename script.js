@@ -9308,8 +9308,8 @@ const pages = {
       const s = subjectById(a.subject);
       const hasAttachments = !!a.fileData;
       const formattedDue = formatDateDDOrdinalMonth(a.due);
-      const formattedSubmitted = a.submittedDate ? formatDateDDOrdinalMonth(a.submittedDate) : "";
-      return `<article class="assignment"><div class="assignment-icon">${s ? escapeHtml(s.icon) : '📝'}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${escapeHtml(a.title)}</b>${a.description ? `<p class="assignment-desc">${escapeHtml(a.description)}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${sanitizeDownloadUrl(a.fileData)}" download="${escapeHtml(a.fileName || 'Assignment_Document')}" class="btn-doc-download"><span style="font-size:14px;">📄</span> ${escapeHtml(a.fileName || 'Download Document')}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? escapeHtml(s.name) : ''} • <strong>Submission Date:</strong> ${formattedDue}${a.status === "Submitted" && formattedSubmitted ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formattedSubmitted}</span>` : ''}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;"><span class="status ${a.status === "Submitted" ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${a.status === "Submitted" ? "✓ Submitted" : "⏳ Pending"}</span></div></article>`;
+      const isSub = a.status === "Submitted";
+      return `<article class="assignment"><div class="assignment-icon">${s ? escapeHtml(s.icon) : '📝'}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${escapeHtml(a.title)}</b>${a.description ? `<p class="assignment-desc">${escapeHtml(a.description)}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${sanitizeDownloadUrl(a.fileData)}" download="${escapeHtml(a.fileName || 'Assignment_Document')}" class="btn-doc-download"><span style="font-size:14px;">📄</span> ${escapeHtml(a.fileName || 'Download Document')}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? escapeHtml(s.name) : ''} • <strong>Submission Date:</strong> ${formattedDue}${isSub && formattedSubmitted ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formattedSubmitted}</span>` : ''}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><span class="status ${isSub ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${isSub ? "✓ Submitted" : "⏳ Pending"}</span><button type="button" class="btn-student-toggle-status" data-student="${escapeHtml(currentUser.username)}" data-title="${encodeURIComponent(a.title || '')}" data-subject="${escapeHtml(a.subject || '')}" data-due="${escapeHtml(a.due || '')}" data-next-status="${isSub ? 'Pending' : 'Submitted'}" style="margin:0; padding:6px 12px; font-size:11.5px; font-weight:700; border-radius:6px; cursor:pointer; background:${isSub ? '#f8fafc' : '#0A2540'}; color:${isSub ? '#64748b' : '#ffffff'}; border:1px solid ${isSub ? '#cbd5e1' : '#0A2540'};"><span>${isSub ? "↩️ Revert to Pending" : "✓ Mark as Submitted"}</span></button></div></article>`;
     }).join("") : `<div class="empty-state">No assignments assigned to you yet.</div>`}</div></section>`;
   },
   notes() {
@@ -10728,6 +10728,62 @@ document.addEventListener("click", e => {
       navigate(target);
       return;
     }
+  }
+
+  const studentStatusBtn = e.target.closest(".btn-student-toggle-status");
+  if (studentStatusBtn) {
+    e.preventDefault();
+    const studentUsername = studentStatusBtn.dataset.student;
+    const title = decodeURIComponent(studentStatusBtn.dataset.title || "");
+    const subject = studentStatusBtn.dataset.subject;
+    const due = studentStatusBtn.dataset.due;
+    const nextStatus = studentStatusBtn.dataset.nextStatus;
+
+    // 1. Instant local update
+    const normUser = String(studentUsername || "").trim().toLowerCase();
+    const normTitle = String(title || "").trim().toLowerCase();
+    const todayISO = getTodayISODate();
+
+    let assign = (ACADEMIC.assignments || []).find(a =>
+      String(a.student || "").trim().toLowerCase() === normUser &&
+      String(a.title || "").trim().toLowerCase() === normTitle &&
+      (!due || String(a.due || "").trim() === String(due).trim())
+    );
+    if (!assign) {
+      assign = (ACADEMIC.assignments || []).find(a =>
+        String(a.student || "").trim().toLowerCase() === normUser &&
+        String(a.title || "").trim().toLowerCase() === normTitle
+      );
+    }
+    if (assign) {
+      assign.status = nextStatus;
+      assign.submittedDate = nextStatus === "Submitted" ? todayISO : "";
+      saveAcademicData();
+    }
+
+    // 2. Call backend endpoint to save to MongoDB & sync files
+    authenticatedFetch(`${API_BASE_URL}/api/academic/assignment-status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentUsername,
+        title,
+        subject,
+        due,
+        status: nextStatus
+      })
+    }).then(res => {
+      if (res.ok) {
+        showToast(nextStatus === "Submitted" ? "Assignment marked as Submitted!" : "Assignment set back to Pending.", "success");
+      } else {
+        showToast("Assignment status saved locally.", "info");
+      }
+      render();
+    }).catch(err => {
+      console.warn("Assignment status sync notice:", err);
+      render();
+    });
+    return;
   }
 
   const statusBtn = e.target.closest(".btn-faculty-set-status");

@@ -1,0 +1,2156 @@
+{
+  "storeKey": "default_academic_store",
+  "notices": [
+    {
+      "id": "xss_notice_1789755422494",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789755748633",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789842690237",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789843165850",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789888265438",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789888952832",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "notice-mu9i4enq",
+      "title": "Notice Important alert('xss')",
+      "text": "Body  text.",
+      "date": "2026-09-20",
+      "content": "Body  text.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789890071963",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-fac-1789890157340",
+      "title": "Faculty Secret Notice",
+      "target": "faculty",
+      "text": "",
+      "content": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-diva-1789890157340",
+      "title": "Div A Student Notice",
+      "target": "student",
+      "targetDivision": "Div A",
+      "text": "",
+      "content": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-all-1789890157340",
+      "title": "Campus General Notice",
+      "target": "all",
+      "text": "",
+      "content": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-spoof-1789890157340",
+      "title": "Spoofed Admin Notice",
+      "authorRole": "faculty",
+      "postedBy": "carol_fac_1789890157340",
+      "text": "",
+      "content": ""
+    },
+    {
+      "id": "xss_notice_1789893077905",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789975365094",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-fac-1789975467106",
+      "title": "Faculty Secret Notice",
+      "target": "faculty",
+      "text": "",
+      "content": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-diva-1789975467106",
+      "title": "Div A Student Notice",
+      "target": "student",
+      "targetDivision": "Div A",
+      "text": "",
+      "content": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-all-1789975467106",
+      "title": "Campus General Notice",
+      "target": "all",
+      "text": "",
+      "content": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "not-spoof-1789975467106",
+      "title": "Spoofed Admin Notice",
+      "authorRole": "faculty",
+      "postedBy": "carol_fac_1789975467106",
+      "text": "",
+      "content": ""
+    },
+    {
+      "id": "xss_notice_1789977855444",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789979959244",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "notice_326073",
+      "title": "Audit Test Notice",
+      "content": "This is an automated audit test notice.",
+      "date": "2026-09-21",
+      "author": "Audit Prof. Faculty",
+      "targetDivision": "Both Divisions",
+      "text": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "notice_561619",
+      "title": "Audit Test Notice",
+      "content": "This is an automated audit test notice.",
+      "date": "2026-09-21",
+      "author": "Audit Prof. Faculty",
+      "targetDivision": "Both Divisions",
+      "text": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "notice_732769",
+      "title": "Audit Test Notice",
+      "content": "This is an automated audit test notice.",
+      "date": "2026-09-21",
+      "author": "Audit Prof. Faculty",
+      "targetDivision": "Both Divisions",
+      "text": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789982023484",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789983729833",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1789997060006",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "notice_266572",
+      "title": "Audit Test Notice",
+      "content": "This is an automated audit test notice.",
+      "date": "2026-09-21",
+      "author": "Audit Prof. Faculty",
+      "targetDivision": "Both Divisions",
+      "text": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790002879198",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790004721991",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790005166804",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790010602801",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790011676369",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790014457144",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790018035503",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790084301673",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790100921919",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790256857233",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790321355498",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790341288897",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790345134043",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1790521688914",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "admin"
+    }
+  ],
+  "timetable": [],
+  "assignments": [
+    {
+      "id": "asgn-a-1789744139953",
+      "title": "Project Part 1",
+      "student": "stu_sync_1789744139953",
+      "subject": "sub-cs101",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789755422494",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789755421325",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789755748633",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789755747537",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789842690237",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789842688746",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789843165850",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789843162527",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789888265439",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789888260810",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789888952832",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789888944076",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789890071963",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789890064995",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-alice-1789890157340",
+      "title": "Alice Private Homework",
+      "student": "alice_stu_1789890157340",
+      "status": "Submitted",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-bob-1789890157340",
+      "title": "Bob Private Homework",
+      "student": "bob_stu_1789890157340",
+      "status": "Submitted",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-broadcast-diva-1789890157340",
+      "title": "Div A Broadcast Assignment",
+      "student": "all",
+      "targetDivision": "Div A",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-broadcast-divb-1789890157340",
+      "title": "Div B Broadcast Assignment",
+      "student": "all",
+      "targetDivision": "Div B",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789893077905",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789893059956",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789975365094",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789975360145",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-alice-1789975467106",
+      "title": "Alice Private Homework",
+      "student": "alice_stu_1789975467106",
+      "status": "Submitted",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-bob-1789975467106",
+      "title": "Bob Private Homework",
+      "student": "bob_stu_1789975467106",
+      "status": "Submitted",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-broadcast-diva-1789975467106",
+      "title": "Div A Broadcast Assignment",
+      "student": "all",
+      "targetDivision": "Div A",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-broadcast-divb-1789975467106",
+      "title": "Div B Broadcast Assignment",
+      "student": "all",
+      "targetDivision": "Div B",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789977855444",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789977849503",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789979959244",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789979951861",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "assign_326073",
+      "title": "Audit C Programming Assignment 1",
+      "subject": "c_programming",
+      "targetDivision": "Both Divisions",
+      "dueDate": "2026-10-01",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "assign_561619",
+      "title": "Audit C Programming Assignment 1",
+      "subject": "c_programming",
+      "targetDivision": "Both Divisions",
+      "dueDate": "2026-10-01",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "assign_732769",
+      "title": "Audit C Programming Assignment 1",
+      "subject": "c_programming",
+      "targetDivision": "Both Divisions",
+      "dueDate": "2026-10-01",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789982023484",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789982014623",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789983729833",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789983721416",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1789997060006",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1789997058030",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "assign_266572",
+      "title": "Audit C Programming Assignment 1",
+      "subject": "c_programming",
+      "targetDivision": "Both Divisions",
+      "dueDate": "2026-10-01",
+      "description": "",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790002879198",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790002876762",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790004721991",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790004719904",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790005166804",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790005164714",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790010602801",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790010601213",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790011676369",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790011674775",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790014457144",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790014455252",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790018035503",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790018033513",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790084301673",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790084297644",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790100921919",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790100920842",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790256857233",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790256855605",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790321355498",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790321353740",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790341288897",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790341287947",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790345134043",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790345132163",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "xss_asgn_1790521688914",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1790521684830",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-test-1791097787451",
+      "title": "DSA Lab Assignment 451",
+      "student": "stud_sync_1791097787451",
+      "subject": "cprog",
+      "due": "2026-10-20",
+      "status": "Submitted",
+      "description": "",
+      "fileName": "",
+      "submittedDate": "2026-10-04"
+    },
+    {
+      "id": "asgn-test-1791098063729",
+      "title": "DSA Lab Assignment 729",
+      "student": "stud_sync_1791098063729",
+      "subject": "cprog",
+      "due": "2026-10-20",
+      "status": "Submitted",
+      "description": "",
+      "fileName": "",
+      "submittedDate": "2026-10-04"
+    },
+    {
+      "id": "asgn-test-1791098281846",
+      "title": "DSA Lab Assignment 846",
+      "student": "stud_sync_1791098281846",
+      "subject": "cprog",
+      "due": "2026-10-20",
+      "status": "Submitted",
+      "description": "",
+      "fileName": "",
+      "submittedDate": "2026-10-04"
+    },
+    {
+      "id": "asgn-test-1791098502901",
+      "title": "DSA Lab Assignment 901",
+      "student": "stud_sync_1791098502901",
+      "subject": "cprog",
+      "due": "2026-10-20",
+      "status": "Submitted",
+      "description": "",
+      "fileName": "",
+      "submittedDate": "2026-10-04"
+    }
+  ],
+  "notes": [
+    {
+      "id": "note-a-1789744139953",
+      "title": "Algorithms Note",
+      "subject": "sub-cs101",
+      "division": "Div A",
+      "uploadedBy": "fac_sync_1789744139953",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-b-1789744139953",
+      "title": "Database Note",
+      "subject": "sub-cs102",
+      "division": "Div B",
+      "uploadedBy": "fac_sync_1789744139953",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789755422494",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789755748633",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789842690237",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789843165850",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789888265439",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789888952832",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789890071963",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-diva-1789890157340",
+      "title": "Div A Exclusive Notes",
+      "division": "Div A",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-divb-1789890157340",
+      "title": "Div B Exclusive Notes",
+      "division": "Div B",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-all-1789890157340",
+      "title": "All Divisions Shared Notes",
+      "division": "All Divisions",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789893077905",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789975365094",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-diva-1789975467106",
+      "title": "Div A Exclusive Notes",
+      "division": "Div A",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-divb-1789975467106",
+      "title": "Div B Exclusive Notes",
+      "division": "Div B",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-all-1789975467106",
+      "title": "All Divisions Shared Notes",
+      "division": "All Divisions",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789977855444",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789979959244",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note_326073",
+      "title": "Audit C Programming Unit 1 Notes",
+      "subject": "c_programming",
+      "division": "Both Divisions",
+      "date": "2026-09-21",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note_561619",
+      "title": "Audit C Programming Unit 1 Notes",
+      "subject": "c_programming",
+      "division": "Both Divisions",
+      "date": "2026-09-21",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note_732769",
+      "title": "Audit C Programming Unit 1 Notes",
+      "subject": "c_programming",
+      "division": "Both Divisions",
+      "date": "2026-09-21",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789982023484",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789983729833",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1789997060006",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note_266572",
+      "title": "Audit C Programming Unit 1 Notes",
+      "subject": "c_programming",
+      "division": "Both Divisions",
+      "date": "2026-09-21",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790002879198",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790004721991",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790005166804",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790010602801",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790011676369",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790014457144",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790018035503",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790084301673",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790100921919",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790256857233",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790321355499",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790341288897",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790345134043",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1790521688914",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    }
+  ],
+  "deletedAssignments": [
+    "alice_stu_1789890157340___del-1",
+    "bob_stu_1789890157340___del-2",
+    "alice_stu_1789975467106___del-1",
+    "bob_stu_1789975467106___del-2"
+  ],
+  "dailyAttendance": [
+    {
+      "id": "att_a_254734",
+      "attendanceId": "att_a_254734",
+      "studentUsername": "e2e_stu_a_254734",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_254734",
+      "records": {
+        "e2e_stu_a_254734": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_427211",
+      "attendanceId": "att_a_427211",
+      "studentUsername": "e2e_stu_a_427211",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_427211",
+      "records": {
+        "e2e_stu_a_427211": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_764018",
+      "attendanceId": "att_a_764018",
+      "studentUsername": "e2e_stu_a_764018",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_764018",
+      "records": {
+        "e2e_stu_a_764018": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_973816",
+      "attendanceId": "att_a_973816",
+      "studentUsername": "e2e_stu_a_973816",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_973816",
+      "records": {
+        "e2e_stu_a_973816": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_794754",
+      "attendanceId": "att_a_794754",
+      "studentUsername": "e2e_stu_a_794754",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_794754",
+      "records": {
+        "e2e_stu_a_794754": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_646987",
+      "attendanceId": "att_a_646987",
+      "studentUsername": "e2e_stu_a_646987",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_646987",
+      "records": {
+        "e2e_stu_a_646987": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_090974",
+      "attendanceId": "att_a_090974",
+      "studentUsername": "e2e_stu_a_090974",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_090974",
+      "records": {
+        "e2e_stu_a_090974": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_955947",
+      "attendanceId": "att_a_955947",
+      "studentUsername": "e2e_stu_a_955947",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_955947",
+      "records": {
+        "e2e_stu_a_955947": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_237483",
+      "attendanceId": "att_a_237483",
+      "studentUsername": "e2e_stu_a_237483",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_237483",
+      "records": {
+        "e2e_stu_a_237483": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_521863",
+      "attendanceId": "att_a_521863",
+      "studentUsername": "e2e_stu_a_521863",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_521863",
+      "records": {
+        "e2e_stu_a_521863": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_602199",
+      "attendanceId": "att_a_602199",
+      "studentUsername": "e2e_stu_a_602199",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_602199",
+      "records": {
+        "e2e_stu_a_602199": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_390499",
+      "attendanceId": "att_a_390499",
+      "studentUsername": "e2e_stu_a_390499",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_390499",
+      "records": {
+        "e2e_stu_a_390499": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_960537",
+      "attendanceId": "att_a_960537",
+      "studentUsername": "e2e_stu_a_960537",
+      "subject": "c_programming",
+      "date": "21-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_960537",
+      "records": {
+        "e2e_stu_a_960537": "P"
+      },
+      "isoDate": "2026-09-21"
+    },
+    {
+      "id": "att_a_220208",
+      "attendanceId": "att_a_220208",
+      "studentUsername": "e2e_stu_a_220208",
+      "subject": "c_programming",
+      "date": "22-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_220208",
+      "records": {
+        "e2e_stu_a_220208": "P"
+      },
+      "isoDate": "2026-09-22"
+    },
+    {
+      "id": "att_a_875338",
+      "attendanceId": "att_a_875338",
+      "studentUsername": "e2e_stu_a_875338",
+      "subject": "c_programming",
+      "date": "22-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_875338",
+      "records": {
+        "e2e_stu_a_875338": "P"
+      },
+      "isoDate": "2026-09-22"
+    },
+    {
+      "id": "att_a_328022",
+      "attendanceId": "att_a_328022",
+      "studentUsername": "e2e_stu_a_328022",
+      "subject": "c_programming",
+      "date": "24-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_328022",
+      "records": {
+        "e2e_stu_a_328022": "P"
+      },
+      "isoDate": "2026-09-24"
+    },
+    {
+      "id": "att_a_396143",
+      "attendanceId": "att_a_396143",
+      "studentUsername": "e2e_stu_a_396143",
+      "subject": "c_programming",
+      "date": "24-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_396143",
+      "records": {
+        "e2e_stu_a_396143": "P"
+      },
+      "isoDate": "2026-09-24"
+    },
+    {
+      "id": "att_a_621414",
+      "attendanceId": "att_a_621414",
+      "studentUsername": "e2e_stu_a_621414",
+      "subject": "c_programming",
+      "date": "24-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_621414",
+      "records": {
+        "e2e_stu_a_621414": "P"
+      },
+      "isoDate": "2026-09-24"
+    },
+    {
+      "id": "att_a_771763",
+      "attendanceId": "att_a_771763",
+      "studentUsername": "e2e_stu_a_771763",
+      "subject": "c_programming",
+      "date": "24-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_771763",
+      "records": {
+        "e2e_stu_a_771763": "P"
+      },
+      "isoDate": "2026-09-24"
+    },
+    {
+      "id": "att_a_676194",
+      "attendanceId": "att_a_676194",
+      "studentUsername": "e2e_stu_a_676194",
+      "subject": "c_programming",
+      "date": "24-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_676194",
+      "records": {
+        "e2e_stu_a_676194": "P"
+      },
+      "isoDate": "2026-09-24"
+    },
+    {
+      "id": "att_a_029538",
+      "attendanceId": "att_a_029538",
+      "studentUsername": "e2e_stu_a_029538",
+      "subject": "c_programming",
+      "date": "25-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_029538",
+      "records": {
+        "e2e_stu_a_029538": "P"
+      },
+      "isoDate": "2026-09-25"
+    },
+    {
+      "id": "att_a_290381",
+      "attendanceId": "att_a_290381",
+      "studentUsername": "e2e_stu_a_290381",
+      "subject": "c_programming",
+      "date": "25-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_290381",
+      "records": {
+        "e2e_stu_a_290381": "P"
+      },
+      "isoDate": "2026-09-25"
+    },
+    {
+      "id": "att_a_206495",
+      "attendanceId": "att_a_206495",
+      "studentUsername": "e2e_stu_a_206495",
+      "subject": "c_programming",
+      "date": "25-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_206495",
+      "records": {
+        "e2e_stu_a_206495": "P"
+      },
+      "isoDate": "2026-09-25"
+    },
+    {
+      "id": "att-1790341394589",
+      "date": "25-09-26",
+      "isoDate": "2026-09-25",
+      "subject": "python",
+      "division": "Div A",
+      "semester": "3rd Semester",
+      "courseYear": "2nd Year",
+      "records": {
+        "00006": "P",
+        "U15BO25S0052": "A"
+      },
+      "updatedAt": "2026-09-25T13:03:14.589Z"
+    },
+    {
+      "id": "att_a_064902",
+      "attendanceId": "att_a_064902",
+      "studentUsername": "e2e_stu_a_064902",
+      "subject": "c_programming",
+      "date": "25-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_064902",
+      "records": {
+        "e2e_stu_a_064902": "P"
+      },
+      "isoDate": "2026-09-25"
+    },
+    {
+      "id": "att_a_598950",
+      "attendanceId": "att_a_598950",
+      "studentUsername": "e2e_stu_a_598950",
+      "subject": "c_programming",
+      "date": "27-09-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_598950",
+      "records": {
+        "e2e_stu_a_598950": "P"
+      },
+      "isoDate": "2026-09-27"
+    },
+    {
+      "id": "att-test-1791097787451",
+      "date": "04-10-26",
+      "isoDate": "2026-10-04",
+      "subject": "cprog",
+      "division": "Div A",
+      "semester": "1st Semester",
+      "courseYear": "1st Year",
+      "records": {
+        "stud_sync_1791097787451": "P"
+      }
+    },
+    {
+      "id": "att-test-1791098063729",
+      "date": "04-10-26",
+      "isoDate": "2026-10-04",
+      "subject": "cprog",
+      "division": "Div A",
+      "semester": "1st Semester",
+      "courseYear": "1st Year",
+      "records": {
+        "stud_sync_1791098063729": "P"
+      }
+    },
+    {
+      "id": "att-test-1791098281846",
+      "date": "04-10-26",
+      "isoDate": "2026-10-04",
+      "subject": "cprog",
+      "division": "Div A",
+      "semester": "1st Semester",
+      "courseYear": "1st Year",
+      "records": {
+        "stud_sync_1791098281846": "P"
+      }
+    },
+    {
+      "id": "att-test-1791098502901",
+      "date": "04-10-26",
+      "isoDate": "2026-10-04",
+      "subject": "cprog",
+      "division": "Div A",
+      "semester": "1st Semester",
+      "courseYear": "1st Year",
+      "records": {
+        "stud_sync_1791098502901": "P"
+      }
+    }
+  ],
+  "subjects": [
+    {
+      "id": "kannada",
+      "name": "Kannada",
+      "short": "Kannada",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "hindi",
+      "name": "Hindi",
+      "short": "Hindi",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "english",
+      "name": "English",
+      "short": "English",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "maths",
+      "name": "Mathematics",
+      "short": "Maths",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "accountancy",
+      "name": "Accountancy",
+      "short": "Acc",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "cprog",
+      "name": "C Programming",
+      "short": "C Prog",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "dbms",
+      "name": "DBMS",
+      "short": "DBMS",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "ic",
+      "name": "Indian Constitution",
+      "short": "IC",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "clab",
+      "name": "C Lab",
+      "short": "C Lab",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "dbmslab",
+      "name": "DBMS Lab",
+      "short": "DBMS Lab",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "oalab",
+      "name": "OA Lab",
+      "short": "OA Lab",
+      "icon": "",
+      "semester": "1st Semester"
+    },
+    {
+      "id": "kannada_sem2",
+      "name": "Kannada",
+      "short": "Kannada",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "hindi_sem2",
+      "name": "Hindi",
+      "short": "Hindi",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "english_sem2",
+      "name": "English",
+      "short": "English",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "nsm",
+      "name": "Numerical & Statistical Methods",
+      "short": "NSM",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "ds",
+      "name": "Data Structure",
+      "short": "DS",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "java",
+      "name": "Java",
+      "short": "Java",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "nsmlab",
+      "name": "NSM Lab",
+      "short": "NSM Lab",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "dslab",
+      "name": "DS Lab",
+      "short": "DS Lab",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "javalab",
+      "name": "Java Lab",
+      "short": "Java Lab",
+      "icon": "",
+      "semester": "2nd Semester"
+    },
+    {
+      "id": "kannada_sem3",
+      "name": "Kannada",
+      "short": "Kannada",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "hindi_sem3",
+      "name": "Hindi",
+      "short": "Hindi",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "english_sem3",
+      "name": "English",
+      "short": "English",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "short": "Python",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "os",
+      "name": "Operating System",
+      "short": "OS",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "advjava",
+      "name": "Advance Java",
+      "short": "Adv.Java",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "ost",
+      "name": "Open Source Tool",
+      "short": "OST",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "evs",
+      "name": "Environmental Studies",
+      "short": "EVS",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "oslab",
+      "name": "OS Lab",
+      "short": "OS Lab",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "pythonlab",
+      "name": "Python Lab",
+      "short": "Python Lab",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "advjavalab",
+      "name": "Adv.Java Lab",
+      "short": "Adv.Java Lab",
+      "icon": "",
+      "semester": "3rd Semester"
+    },
+    {
+      "id": "kannada_sem4",
+      "name": "Kannada",
+      "short": "Kannada",
+      "icon": "",
+      "semester": "4th Semester"
+    },
+    {
+      "id": "hindi_sem4",
+      "name": "Hindi",
+      "short": "Hindi",
+      "icon": "",
+      "semester": "4th Semester"
+    },
+    {
+      "id": "english_sem4",
+      "name": "English",
+      "short": "English",
+      "icon": "",
+      "semester": "4th Semester"
+    },
+    {
+      "id": "english_sem5",
+      "name": "English",
+      "short": "English",
+      "icon": "",
+      "semester": "5th Semester"
+    },
+    {
+      "id": "english_sem6",
+      "name": "English",
+      "short": "English",
+      "icon": "",
+      "semester": "6th Semester"
+    }
+  ],
+  "createdAt": "2026-09-02T14:08:40.514Z",
+  "updatedAt": "2026-10-04T07:22:05.429Z",
+  "divisions": {
+    "1st Year": [
+      "Div A",
+      "Div B"
+    ],
+    "2nd Year": [
+      "Div A",
+      "Div B"
+    ],
+    "3rd Year": [
+      "Div A",
+      "Div B",
+      "Div C"
+    ]
+  },
+  "subjectMarksConfig": {},
+  "timetableHeader": {
+    "1st Semester_Div A": {
+      "title": "Bharatesh College alert(\"Header XSS\")",
+      "subtitle": "Academic Year 2026"
+    }
+  },
+  "students": {
+    "stu_sync_1789744139953": {
+      "marks": {
+        "sub-cs101": {
+          "internal1": 19,
+          "internal2": 20,
+          "total": 39
+        }
+      },
+      "attendance": {}
+    },
+    "alice_stu_1789890157340": {
+      "marks": {
+        "math": {
+          "internal1": 20,
+          "internal2": 19,
+          "final": 55,
+          "total": 94,
+          "grade": "A+"
+        }
+      },
+      "attendance": {
+        "math": 95
+      }
+    },
+    "bob_stu_1789890157340": {
+      "marks": {
+        "math": {
+          "internal1": 12,
+          "internal2": 11,
+          "final": 40,
+          "total": 63,
+          "grade": "B"
+        }
+      },
+      "attendance": {
+        "math": 70
+      }
+    },
+    "alice_stu_1789975467106": {
+      "marks": {
+        "math": {
+          "internal1": 20,
+          "internal2": 19,
+          "final": 55,
+          "total": 94,
+          "grade": "A+"
+        }
+      },
+      "attendance": {
+        "math": 95
+      }
+    },
+    "bob_stu_1789975467106": {
+      "marks": {
+        "math": {
+          "internal1": 12,
+          "internal2": 11,
+          "final": 40,
+          "total": 63,
+          "grade": "B"
+        }
+      },
+      "attendance": {
+        "math": 70
+      }
+    },
+    "e2e_stu_a_254734": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_427211": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_764018": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_973816": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_794754": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_646987": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_090974": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_955947": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_237483": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_521863": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_602199": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_390499": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_960537": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_220208": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_875338": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_328022": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_396143": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_621414": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_771763": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_676194": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_029538": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_290381": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "0005": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "00006": {
+      "attendance": {
+        "python": 100
+      },
+      "assignments": []
+    },
+    "U15BO25S0052": {
+      "attendance": {
+        "python": 0
+      },
+      "assignments": []
+    },
+    "t_stu_1789672613422": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "t_vic_1789672613422": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "stu_integ_1789673340930": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "integ_stu_1789673343160": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "stu_integ_1789673375350": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "integ_stu_1789673377533": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "stu_integ_1789673396977": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "t_stu_1789673409411": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "t_vic_1789673409411": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "clean_user_1789755370799": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "p11_stu_mu9i2pty": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "p11_stu2_mu9i2pty": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "rogue_1789892533217": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "clean_user_1789893059956": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "clean_user_1790341287947": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "stu_a_1790341292643": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "stu_b_1790341292643": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "mig_stu_1790341292643": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "bob_stu_1790341301587": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "alice_stu_1790341301587": {
+      "assignments": [],
+      "attendance": {}
+    },
+    "e2e_stu_a_206495": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "e2e_stu_a_064902": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "stud_sync_1791097787451": {
+      "marks": {
+        "cprog": {
+          "internal1": 19,
+          "internal2": 18,
+          "final": 65,
+          "total": 84,
+          "grade": "A+"
+        }
+      },
+      "attendance": {
+        "cprog": 100
+      }
+    },
+    "e2e_stu_a_598950": {
+      "attendance": {
+        "c_programming": 100
+      }
+    },
+    "stud_sync_1791098063729": {
+      "attendance": {
+        "cprog": 100
+      }
+    },
+    "stud_sync_1791098502901": {
+      "marks": {
+        "cprog": {
+          "internal1": 19,
+          "internal2": 18,
+          "final": 65,
+          "total": 84,
+          "grade": "A+"
+        }
+      },
+      "attendance": {
+        "cprog": 100
+      }
+    },
+    "stud_sync_1791098281846": {
+      "marks": {},
+      "attendance": {
+        "cprog": 100
+      }
+    }
+  },
+  "customBreakRows": {},
+  "deletedDailyAttendance": []
+}
