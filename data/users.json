@@ -132,28 +132,6 @@
     "updatedAt": "2026-10-04T07:09:47.539Z"
   },
   {
-    "_id": "6ac1fe864fc3ae34338d26fb",
-    "id": "id-admin_sync_1791098502901",
-    "role": "admin",
-    "name": "Sync Test Admin",
-    "username": "admin_sync_1791098502901",
-    "email": "admin_sync_1791098502901@test.edu",
-    "passwordHash": "scrypt$16384$8$1$Hj9tEw-2fwxsiqhncHDJDg$bWsn55QoudLwBe-8whWFO8HnOaqYT_j-Ue7RbTowCY7hl3VgDdG7VVGqsNSUkfT8tMetS5wK8wbPdzYFxORsjA",
-    "subject": "",
-    "subjects": [],
-    "subjectDivisions": {},
-    "department": "",
-    "division": "",
-    "semester": "",
-    "courseYear": "",
-    "course": "",
-    "languageChoice": "",
-    "mathChoice": "",
-    "profilePic": "",
-    "createdAt": "2026-10-04T07:21:43.006Z",
-    "updatedAt": "2026-10-04T07:21:43.006Z"
-  },
-  {
     "_id": "6aaf99c3e6373bcdc50e2925",
     "id": "id-admin_xss_1789893059299",
     "role": "admin",
@@ -484,30 +462,6 @@
     "profilePic": "",
     "createdAt": "2026-10-04T07:09:47.539Z",
     "updatedAt": "2026-10-04T07:09:47.539Z"
-  },
-  {
-    "_id": "6ac1fe874fc3ae34338d26fc",
-    "id": "id-fac_sync_1791098502901",
-    "role": "faculty",
-    "name": "Sync Test Faculty",
-    "username": "fac_sync_1791098502901",
-    "email": "fac_sync_1791098502901@test.edu",
-    "passwordHash": "scrypt$16384$8$1$Hj9tEw-2fwxsiqhncHDJDg$bWsn55QoudLwBe-8whWFO8HnOaqYT_j-Ue7RbTowCY7hl3VgDdG7VVGqsNSUkfT8tMetS5wK8wbPdzYFxORsjA",
-    "subject": "cprog",
-    "subjects": [
-      "cprog"
-    ],
-    "subjectDivisions": {},
-    "department": "",
-    "division": "Both Divisions",
-    "semester": "",
-    "courseYear": "",
-    "course": "",
-    "languageChoice": "",
-    "mathChoice": "",
-    "profilePic": "",
-    "createdAt": "2026-10-04T07:21:43.007Z",
-    "updatedAt": "2026-10-04T07:21:43.007Z"
   },
   {
     "_id": "6aaf8c6a51d529caaa81475e",

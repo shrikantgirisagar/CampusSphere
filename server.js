@@ -631,7 +631,7 @@ async function authenticateRequest(req, res, next) {
       return next();
     }
     const message = result.error === "expired"
-      ? "Authentication token has expired. Please sign in again."
+      ? "Authentication token has expired. Please log in again."
       : (result.error === "malformed" ? "Malformed authentication token." : "Invalid authentication token signature.");
     return res.status(401).json({ success: false, message });
   }
@@ -1452,7 +1452,7 @@ app.post("/api/auth/login", rateLimitLogin, async (req, res) => {
     res.json({ success: true, token, user: sanitizeUser(user) });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ success: false, message: "Unable to sign in right now." });
+    res.status(500).json({ success: false, message: "Unable to log in right now." });
   }
 });
 

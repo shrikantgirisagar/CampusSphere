@@ -1,12 +1,12 @@
 {
   "system": "CampusSphere",
   "version": "2.0.0",
-  "lastSyncedAt": "2026-10-04T07:22:09.555Z",
+  "lastSyncedAt": "2026-10-10T07:22:05.879Z",
   "counts": {
-    "totalUsers": 54,
+    "totalUsers": 52,
     "students": 27,
-    "faculty": 15,
-    "admins": 12,
+    "faculty": 14,
+    "admins": 11,
     "timetables": 1,
     "syllabi": 0
   },
@@ -142,28 +142,6 @@
       "profilePic": "",
       "createdAt": "2026-10-04T07:09:47.539Z",
       "updatedAt": "2026-10-04T07:09:47.539Z"
-    },
-    {
-      "_id": "6ac1fe864fc3ae34338d26fb",
-      "id": "id-admin_sync_1791098502901",
-      "role": "admin",
-      "name": "Sync Test Admin",
-      "username": "admin_sync_1791098502901",
-      "email": "admin_sync_1791098502901@test.edu",
-      "passwordHash": "scrypt$16384$8$1$Hj9tEw-2fwxsiqhncHDJDg$bWsn55QoudLwBe-8whWFO8HnOaqYT_j-Ue7RbTowCY7hl3VgDdG7VVGqsNSUkfT8tMetS5wK8wbPdzYFxORsjA",
-      "subject": "",
-      "subjects": [],
-      "subjectDivisions": {},
-      "department": "",
-      "division": "",
-      "semester": "",
-      "courseYear": "",
-      "course": "",
-      "languageChoice": "",
-      "mathChoice": "",
-      "profilePic": "",
-      "createdAt": "2026-10-04T07:21:43.006Z",
-      "updatedAt": "2026-10-04T07:21:43.006Z"
     },
     {
       "_id": "6aaf99c3e6373bcdc50e2925",
@@ -496,30 +474,6 @@
       "profilePic": "",
       "createdAt": "2026-10-04T07:09:47.539Z",
       "updatedAt": "2026-10-04T07:09:47.539Z"
-    },
-    {
-      "_id": "6ac1fe874fc3ae34338d26fc",
-      "id": "id-fac_sync_1791098502901",
-      "role": "faculty",
-      "name": "Sync Test Faculty",
-      "username": "fac_sync_1791098502901",
-      "email": "fac_sync_1791098502901@test.edu",
-      "passwordHash": "scrypt$16384$8$1$Hj9tEw-2fwxsiqhncHDJDg$bWsn55QoudLwBe-8whWFO8HnOaqYT_j-Ue7RbTowCY7hl3VgDdG7VVGqsNSUkfT8tMetS5wK8wbPdzYFxORsjA",
-      "subject": "cprog",
-      "subjects": [
-        "cprog"
-      ],
-      "subjectDivisions": {},
-      "department": "",
-      "division": "Both Divisions",
-      "semester": "",
-      "courseYear": "",
-      "course": "",
-      "languageChoice": "",
-      "mathChoice": "",
-      "profilePic": "",
-      "createdAt": "2026-10-04T07:21:43.007Z",
-      "updatedAt": "2026-10-04T07:21:43.007Z"
     },
     {
       "_id": "6aaf8c6a51d529caaa81475e",
@@ -1605,7 +1559,25 @@
         "date": "2026-09-19",
         "target": "all",
         "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
-        "authorRole": "admin"
+        "authorRole": "faculty"
+      },
+      {
+        "id": "xss_notice_1791200663069",
+        "title": "Campus Notice Important",
+        "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+        "date": "2026-09-19",
+        "target": "all",
+        "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+        "authorRole": "faculty"
+      },
+      {
+        "id": "xss_notice_1791200945542",
+        "title": "Campus Notice Important",
+        "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+        "date": "2026-09-19",
+        "target": "all",
+        "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+        "authorRole": "faculty"
       }
     ],
     "timetable": [],
@@ -2013,6 +1985,1582 @@
         "description": "",
         "fileName": "",
         "submittedDate": "2026-10-04"
+      },
+      {
+        "id": "xss_asgn_1791200663069",
+        "title": "Unit 1 Assignment",
+        "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+        "subject": "bca101",
+        "student": "clean_user_1791200662026",
+        "due": "2026-09-25",
+        "fileName": ""
+      },
+      {
+        "id": "xss_asgn_1791200945542",
+        "title": "Unit 1 Assignment",
+        "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+        "subject": "bca101",
+        "student": "clean_user_1791200944446",
+        "due": "2026-09-25",
+        "fileName": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "title": "DSA Lab Assignment 371",
+        "student": "stud_sync_1791306702371",
+        "subject": "cprog",
+        "due": "2026-10-20",
+        "status": "Submitted",
+        "description": "",
+        "fileName": "",
+        "submittedDate": "2026-10-06"
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "t_stu_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "t_vic_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "stu_integ_1789673340930",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "integ_stu_1789673343160",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "stu_integ_1789673375350",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "integ_stu_1789673377533",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "stu_integ_1789673396977",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "t_stu_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "t_vic_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "clean_user_1789755370799",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "p11_stu_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "p11_stu2_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "rogue_1789892533217",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "clean_user_1789893059956",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "test_direct_75903",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "test_direct_37161",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "direct_stu_62826",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "direct_stu_75294",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "direct_stu_97653",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "direct_stu_74333",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "direct_stu_44048",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "stu_term_75753",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791097787451",
+        "student": "test_syl_student_1790686346922",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 451",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "t_stu_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "t_vic_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "stu_integ_1789673340930",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "integ_stu_1789673343160",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "stu_integ_1789673375350",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "integ_stu_1789673377533",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "stu_integ_1789673396977",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "t_stu_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "t_vic_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "clean_user_1789755370799",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "p11_stu_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "p11_stu2_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "rogue_1789892533217",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "clean_user_1789893059956",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "test_direct_75903",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "test_direct_37161",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "direct_stu_62826",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "direct_stu_75294",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "direct_stu_97653",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "direct_stu_74333",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "direct_stu_44048",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "stu_term_75753",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "test_syl_student_1790686346922",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098063729",
+        "student": "stud_sync_1791097787451",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 729",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "t_stu_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "t_vic_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "stu_integ_1789673340930",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "integ_stu_1789673343160",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "stu_integ_1789673375350",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "integ_stu_1789673377533",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "stu_integ_1789673396977",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "t_stu_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "t_vic_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "clean_user_1789755370799",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "p11_stu_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "p11_stu2_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "rogue_1789892533217",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "clean_user_1789893059956",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "test_direct_75903",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "test_direct_37161",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "direct_stu_62826",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "direct_stu_75294",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "direct_stu_97653",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "direct_stu_74333",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "direct_stu_44048",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "stu_term_75753",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "test_syl_student_1790686346922",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098281846",
+        "student": "stud_sync_1791097787451",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 846",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "t_stu_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "t_vic_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "stu_integ_1789673340930",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "integ_stu_1789673343160",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "stu_integ_1789673375350",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "integ_stu_1789673377533",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "stu_integ_1789673396977",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "t_stu_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "t_vic_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "clean_user_1789755370799",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "p11_stu_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "p11_stu2_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "rogue_1789892533217",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "clean_user_1789893059956",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "test_direct_75903",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "test_direct_37161",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "direct_stu_62826",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "direct_stu_75294",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "direct_stu_97653",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "direct_stu_74333",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "direct_stu_44048",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "stu_term_75753",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "test_syl_student_1790686346922",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791098502901",
+        "student": "stud_sync_1791097787451",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 901",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "t_stu_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "t_vic_1789672613422",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "stu_integ_1789673340930",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "integ_stu_1789673343160",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "stu_integ_1789673375350",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "integ_stu_1789673377533",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "stu_integ_1789673396977",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "t_stu_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "t_vic_1789673409411",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "clean_user_1789755370799",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "p11_stu_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "p11_stu2_mu9i2pty",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "rogue_1789892533217",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "clean_user_1789893059956",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "test_direct_75903",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "test_direct_37161",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "direct_stu_62826",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "direct_stu_75294",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "direct_stu_97653",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "direct_stu_74333",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "direct_stu_44048",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "stu_term_75753",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "test_syl_student_1790686346922",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
+      },
+      {
+        "id": "asgn-test-1791306702371",
+        "student": "stud_sync_1791097787451",
+        "subject": "cprog",
+        "targetDivision": "All Divisions",
+        "title": "DSA Lab Assignment 371",
+        "description": "",
+        "fileName": "",
+        "fileData": "",
+        "due": "2026-10-20",
+        "status": "Pending",
+        "submittedDate": ""
       }
     ],
     "notes": [
@@ -2357,6 +3905,24 @@
       },
       {
         "id": "xss_note_1790521688914",
+        "subject": "bca101",
+        "title": "Lecture 1 Notes",
+        "division": "All Divisions",
+        "date": "2026-09-19",
+        "fileName": "",
+        "uploadedByName": ""
+      },
+      {
+        "id": "xss_note_1791200663069",
+        "subject": "bca101",
+        "title": "Lecture 1 Notes",
+        "division": "All Divisions",
+        "date": "2026-09-19",
+        "fileName": "",
+        "uploadedByName": ""
+      },
+      {
+        "id": "xss_note_1791200945542",
         "subject": "bca101",
         "title": "Lecture 1 Notes",
         "division": "All Divisions",
@@ -2783,6 +4349,46 @@
         "records": {
           "stud_sync_1791098502901": "P"
         }
+      },
+      {
+        "id": "att_a_500713",
+        "attendanceId": "att_a_500713",
+        "studentUsername": "e2e_stu_a_500713",
+        "subject": "c_programming",
+        "date": "05-10-26",
+        "status": "Present",
+        "division": "Division A",
+        "facultyUsername": "e2e_fac_500713",
+        "records": {
+          "e2e_stu_a_500713": "P"
+        },
+        "isoDate": "2026-10-05"
+      },
+      {
+        "id": "att_a_896338",
+        "attendanceId": "att_a_896338",
+        "studentUsername": "e2e_stu_a_896338",
+        "subject": "c_programming",
+        "date": "05-10-26",
+        "status": "Present",
+        "division": "Division A",
+        "facultyUsername": "e2e_fac_896338",
+        "records": {
+          "e2e_stu_a_896338": "P"
+        },
+        "isoDate": "2026-10-05"
+      },
+      {
+        "id": "att-test-1791306702371",
+        "date": "04-10-26",
+        "isoDate": "2026-10-04",
+        "subject": "cprog",
+        "division": "Div A",
+        "semester": "1st Semester",
+        "courseYear": "1st Year",
+        "records": {
+          "stud_sync_1791306702371": "P"
+        }
       }
     ],
     "subjects": [
@@ -3040,7 +4646,7 @@
       }
     ],
     "createdAt": "2026-09-02T14:08:40.514Z",
-    "updatedAt": "2026-10-04T07:22:05.429Z",
+    "updatedAt": "2026-10-10T07:22:04.823Z",
     "divisions": {
       "1st Year": [
         "Div A",
@@ -3242,74 +4848,91 @@
       },
       "0005": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "00006": {
         "attendance": {
           "python": 100
         },
-        "assignments": []
+        "assignments": [],
+        "marks": {}
       },
       "U15BO25S0052": {
         "attendance": {
           "python": 0
         },
-        "assignments": []
+        "assignments": [],
+        "marks": {}
       },
       "t_stu_1789672613422": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "t_vic_1789672613422": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "stu_integ_1789673340930": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "integ_stu_1789673343160": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "stu_integ_1789673375350": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "integ_stu_1789673377533": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "stu_integ_1789673396977": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "t_stu_1789673409411": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "t_vic_1789673409411": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "clean_user_1789755370799": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "p11_stu_mu9i2pty": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "p11_stu2_mu9i2pty": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "rogue_1789892533217": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "clean_user_1789893059956": {
         "assignments": [],
+        "marks": {},
         "attendance": {}
       },
       "clean_user_1790341287947": {
@@ -3358,7 +4981,8 @@
         },
         "attendance": {
           "cprog": 100
-        }
+        },
+        "assignments": []
       },
       "e2e_stu_a_598950": {
         "attendance": {
@@ -3370,21 +4994,72 @@
           "cprog": 100
         }
       },
-      "stud_sync_1791098502901": {
-        "marks": {
-          "cprog": {
-            "internal1": 19,
-            "internal2": 18,
-            "final": 65,
-            "total": 84,
-            "grade": "A+"
-          }
-        },
+      "stud_sync_1791098281846": {
         "attendance": {
           "cprog": 100
         }
       },
-      "stud_sync_1791098281846": {
+      "stud_sync_1791098502901": {
+        "attendance": {
+          "cprog": 100
+        }
+      },
+      "e2e_stu_a_500713": {
+        "attendance": {
+          "c_programming": 100
+        }
+      },
+      "e2e_stu_a_896338": {
+        "attendance": {
+          "c_programming": 100
+        }
+      },
+      "test_direct_75903": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "test_direct_37161": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "direct_stu_62826": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "direct_stu_75294": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "direct_stu_97653": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "direct_stu_74333": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "direct_stu_44048": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "stu_term_75753": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "test_syl_student_1790686346922": {
+        "attendance": {},
+        "marks": {},
+        "assignments": []
+      },
+      "stud_sync_1791306702371": {
         "marks": {},
         "attendance": {
           "cprog": 100
@@ -3411,16 +5086,16 @@
   },
   "timetables": [
     {
-      "_id": "6ab931848f43f70095f2b160",
+      "_id": "6ac38ec4d2521401819b09d9",
       "semester": "1st Semester",
       "division": "Div A",
       "day": "Monday",
       "time": "10:00 AM",
       "subject": "math",
       "subjectText": "Mathematics",
-      "faculty": "carol_fac_1790521725935",
-      "createdAt": "2026-09-27T15:08:52.952Z",
-      "updatedAt": "2026-09-27T15:08:52.952Z"
+      "faculty": "carol_fac_1791200961883",
+      "createdAt": "2026-10-05T11:49:24.912Z",
+      "updatedAt": "2026-10-05T11:49:24.912Z"
     }
   ],
   "syllabi": []

@@ -356,7 +356,7 @@
       if (toast && toastMsg) {
         clearTimeout(toastTimer);
         if (!currentToken) {
-          toastMsg.innerHTML = '<span>Please <a href="index.html#login" style="color:#60a5fa; text-decoration:underline; font-weight:700;">Sign In</a> to download official syllabus PDFs.</span>';
+          toastMsg.innerHTML = '<span>Please <a href="index.html#login" style="color:#60a5fa; text-decoration:underline; font-weight:700;">Login</a> to download official syllabus PDFs.</span>';
           toast.classList.add("is-visible");
           toastTimer = setTimeout(() => {
             toast.classList.remove("is-visible");

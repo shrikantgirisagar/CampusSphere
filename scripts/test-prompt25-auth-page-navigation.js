@@ -101,7 +101,7 @@ async function runPrompt25Tests() {
   const loginToSignupBtn = indexHtml.includes('data-open-signup>Register as Student or Faculty');
   logTest('Login card switch button exists with data-open-signup trigger', loginToSignupBtn);
 
-  const signupToLoginBtn = indexHtml.includes('data-open-login>Sign In to Account');
+  const signupToLoginBtn = indexHtml.includes('data-open-login>Login to Account') || indexHtml.includes('data-open-login>Sign In to Account');
   logTest('Signup card switch button exists with data-open-login trigger', signupToLoginBtn);
 
   const backHomeTriggers = indexHtml.includes('data-back-home');

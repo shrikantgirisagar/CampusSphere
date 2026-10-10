@@ -540,7 +540,7 @@ function handleSessionExpired(customMessage) {
 
   // 3. Display session expired notice
   if (wasAuthenticated && $("loginMessage")) {
-    $("loginMessage").textContent = customMessage || "Your session has expired. Please sign in again.";
+    $("loginMessage").textContent = customMessage || "Your session has expired. Please log in again.";
     $("loginMessage").className = "message error";
   }
 
@@ -554,7 +554,7 @@ function getStatusErrorMessage(status, defaultMsg) {
     case 400:
       return defaultMsg || "Validation error: Please verify your input details.";
     case 401:
-      return "Your session has expired. Please sign in again.";
+      return "Your session has expired. Please log in again.";
     case 403:
       return defaultMsg || "Access forbidden: You do not have permission to perform this action.";
     case 404:
@@ -593,7 +593,7 @@ async function authenticatedFetch(url, options = {}) {
 
   if (response.status === 401) {
     if (getStoredAuthToken() || currentUser) {
-      handleSessionExpired("Your session has expired. Please sign in again.");
+      handleSessionExpired("Your session has expired. Please log in again.");
     }
   }
 
@@ -917,7 +917,7 @@ async function loginOnServer(role, username, password) {
     if (response.status >= 500) {
       throw new Error("The authentication service is temporarily unavailable. Please try again later.");
     }
-    throw new Error((data && data.message) || getStatusErrorMessage(response.status, "Unable to sign in."));
+    throw new Error((data && data.message) || getStatusErrorMessage(response.status, "Unable to log in."));
   }
 
   if (data.token) {
@@ -2484,7 +2484,7 @@ $("signupForm").addEventListener("submit", async e => {
         $("password").value = "";
         document.querySelectorAll(".role-tab").forEach(b => b.classList.toggle("active", b.dataset.role === role));
         currentRole = role;
-        $("signupMessage").textContent = "Account created successfully. You can now sign in.";
+        $("signupMessage").textContent = "Account created successfully. You can now log in.";
         $("signupMessage").className = "message success";
       }
 
@@ -2534,11 +2534,11 @@ $("loginForm").addEventListener("submit", async e => {
       openPortal();
     } catch (error) {
       if ($("loginMessage")) {
-        $("loginMessage").textContent = error.message || "Unable to sign in.";
+        $("loginMessage").textContent = error.message || "Unable to log in.";
         $("loginMessage").className = "message error";
       }
     }
-  }, { loadingText: "Signing in..." });
+  }, { loadingText: "Logging in..." });
 });
 
 if ($("logoutBtn")) $("logoutBtn").addEventListener("click", logout);
@@ -12605,7 +12605,7 @@ executeUniversalAutoSync();
           if (typeof render === "function") render();
 
           if (pageSignupMessage) {
-            pageSignupMessage.textContent = "Account created successfully! Redirecting to Sign In...";
+            pageSignupMessage.textContent = "Account created successfully! Redirecting to Login...";
             pageSignupMessage.className = "message success";
           }
 
@@ -13530,7 +13530,7 @@ function handleSyllabusUploadSubmit(e) {
   if (!token) {
     if (alertEl) {
       alertEl.className = "message error";
-      alertEl.textContent = "Authentication required. Please sign in as administrator.";
+      alertEl.textContent = "Authentication required. Please log in as administrator.";
     }
     return;
   }
@@ -13675,7 +13675,7 @@ async function handleDeleteSyllabusSubmit(yearLevel) {
 function previewSyllabusPdf(yearLevel) {
   const token = getStoredAuthToken();
   if (!token) {
-    showToast("Please sign in to view the syllabus.", "warning");
+    showToast("Please log in to view the syllabus.", "warning");
     return;
   }
   const url = `${API_BASE_URL}/api/syllabus/${yearLevel}/download?inline=1&token=${encodeURIComponent(token)}`;
@@ -13685,7 +13685,7 @@ function previewSyllabusPdf(yearLevel) {
 function downloadSyllabusPdf(yearLevel, filename) {
   const token = getStoredAuthToken();
   if (!token) {
-    showToast("Please sign in to download the syllabus.", "warning");
+    showToast("Please log in to download the syllabus.", "warning");
     return;
   }
   showToast("Downloading syllabus PDF...", "info");
