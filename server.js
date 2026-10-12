@@ -168,7 +168,26 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // In-memory rate limiter factory with sliding window and automatic cleanup
-function createRateLimiter({ windowMs = 15 * 60 * 1000, maxRequests = 100, message = "Too many requests. Please try again later.", bypassInTest = false }) {
+function normalizeClientIp(rawIp) {
+  if (!rawIp || typeof rawIp !== "string") return "unknown";
+  let ip = rawIp.trim();
+  if (ip.startsWith("::ffff:")) {
+    ip = ip.slice(7);
+  }
+  if (ip === "::1") {
+    ip = "127.0.0.1";
+  }
+  return ip;
+}
+
+function createRateLimiter({
+  windowMs = 15 * 60 * 1000,
+  maxRequests = 100,
+  message = "Too many requests. Please try again later.",
+  bypassInTest = false,
+  skipSuccessfulRequests = false,
+  skip = null
+}) {
   const hits = new Map();
 
   const cleanupTimer = setInterval(() => {
@@ -186,7 +205,11 @@ function createRateLimiter({ windowMs = 15 * 60 * 1000, maxRequests = 100, messa
       return next();
     }
 
-    const ip = req.ip || req.socket?.remoteAddress || "unknown";
+    if (typeof skip === "function" && skip(req)) {
+      return next();
+    }
+
+    const ip = normalizeClientIp(req.ip || req.socket?.remoteAddress || "unknown");
     const now = Date.now();
     let record = hits.get(ip);
 
@@ -197,35 +220,52 @@ function createRateLimiter({ windowMs = 15 * 60 * 1000, maxRequests = 100, messa
       record.count++;
     }
 
-    const remaining = Math.max(0, maxRequests - record.count);
+    const effectiveMax = typeof maxRequests === "function" ? maxRequests(req) : maxRequests;
+    const remaining = Math.max(0, effectiveMax - record.count);
     const resetSeconds = Math.ceil((record.startTime + windowMs - now) / 1000);
 
-    res.setHeader("RateLimit-Limit", maxRequests);
+    res.setHeader("RateLimit-Limit", effectiveMax);
     res.setHeader("RateLimit-Remaining", remaining);
     res.setHeader("RateLimit-Reset", resetSeconds);
 
-    if (record.count > maxRequests) {
+    if (record.count > effectiveMax) {
       res.setHeader("Retry-After", resetSeconds);
       return res.status(429).json({
         success: false,
-        message
+        message,
+        retryAfter: resetSeconds
       });
     }
+
+    if (skipSuccessfulRequests) {
+      res.on("finish", () => {
+        if (res.statusCode < 400 && record && record.count > 0) {
+          record.count--;
+          if (record.count <= 0) {
+            hits.delete(ip);
+          }
+        }
+      });
+    }
+
     next();
   };
 }
 
-// 1. Auth Login Rate Limiter (25 requests per 15 min per IP)
+const isDev = process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test";
+
+// 1. Auth Login Rate Limiter (25 requests per 15 min per IP in prod/test, 100 in dev)
 const rateLimitLogin = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 25,
-  message: "Too many login attempts. Please try again after 15 minutes."
+  maxRequests: Number(process.env.RATE_LIMIT_LOGIN_MAX || (isDev ? 100 : 25)),
+  message: "Too many login attempts. Please try again after 15 minutes.",
+  skipSuccessfulRequests: true
 });
 
 // 2. User Registration Rate Limiter (30 requests per 15 min per IP)
 const rateLimitRegistration = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 30,
+  maxRequests: Number(process.env.RATE_LIMIT_REGISTER_MAX || (isDev ? 100 : 30)),
   message: "Too many registration attempts. Please try again later.",
   bypassInTest: true
 });
@@ -233,17 +273,24 @@ const rateLimitRegistration = createRateLimiter({
 // 3. Heavy / Expensive Operations Rate Limiter (60 requests per 15 min per IP)
 const rateLimitExpensive = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 60,
+  maxRequests: Number(process.env.RATE_LIMIT_EXPENSIVE_MAX || (isDev ? 200 : 60)),
   message: "Too many synchronization requests. Please try again later.",
   bypassInTest: true
 });
 
-// 4. General API Rate Limiter (300 requests per 15 min per IP)
+// 4. General API Rate Limiter (300 requests per 15 min per IP in prod/test, 2000 in dev)
+// Excludes dedicated auth login endpoint so general background polling,
+// divisions sync, or stats traffic never exhausts the login limiter or blocks logins.
 const rateLimitApi = createRateLimiter({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
-  maxRequests: Number(process.env.RATE_LIMIT_MAX || 300),
+  maxRequests: Number(process.env.RATE_LIMIT_MAX || (isDev ? 2000 : 300)),
   message: "Too many requests to the API. Please try again later.",
-  bypassInTest: true
+  bypassInTest: true,
+  skip: (req) => {
+    const pathStr = req.path || "";
+    const origStr = req.originalUrl ? req.originalUrl.split("?")[0] : "";
+    return pathStr === "/auth/login" || origStr === "/api/auth/login";
+  }
 });
 
 // Favicon handler with safe fallback to logo if favicon.ico is not found

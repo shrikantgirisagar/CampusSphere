@@ -1,16 +1,38 @@
 {
   "system": "CampusSphere",
   "version": "2.0.0",
-  "lastSyncedAt": "2026-10-10T07:22:05.879Z",
+  "lastSyncedAt": "2026-10-12T15:26:48.578Z",
   "counts": {
-    "totalUsers": 52,
-    "students": 27,
-    "faculty": 14,
-    "admins": 11,
-    "timetables": 1,
+    "totalUsers": 55,
+    "students": 28,
+    "faculty": 15,
+    "admins": 12,
+    "timetables": 6,
     "syllabi": 0
   },
   "users": [
+    {
+      "_id": "6accfc2c19a3a48f9515a13d",
+      "id": "id-adm_sync_1791818796497",
+      "role": "admin",
+      "name": "Test Admin",
+      "username": "adm_sync_1791818796497",
+      "email": "adm_sync_1791818796497@test.edu",
+      "passwordHash": "scrypt$16384$8$1$oBPdf2yn5XirWg6Rk8X80g$W0uAn6oBoq1JNcSe5u-nTtRK_-Zio7pNzXZ29dWGCFYgFefV2U_ALMbx9e_AY7uLirs_yqvdkMAVPBWwgVvSgw",
+      "subject": "",
+      "subjects": [],
+      "subjectDivisions": {},
+      "department": "",
+      "division": "",
+      "semester": "",
+      "courseYear": "",
+      "course": "",
+      "languageChoice": "",
+      "mathChoice": "",
+      "profilePic": "",
+      "createdAt": "2026-10-12T15:26:36.549Z",
+      "updatedAt": "2026-10-12T15:26:36.549Z"
+    },
     {
       "_id": "6a982dbb619f30507225e626",
       "id": "admin-001",
@@ -474,6 +496,28 @@
       "profilePic": "",
       "createdAt": "2026-10-04T07:09:47.539Z",
       "updatedAt": "2026-10-04T07:09:47.539Z"
+    },
+    {
+      "_id": "6accfc2c19a3a48f9515a13c",
+      "id": "id-fac_sync_1791818796497",
+      "role": "faculty",
+      "name": "Test Faculty",
+      "username": "fac_sync_1791818796497",
+      "email": "fac_sync_1791818796497@test.edu",
+      "passwordHash": "scrypt$16384$8$1$oBPdf2yn5XirWg6Rk8X80g$W0uAn6oBoq1JNcSe5u-nTtRK_-Zio7pNzXZ29dWGCFYgFefV2U_ALMbx9e_AY7uLirs_yqvdkMAVPBWwgVvSgw",
+      "subject": "sub-cs101",
+      "subjects": [],
+      "subjectDivisions": {},
+      "department": "",
+      "division": "",
+      "semester": "",
+      "courseYear": "",
+      "course": "",
+      "languageChoice": "",
+      "mathChoice": "",
+      "profilePic": "",
+      "createdAt": "2026-10-12T15:26:36.549Z",
+      "updatedAt": "2026-10-12T15:26:36.549Z"
     },
     {
       "_id": "6aaf8c6a51d529caaa81475e",
@@ -992,6 +1036,28 @@
       "profilePic": "",
       "createdAt": "2026-09-17T19:29:57.535Z",
       "updatedAt": "2026-09-17T19:29:57.535Z"
+    },
+    {
+      "_id": "6accfc2c19a3a48f9515a13b",
+      "id": "id-stu_sync_1791818796497",
+      "role": "student",
+      "name": "Test Student",
+      "username": "stu_sync_1791818796497",
+      "email": "stu_sync_1791818796497@test.edu",
+      "passwordHash": "scrypt$16384$8$1$oBPdf2yn5XirWg6Rk8X80g$W0uAn6oBoq1JNcSe5u-nTtRK_-Zio7pNzXZ29dWGCFYgFefV2U_ALMbx9e_AY7uLirs_yqvdkMAVPBWwgVvSgw",
+      "subject": "",
+      "subjects": [],
+      "subjectDivisions": {},
+      "department": "",
+      "division": "Div A",
+      "semester": "",
+      "courseYear": "",
+      "course": "",
+      "languageChoice": "",
+      "mathChoice": "",
+      "profilePic": "",
+      "createdAt": "2026-10-12T15:26:36.549Z",
+      "updatedAt": "2026-10-12T15:26:36.549Z"
     },
     {
       "_id": "6ab92d7728c2b20a1f984b50",
@@ -1578,6 +1644,30 @@
         "target": "all",
         "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
         "authorRole": "faculty"
+      },
+      {
+        "id": "xss_notice_1791818772423",
+        "title": "Campus Notice Important",
+        "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+        "date": "2026-09-19",
+        "target": "all",
+        "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+        "authorRole": "admin"
+      },
+      {
+        "id": "notice-a-1791818796497",
+        "title": "Notice Alpha",
+        "content": "Campus alpha notice",
+        "date": "2026-09-18",
+        "text": "",
+        "authorRole": "faculty"
+      },
+      {
+        "id": "notice-conc2-1791818796497",
+        "title": "Conc Notice 2",
+        "text": "",
+        "content": "",
+        "authorRole": "admin"
       }
     ],
     "timetable": [],
@@ -3561,6 +3651,23 @@
         "due": "2026-10-20",
         "status": "Pending",
         "submittedDate": ""
+      },
+      {
+        "id": "xss_asgn_1791818772423",
+        "title": "Unit 1 Assignment",
+        "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+        "subject": "bca101",
+        "student": "clean_user_1791818770116",
+        "due": "2026-09-25",
+        "fileName": ""
+      },
+      {
+        "id": "asgn-a-1791818796497",
+        "title": "Project Part 1",
+        "student": "stu_sync_1791818796497",
+        "subject": "sub-cs101",
+        "description": "",
+        "fileName": ""
       }
     ],
     "notes": [
@@ -3927,6 +4034,33 @@
         "title": "Lecture 1 Notes",
         "division": "All Divisions",
         "date": "2026-09-19",
+        "fileName": "",
+        "uploadedByName": ""
+      },
+      {
+        "id": "xss_note_1791818772423",
+        "subject": "bca101",
+        "title": "Lecture 1 Notes",
+        "division": "All Divisions",
+        "date": "2026-09-19",
+        "fileName": "",
+        "uploadedByName": ""
+      },
+      {
+        "id": "note-a-1791818796497",
+        "title": "Algorithms Note",
+        "subject": "sub-cs101",
+        "division": "Div A",
+        "uploadedBy": "fac_sync_1791818796497",
+        "fileName": "",
+        "uploadedByName": ""
+      },
+      {
+        "id": "note-b-1791818796497",
+        "title": "Database Note",
+        "subject": "sub-cs102",
+        "division": "Div B",
+        "uploadedBy": "fac_sync_1791818796497",
         "fileName": "",
         "uploadedByName": ""
       }
@@ -4389,6 +4523,20 @@
         "records": {
           "stud_sync_1791306702371": "P"
         }
+      },
+      {
+        "id": "att_a_718381",
+        "attendanceId": "att_a_718381",
+        "studentUsername": "e2e_stu_a_718381",
+        "subject": "c_programming",
+        "date": "12-10-26",
+        "status": "Present",
+        "division": "Division A",
+        "facultyUsername": "e2e_fac_718381",
+        "records": {
+          "e2e_stu_a_718381": "P"
+        },
+        "isoDate": "2026-10-12"
       }
     ],
     "subjects": [
@@ -4646,7 +4794,7 @@
       }
     ],
     "createdAt": "2026-09-02T14:08:40.514Z",
-    "updatedAt": "2026-10-10T07:22:04.823Z",
+    "updatedAt": "2026-10-12T15:26:47.488Z",
     "divisions": {
       "1st Year": [
         "Div A",
@@ -4677,8 +4825,7 @@
             "internal2": 20,
             "total": 39
           }
-        },
-        "attendance": {}
+        }
       },
       "alice_stu_1789890157340": {
         "marks": {
@@ -4847,117 +4994,79 @@
         }
       },
       "0005": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "00006": {
         "attendance": {
           "python": 100
         },
-        "assignments": [],
-        "marks": {}
+        "assignments": []
       },
       "U15BO25S0052": {
         "attendance": {
           "python": 0
         },
-        "assignments": [],
-        "marks": {}
+        "assignments": []
       },
       "t_stu_1789672613422": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "t_vic_1789672613422": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "stu_integ_1789673340930": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "integ_stu_1789673343160": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "stu_integ_1789673375350": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "integ_stu_1789673377533": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "stu_integ_1789673396977": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "t_stu_1789673409411": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "t_vic_1789673409411": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "clean_user_1789755370799": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "p11_stu_mu9i2pty": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "p11_stu2_mu9i2pty": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "rogue_1789892533217": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "clean_user_1789893059956": {
-        "assignments": [],
-        "marks": {},
-        "attendance": {}
+        "assignments": []
       },
       "clean_user_1790341287947": {
-        "assignments": [],
-        "attendance": {}
+        "assignments": []
       },
       "stu_a_1790341292643": {
-        "assignments": [],
-        "attendance": {}
+        "assignments": []
       },
       "stu_b_1790341292643": {
-        "assignments": [],
-        "attendance": {}
+        "assignments": []
       },
       "mig_stu_1790341292643": {
-        "assignments": [],
-        "attendance": {}
+        "assignments": []
       },
       "bob_stu_1790341301587": {
-        "assignments": [],
-        "attendance": {}
+        "assignments": []
       },
       "alice_stu_1790341301587": {
-        "assignments": [],
-        "attendance": {}
+        "assignments": []
       },
       "e2e_stu_a_206495": {
         "attendance": {
@@ -5015,54 +5124,44 @@
         }
       },
       "test_direct_75903": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "test_direct_37161": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "direct_stu_62826": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "direct_stu_75294": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "direct_stu_97653": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "direct_stu_74333": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "direct_stu_44048": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "stu_term_75753": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "test_syl_student_1790686346922": {
-        "attendance": {},
-        "marks": {},
         "assignments": []
       },
       "stud_sync_1791306702371": {
-        "marks": {},
         "attendance": {
           "cprog": 100
+        }
+      },
+      "stu_sync_1791818796497": {
+        "marks": {
+          "sub-cs101": {
+            "internal1": 19,
+            "internal2": 20,
+            "total": 39
+          }
         }
       }
     },
@@ -5086,16 +5185,76 @@
   },
   "timetables": [
     {
-      "_id": "6ac38ec4d2521401819b09d9",
+      "_id": "6accfc2667241a919e025e1b",
       "semester": "1st Semester",
       "division": "Div A",
       "day": "Monday",
       "time": "10:00 AM",
       "subject": "math",
       "subjectText": "Mathematics",
-      "faculty": "carol_fac_1791200961883",
-      "createdAt": "2026-10-05T11:49:24.912Z",
-      "updatedAt": "2026-10-05T11:49:24.912Z"
+      "faculty": "carol_fac_1791818787833",
+      "createdAt": "2026-10-12T15:26:30.471Z",
+      "updatedAt": "2026-10-12T15:26:30.471Z"
+    },
+    {
+      "_id": "6accfc2d05f942b0c90b1c92",
+      "semester": "1st Semester",
+      "time": "09:00-10:00",
+      "day": "Monday",
+      "division": "Div_A_1791818796497",
+      "createdAt": "2026-10-12T15:26:38.815Z",
+      "faculty": "fac_sync_1791818796497",
+      "subject": "sub-cs101",
+      "subjectText": "Advanced CS 101",
+      "updatedAt": "2026-10-12T15:26:40.452Z"
+    },
+    {
+      "_id": "6accfc2d05f942b0c90b1c93",
+      "semester": "1st Semester",
+      "time": "10:00-11:00",
+      "day": "Monday",
+      "division": "Div_A_1791818796497",
+      "createdAt": "2026-10-12T15:26:38.815Z",
+      "faculty": "fac_sync_1791818796497",
+      "subject": "sub-cs102",
+      "subjectText": "Data Structures",
+      "updatedAt": "2026-10-12T15:26:39.600Z"
+    },
+    {
+      "_id": "6accfc2e05f942b0c90b1c94",
+      "day": "Tuesday",
+      "semester": "1st Semester",
+      "division": "Div_A_1791818796497",
+      "time": "09:00-10:00",
+      "createdAt": "2026-10-12T15:26:39.600Z",
+      "faculty": "fac_sync_1791818796497",
+      "subject": "sub-cs103",
+      "subjectText": "Web Dev",
+      "updatedAt": "2026-10-12T15:26:39.600Z"
+    },
+    {
+      "_id": "6accfc2f05f942b0c90b1c96",
+      "day": "Wednesday",
+      "semester": "1st Semester",
+      "division": "Div_A_1791818796497",
+      "time": "11:00-12:00",
+      "createdAt": "2026-10-12T15:26:41.081Z",
+      "faculty": "fac_sync_1791818796497",
+      "subject": "sub-1",
+      "subjectText": "Parallel Class 2",
+      "updatedAt": "2026-10-12T15:26:41.145Z"
+    },
+    {
+      "_id": "6accfc2e05f942b0c90b1c95",
+      "day": "Monday",
+      "semester": "1st Semester",
+      "division": "Div_B_1791818796497",
+      "time": "09:00-10:00",
+      "createdAt": "2026-10-12T15:26:39.973Z",
+      "faculty": "fac_sync_1791818796497",
+      "subject": "sub-cs101",
+      "subjectText": "Intro to CS (B)",
+      "updatedAt": "2026-10-12T15:26:39.973Z"
     }
   ],
   "syllabi": []

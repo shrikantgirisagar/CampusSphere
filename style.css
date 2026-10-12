@@ -1318,12 +1318,11 @@ animated-background,
   border: 1px solid rgba(226, 232, 240, 0.85);
   border-radius: 14px;
   padding: 12px 14px;
-  transition: transform .22s ease, background .22s ease, box-shadow .22s ease;
+  transition: background .22s ease, box-shadow .22s ease, border-color .22s ease;
 }
 
 .showcase-feature-item:hover {
   background: rgba(255, 255, 255, 0.98);
-  transform: translateX(4px);
   box-shadow: 0 4px 14px rgba(20, 89, 217, 0.08);
 }
 
@@ -1494,12 +1493,11 @@ animated-background,
   border: 1px solid rgba(226, 232, 240, 0.85);
   border-radius: 12px;
   padding: 9px 12px;
-  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+  transition: background .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 
 .signup-card .showcase-feature-item:hover {
   background: rgba(255, 255, 255, 0.98);
-  transform: translateX(3px);
   box-shadow: 0 4px 12px rgba(20, 89, 217, 0.08);
 }
 
@@ -2708,11 +2706,10 @@ animated-background,
   border-radius: var(--campus-radius-lg);
   background: #ffffff;
   box-shadow: var(--campus-shadow-sm);
-  transition: all 0.22s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .stat:hover {
-  transform: translateY(-2px);
   border-color: var(--campus-border-strong);
   box-shadow: var(--campus-shadow-md);
 }
@@ -2800,11 +2797,10 @@ animated-background,
   border-radius: var(--campus-radius-md);
   background: #ffffff;
   box-shadow: var(--campus-shadow-xs);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .subject-card:hover {
-  transform: translateY(-2px);
   border-color: var(--campus-border-strong);
   background: #ffffff;
   box-shadow: var(--campus-shadow-md);
@@ -3139,11 +3135,10 @@ td small {
   border-radius: var(--campus-radius-md);
   background: #ffffff;
   box-shadow: var(--campus-shadow-xs);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .mark-card:hover {
-  transform: translateY(-2px);
   border-color: var(--campus-border-strong);
   box-shadow: var(--campus-shadow-md);
 }
@@ -3199,11 +3194,10 @@ td small {
   border-radius: var(--campus-radius-md);
   background: #ffffff;
   box-shadow: var(--campus-shadow-xs);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .assignment:hover {
-  transform: translateX(3px);
   border-color: var(--campus-border-strong);
   box-shadow: var(--campus-shadow-md);
 }
@@ -3314,11 +3308,10 @@ td small {
   border-radius: var(--campus-radius-md);
   background: #ffffff;
   box-shadow: var(--campus-shadow-xs);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .notice:hover {
-  transform: translateY(-2px);
   border-color: var(--campus-border-strong);
   box-shadow: var(--campus-shadow-md);
 }
@@ -3371,13 +3364,12 @@ td small {
   border-radius: var(--campus-radius-md);
   background: #ffffff;
   box-shadow: var(--campus-shadow-xs);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .faculty-card:hover {
   border-color: var(--campus-border-strong);
   box-shadow: var(--campus-shadow-md);
-  transform: translateY(-2px);
 }
 
 .faculty-card .big-avatar {
@@ -3467,6 +3459,34 @@ td small {
   flex-direction: column;
   gap: 8px;
   margin-top: 12px;
+}
+
+.faculty-card .admin-actions button,
+.faculty-card .secondary-btn,
+.faculty-card .danger-btn,
+.admin-actions-stack button,
+.card-actions button,
+.subject-manage-card .card-actions button,
+.division-manage-card .card-actions button,
+.syllabus-card-actions button,
+.syllabus-card-actions a,
+.syllabus-sem-card button,
+.admin-year-card button {
+  transform: none;
+}
+
+.faculty-card .admin-actions button:hover,
+.faculty-card .secondary-btn:hover,
+.faculty-card .danger-btn:hover,
+.admin-actions-stack button:hover,
+.card-actions button:hover,
+.subject-manage-card .card-actions button:hover,
+.division-manage-card .card-actions button:hover,
+.syllabus-card-actions button:hover,
+.syllabus-card-actions a:hover,
+.syllabus-sem-card button:hover,
+.admin-year-card button:hover {
+  transform: none;
 }
 
 .admin-feedback {
@@ -4324,12 +4344,12 @@ td small {
   background: #f8fafc;
   border: 1px solid var(--campus-border);
   border-radius: 8px;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .daily-subject-item:hover {
-  transform: translateX(4px);
   border-color: var(--campus-border-strong);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 .daily-subject-item .subj-info {
@@ -4919,7 +4939,7 @@ td small {
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-  transition: all 0.25s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -4934,7 +4954,6 @@ td small {
   border-color: #609633;
   border-top-color: #609633;
   box-shadow: 0 6px 18px rgba(96, 150, 51, 0.14);
-  transform: translateY(-3px);
 }
 
 .profile-col-box.feature-col-box:hover {
@@ -5557,11 +5576,11 @@ td small {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .ai-metric-card:hover {
-  transform: translateY(-2px);
+  border-color: #cbd5e1;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
@@ -6428,11 +6447,10 @@ td small {
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .subject-manage-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
   border-color: #cbd5e1;
 }
@@ -6639,11 +6657,10 @@ td small {
   justify-content: space-between;
   gap: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .sem-overview-card:hover {
-  transform: translateY(-2px);
   border-color: var(--campus-border-strong);
   box-shadow: var(--campus-shadow-md);
 }
@@ -6761,14 +6778,13 @@ td small {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .admin-detail-box:hover {
   background: #ffffff;
   border-color: #cbd5e1;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
 }
 
 .admin-credentials-form {
@@ -7044,11 +7060,10 @@ td small {
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .division-manage-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
   border-color: #cbd5e1;
 }
@@ -7935,11 +7950,10 @@ body.courses-page-body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 12px 32px rgba(21, 54, 105, .055);
-  transition: transform .28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .28s cubic-bezier(0.16, 1, 0.3, 1), border-color .28s ease;
+  transition: box-shadow .28s cubic-bezier(0.16, 1, 0.3, 1), border-color .28s ease, background-color .28s ease;
 }
 
 .feature-card:hover {
-  transform: translateY(-8px);
   border-color: #bfdbfe;
   box-shadow: 0 22px 48px rgba(20, 89, 217, .12);
 }
@@ -8101,11 +8115,10 @@ body.courses-page-body {
   flex-direction: column;
   justify-content: space-between;
   min-height: 230px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
 .syllabus-card:hover {
-  transform: translateY(-5px);
   border-color: #cbd5e1;
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
 }
@@ -8309,7 +8322,7 @@ body.courses-page-body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+  transition: box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease, background-color 0.28s ease;
   position: relative;
   overflow: hidden;
 }
@@ -8327,7 +8340,6 @@ body.courses-page-body {
 }
 
 .testimonial-card:hover {
-  transform: translateY(-6px);
   border-color: #cbd5e1;
   box-shadow: 0 20px 42px rgba(20, 89, 217, 0.11);
 }
@@ -9352,13 +9364,12 @@ body.courses-page-body {
   border-radius: 14px;
   padding: 30px 26px;
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
   display: flex;
   flex-direction: column;
 }
 
 .about-feature-card:hover {
-  transform: translateY(-4px);
   border-color: #cbd5e1;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
@@ -9406,12 +9417,12 @@ body.courses-page-body {
   padding: 24px 20px;
   text-align: center;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .about-tech-card:hover {
-  transform: translateY(-3px);
   border-color: #93c5fd;
+  box-shadow: 0 6px 16px rgba(147, 197, 253, 0.2);
 }
 
 .about-tech-badge {
@@ -9722,11 +9733,10 @@ body.courses-page-body {
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
 .about-module-card:hover {
-  transform: translateY(-4px);
   border-color: #cbd5e1;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
@@ -10040,13 +10050,12 @@ body.courses-page-body {
   align-items: center;
   text-align: center;
   gap: 0;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
   outline: none;
   cursor: default;
 }
 
 .student-stat-card:hover {
-  transform: translateY(-3px);
   border-color: rgba(20, 89, 217, 0.3);
   box-shadow: 0 14px 36px rgba(10, 37, 64, 0.1), 0 4px 10px rgba(20, 89, 217, 0.06);
 }
@@ -10859,12 +10868,11 @@ button:not(.primary-btn):not(.danger-btn) .btn-spinner {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 18px;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
 }
 
 .syllabus-sem-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
   border-color: #cbd5e1;
 }
@@ -11348,11 +11356,10 @@ button:not(.primary-btn):not(.danger-btn) .btn-spinner {
   border-radius: 12px;
   padding: 26px 22px;
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
 .admin-year-card:hover {
-  transform: translateY(-5px);
   border-color: #cbd5e1;
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
 }

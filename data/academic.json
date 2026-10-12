@@ -384,6 +384,30 @@
       "target": "all",
       "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
       "authorRole": "faculty"
+    },
+    {
+      "id": "xss_notice_1791818772423",
+      "title": "Campus Notice Important",
+      "text": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "date": "2026-09-19",
+      "target": "all",
+      "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
+      "authorRole": "admin"
+    },
+    {
+      "id": "notice-a-1791818796497",
+      "title": "Notice Alpha",
+      "content": "Campus alpha notice",
+      "date": "2026-09-18",
+      "text": "",
+      "authorRole": "faculty"
+    },
+    {
+      "id": "notice-conc2-1791818796497",
+      "title": "Conc Notice 2",
+      "text": "",
+      "content": "",
+      "authorRole": "admin"
     }
   ],
   "timetable": [],
@@ -2367,6 +2391,23 @@
       "due": "2026-10-20",
       "status": "Pending",
       "submittedDate": ""
+    },
+    {
+      "id": "xss_asgn_1791818772423",
+      "title": "Unit 1 Assignment",
+      "description": "alert(\"Asgn XSS\")Complete exercises 1 to 5",
+      "subject": "bca101",
+      "student": "clean_user_1791818770116",
+      "due": "2026-09-25",
+      "fileName": ""
+    },
+    {
+      "id": "asgn-a-1791818796497",
+      "title": "Project Part 1",
+      "student": "stu_sync_1791818796497",
+      "subject": "sub-cs101",
+      "description": "",
+      "fileName": ""
     }
   ],
   "notes": [
@@ -2733,6 +2774,33 @@
       "title": "Lecture 1 Notes",
       "division": "All Divisions",
       "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "xss_note_1791818772423",
+      "subject": "bca101",
+      "title": "Lecture 1 Notes",
+      "division": "All Divisions",
+      "date": "2026-09-19",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-a-1791818796497",
+      "title": "Algorithms Note",
+      "subject": "sub-cs101",
+      "division": "Div A",
+      "uploadedBy": "fac_sync_1791818796497",
+      "fileName": "",
+      "uploadedByName": ""
+    },
+    {
+      "id": "note-b-1791818796497",
+      "title": "Database Note",
+      "subject": "sub-cs102",
+      "division": "Div B",
+      "uploadedBy": "fac_sync_1791818796497",
       "fileName": "",
       "uploadedByName": ""
     }
@@ -3195,6 +3263,20 @@
       "records": {
         "stud_sync_1791306702371": "P"
       }
+    },
+    {
+      "id": "att_a_718381",
+      "attendanceId": "att_a_718381",
+      "studentUsername": "e2e_stu_a_718381",
+      "subject": "c_programming",
+      "date": "12-10-26",
+      "status": "Present",
+      "division": "Division A",
+      "facultyUsername": "e2e_fac_718381",
+      "records": {
+        "e2e_stu_a_718381": "P"
+      },
+      "isoDate": "2026-10-12"
     }
   ],
   "subjects": [
@@ -3452,7 +3534,7 @@
     }
   ],
   "createdAt": "2026-09-02T14:08:40.514Z",
-  "updatedAt": "2026-10-10T07:22:04.823Z",
+  "updatedAt": "2026-10-12T15:26:47.488Z",
   "divisions": {
     "1st Year": [
       "Div A",
@@ -3483,8 +3565,7 @@
           "internal2": 20,
           "total": 39
         }
-      },
-      "attendance": {}
+      }
     },
     "alice_stu_1789890157340": {
       "marks": {
@@ -3653,117 +3734,79 @@
       }
     },
     "0005": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "00006": {
       "attendance": {
         "python": 100
       },
-      "assignments": [],
-      "marks": {}
+      "assignments": []
     },
     "U15BO25S0052": {
       "attendance": {
         "python": 0
       },
-      "assignments": [],
-      "marks": {}
+      "assignments": []
     },
     "t_stu_1789672613422": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "t_vic_1789672613422": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "stu_integ_1789673340930": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "integ_stu_1789673343160": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "stu_integ_1789673375350": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "integ_stu_1789673377533": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "stu_integ_1789673396977": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "t_stu_1789673409411": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "t_vic_1789673409411": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "clean_user_1789755370799": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "p11_stu_mu9i2pty": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "p11_stu2_mu9i2pty": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "rogue_1789892533217": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "clean_user_1789893059956": {
-      "assignments": [],
-      "marks": {},
-      "attendance": {}
+      "assignments": []
     },
     "clean_user_1790341287947": {
-      "assignments": [],
-      "attendance": {}
+      "assignments": []
     },
     "stu_a_1790341292643": {
-      "assignments": [],
-      "attendance": {}
+      "assignments": []
     },
     "stu_b_1790341292643": {
-      "assignments": [],
-      "attendance": {}
+      "assignments": []
     },
     "mig_stu_1790341292643": {
-      "assignments": [],
-      "attendance": {}
+      "assignments": []
     },
     "bob_stu_1790341301587": {
-      "assignments": [],
-      "attendance": {}
+      "assignments": []
     },
     "alice_stu_1790341301587": {
-      "assignments": [],
-      "attendance": {}
+      "assignments": []
     },
     "e2e_stu_a_206495": {
       "attendance": {
@@ -3821,54 +3864,44 @@
       }
     },
     "test_direct_75903": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "test_direct_37161": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "direct_stu_62826": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "direct_stu_75294": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "direct_stu_97653": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "direct_stu_74333": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "direct_stu_44048": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "stu_term_75753": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "test_syl_student_1790686346922": {
-      "attendance": {},
-      "marks": {},
       "assignments": []
     },
     "stud_sync_1791306702371": {
-      "marks": {},
       "attendance": {
         "cprog": 100
+      }
+    },
+    "stu_sync_1791818796497": {
+      "marks": {
+        "sub-cs101": {
+          "internal1": 19,
+          "internal2": 20,
+          "total": 39
+        }
       }
     }
   },

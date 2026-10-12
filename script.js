@@ -909,7 +909,20 @@ async function loginOnServer(role, username, password) {
 
   if (!response.ok || !data || !data.success) {
     if (response.status === 429) {
-      throw new Error((data && data.message) || "Too many login attempts. Please wait a moment and try again later.");
+      const retryAfterHeader = response.headers ? response.headers.get("Retry-After") : null;
+      const retrySec = (data && data.retryAfter) || (retryAfterHeader ? parseInt(retryAfterHeader, 10) : null);
+      let errMsg = (data && data.message) || "";
+      if (!errMsg) {
+        if (retrySec) {
+          errMsg = `Too many login attempts. Please try again after ${retrySec} seconds.`;
+        } else {
+          errMsg = "Too many login attempts. Please wait a moment and try again later.";
+        }
+      }
+      const err = new Error(errMsg);
+      err.status = 429;
+      if (retrySec) err.retryAfter = retrySec;
+      throw err;
     }
     if (response.status === 400 || response.status === 401) {
       throw new Error((data && data.message) || "Invalid username or password.");
@@ -924,6 +937,10 @@ async function loginOnServer(role, username, password) {
     setStoredAuthToken(data.token);
   }
   return data.user;
+}
+
+if (typeof window !== "undefined") {
+  window.loginOnServer = loginOnServer;
 }
 
 async function removeUserAccount(role, username) {
@@ -1433,10 +1450,17 @@ function updateLoginUsernameLabel(role) {
 const eyeOpenSVG = `<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg>`;
 const eyeClosedSVG = `<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 6.2A10.9 10.9 0 0 1 12 6c6.3 0 9.8 6 9.8 6a18.4 18.4 0 0 1-3.3 4.1"></path><path d="M6.2 6.2A18.5 18.5 0 0 0 2.2 12s3.5 6 9.8 6c.5 0 1 0 1.5-.1"></path><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg>`;
 
+let isLoginSubmitting = false;
+
 function resetLoginForm() {
-  if ($("username")) $("username").value = "";
+  isLoginSubmitting = false;
+  if ($("username")) {
+    $("username").value = "";
+    $("username").disabled = false;
+  }
   if ($("password")) {
     $("password").value = "";
+    $("password").disabled = false;
     if ($("password").type === "text") {
       $("password").type = "password";
       const toggleBtn = $("togglePassword");
@@ -1452,6 +1476,17 @@ function resetLoginForm() {
     $("loginMessage").textContent = "";
     $("loginMessage").className = "message";
   }
+  const submitButton = $("loginForm") ? $("loginForm").querySelector('button[type="submit"]') : null;
+  if (submitButton) {
+    submitButton.disabled = false;
+    submitButton.classList.remove("btn-loading");
+    submitButton.dataset.actionLocked = "false";
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.resetLoginForm = resetLoginForm;
+  window.isLoginSubmitting = () => isLoginSubmitting;
 }
 
 document.querySelectorAll("#loginPage .role-tab").forEach(btn => {
@@ -2501,8 +2536,12 @@ $("signupForm").addEventListener("submit", async e => {
 
 $("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const username = $("username").value.trim();
-  const password = $("password").value;
+  if (isLoginSubmitting) return;
+
+  const usernameInput = $("username");
+  const passwordInput = $("password");
+  const username = usernameInput ? usernameInput.value.trim() : "";
+  const password = passwordInput ? passwordInput.value : "";
   const submitButton = $("loginForm").querySelector('button[type="submit"]');
 
   if (!username || !password) {
@@ -2513,32 +2552,42 @@ $("loginForm").addEventListener("submit", async e => {
     return;
   }
 
-  await withActionLock(submitButton, async () => {
-    try {
-      const user = await loginOnServer(currentRole, username, password);
-      currentUser = user;
-      const roleList = USERS[currentRole] || [];
-      const knownIndex = roleList.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
-      if (knownIndex >= 0) roleList[knownIndex] = user;
-      else roleList.push(user);
-      saveUsers();
-      sessionStorage.setItem("portalUser", JSON.stringify(user));
+  isLoginSubmitting = true;
+  if (usernameInput) usernameInput.disabled = true;
+  if (passwordInput) passwordInput.disabled = true;
 
+  try {
+    await withActionLock(submitButton, async () => {
       try {
-        await hydrateUsersFromServer();
-        await hydrateAcademicDataFromServer();
-      } catch (hErr) {
-        console.warn("Pre-portal hydration warning:", hErr);
-      }
+        const user = await loginOnServer(currentRole, username, password);
+        currentUser = user;
+        const roleList = USERS[currentRole] || [];
+        const knownIndex = roleList.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+        if (knownIndex >= 0) roleList[knownIndex] = user;
+        else roleList.push(user);
+        saveUsers();
+        sessionStorage.setItem("portalUser", JSON.stringify(user));
 
-      openPortal();
-    } catch (error) {
-      if ($("loginMessage")) {
-        $("loginMessage").textContent = error.message || "Unable to log in.";
-        $("loginMessage").className = "message error";
+        try {
+          await hydrateUsersFromServer();
+          await hydrateAcademicDataFromServer();
+        } catch (hErr) {
+          console.warn("Pre-portal hydration warning:", hErr);
+        }
+
+        openPortal();
+      } catch (error) {
+        if ($("loginMessage")) {
+          $("loginMessage").textContent = error.message || "Unable to log in.";
+          $("loginMessage").className = "message error";
+        }
       }
-    }
-  }, { loadingText: "Logging in..." });
+    }, { loadingText: "Logging in..." });
+  } finally {
+    isLoginSubmitting = false;
+    if (usernameInput) usernameInput.disabled = false;
+    if (passwordInput) passwordInput.disabled = false;
+  }
 });
 
 if ($("logoutBtn")) $("logoutBtn").addEventListener("click", logout);
