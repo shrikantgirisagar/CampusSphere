@@ -393,21 +393,6 @@
       "target": "all",
       "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
       "authorRole": "admin"
-    },
-    {
-      "id": "notice-a-1791818796497",
-      "title": "Notice Alpha",
-      "content": "Campus alpha notice",
-      "date": "2026-09-18",
-      "text": "",
-      "authorRole": "faculty"
-    },
-    {
-      "id": "notice-conc2-1791818796497",
-      "title": "Conc Notice 2",
-      "text": "",
-      "content": "",
-      "authorRole": "admin"
     }
   ],
   "timetable": [],
@@ -2400,14 +2385,6 @@
       "student": "clean_user_1791818770116",
       "due": "2026-09-25",
       "fileName": ""
-    },
-    {
-      "id": "asgn-a-1791818796497",
-      "title": "Project Part 1",
-      "student": "stu_sync_1791818796497",
-      "subject": "sub-cs101",
-      "description": "",
-      "fileName": ""
     }
   ],
   "notes": [
@@ -2783,24 +2760,6 @@
       "title": "Lecture 1 Notes",
       "division": "All Divisions",
       "date": "2026-09-19",
-      "fileName": "",
-      "uploadedByName": ""
-    },
-    {
-      "id": "note-a-1791818796497",
-      "title": "Algorithms Note",
-      "subject": "sub-cs101",
-      "division": "Div A",
-      "uploadedBy": "fac_sync_1791818796497",
-      "fileName": "",
-      "uploadedByName": ""
-    },
-    {
-      "id": "note-b-1791818796497",
-      "title": "Database Note",
-      "subject": "sub-cs102",
-      "division": "Div B",
-      "uploadedBy": "fac_sync_1791818796497",
       "fileName": "",
       "uploadedByName": ""
     }
@@ -3534,7 +3493,7 @@
     }
   ],
   "createdAt": "2026-09-02T14:08:40.514Z",
-  "updatedAt": "2026-10-12T15:26:47.488Z",
+  "updatedAt": "2026-10-12T15:27:09.215Z",
   "divisions": {
     "1st Year": [
       "Div A",
@@ -3893,15 +3852,6 @@
     "stud_sync_1791306702371": {
       "attendance": {
         "cprog": 100
-      }
-    },
-    "stu_sync_1791818796497": {
-      "marks": {
-        "sub-cs101": {
-          "internal1": 19,
-          "internal2": 20,
-          "total": 39
-        }
       }
     }
   },

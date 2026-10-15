@@ -1,38 +1,16 @@
 {
   "system": "CampusSphere",
   "version": "2.0.0",
-  "lastSyncedAt": "2026-10-12T15:26:48.578Z",
+  "lastSyncedAt": "2026-10-15T07:05:01.267Z",
   "counts": {
-    "totalUsers": 55,
-    "students": 28,
-    "faculty": 15,
-    "admins": 12,
-    "timetables": 6,
+    "totalUsers": 52,
+    "students": 27,
+    "faculty": 14,
+    "admins": 11,
+    "timetables": 1,
     "syllabi": 0
   },
   "users": [
-    {
-      "_id": "6accfc2c19a3a48f9515a13d",
-      "id": "id-adm_sync_1791818796497",
-      "role": "admin",
-      "name": "Test Admin",
-      "username": "adm_sync_1791818796497",
-      "email": "adm_sync_1791818796497@test.edu",
-      "passwordHash": "scrypt$16384$8$1$oBPdf2yn5XirWg6Rk8X80g$W0uAn6oBoq1JNcSe5u-nTtRK_-Zio7pNzXZ29dWGCFYgFefV2U_ALMbx9e_AY7uLirs_yqvdkMAVPBWwgVvSgw",
-      "subject": "",
-      "subjects": [],
-      "subjectDivisions": {},
-      "department": "",
-      "division": "",
-      "semester": "",
-      "courseYear": "",
-      "course": "",
-      "languageChoice": "",
-      "mathChoice": "",
-      "profilePic": "",
-      "createdAt": "2026-10-12T15:26:36.549Z",
-      "updatedAt": "2026-10-12T15:26:36.549Z"
-    },
     {
       "_id": "6a982dbb619f30507225e626",
       "id": "admin-001",
@@ -496,28 +474,6 @@
       "profilePic": "",
       "createdAt": "2026-10-04T07:09:47.539Z",
       "updatedAt": "2026-10-04T07:09:47.539Z"
-    },
-    {
-      "_id": "6accfc2c19a3a48f9515a13c",
-      "id": "id-fac_sync_1791818796497",
-      "role": "faculty",
-      "name": "Test Faculty",
-      "username": "fac_sync_1791818796497",
-      "email": "fac_sync_1791818796497@test.edu",
-      "passwordHash": "scrypt$16384$8$1$oBPdf2yn5XirWg6Rk8X80g$W0uAn6oBoq1JNcSe5u-nTtRK_-Zio7pNzXZ29dWGCFYgFefV2U_ALMbx9e_AY7uLirs_yqvdkMAVPBWwgVvSgw",
-      "subject": "sub-cs101",
-      "subjects": [],
-      "subjectDivisions": {},
-      "department": "",
-      "division": "",
-      "semester": "",
-      "courseYear": "",
-      "course": "",
-      "languageChoice": "",
-      "mathChoice": "",
-      "profilePic": "",
-      "createdAt": "2026-10-12T15:26:36.549Z",
-      "updatedAt": "2026-10-12T15:26:36.549Z"
     },
     {
       "_id": "6aaf8c6a51d529caaa81475e",
@@ -1036,28 +992,6 @@
       "profilePic": "",
       "createdAt": "2026-09-17T19:29:57.535Z",
       "updatedAt": "2026-09-17T19:29:57.535Z"
-    },
-    {
-      "_id": "6accfc2c19a3a48f9515a13b",
-      "id": "id-stu_sync_1791818796497",
-      "role": "student",
-      "name": "Test Student",
-      "username": "stu_sync_1791818796497",
-      "email": "stu_sync_1791818796497@test.edu",
-      "passwordHash": "scrypt$16384$8$1$oBPdf2yn5XirWg6Rk8X80g$W0uAn6oBoq1JNcSe5u-nTtRK_-Zio7pNzXZ29dWGCFYgFefV2U_ALMbx9e_AY7uLirs_yqvdkMAVPBWwgVvSgw",
-      "subject": "",
-      "subjects": [],
-      "subjectDivisions": {},
-      "department": "",
-      "division": "Div A",
-      "semester": "",
-      "courseYear": "",
-      "course": "",
-      "languageChoice": "",
-      "mathChoice": "",
-      "profilePic": "",
-      "createdAt": "2026-10-12T15:26:36.549Z",
-      "updatedAt": "2026-10-12T15:26:36.549Z"
     },
     {
       "_id": "6ab92d7728c2b20a1f984b50",
@@ -1652,21 +1586,6 @@
         "date": "2026-09-19",
         "target": "all",
         "content": "alert(\"Stored Notice XSS\")Regular classes resume tomorrow.",
-        "authorRole": "admin"
-      },
-      {
-        "id": "notice-a-1791818796497",
-        "title": "Notice Alpha",
-        "content": "Campus alpha notice",
-        "date": "2026-09-18",
-        "text": "",
-        "authorRole": "faculty"
-      },
-      {
-        "id": "notice-conc2-1791818796497",
-        "title": "Conc Notice 2",
-        "text": "",
-        "content": "",
         "authorRole": "admin"
       }
     ],
@@ -3660,14 +3579,6 @@
         "student": "clean_user_1791818770116",
         "due": "2026-09-25",
         "fileName": ""
-      },
-      {
-        "id": "asgn-a-1791818796497",
-        "title": "Project Part 1",
-        "student": "stu_sync_1791818796497",
-        "subject": "sub-cs101",
-        "description": "",
-        "fileName": ""
       }
     ],
     "notes": [
@@ -4043,24 +3954,6 @@
         "title": "Lecture 1 Notes",
         "division": "All Divisions",
         "date": "2026-09-19",
-        "fileName": "",
-        "uploadedByName": ""
-      },
-      {
-        "id": "note-a-1791818796497",
-        "title": "Algorithms Note",
-        "subject": "sub-cs101",
-        "division": "Div A",
-        "uploadedBy": "fac_sync_1791818796497",
-        "fileName": "",
-        "uploadedByName": ""
-      },
-      {
-        "id": "note-b-1791818796497",
-        "title": "Database Note",
-        "subject": "sub-cs102",
-        "division": "Div B",
-        "uploadedBy": "fac_sync_1791818796497",
         "fileName": "",
         "uploadedByName": ""
       }
@@ -4794,7 +4687,7 @@
       }
     ],
     "createdAt": "2026-09-02T14:08:40.514Z",
-    "updatedAt": "2026-10-12T15:26:47.488Z",
+    "updatedAt": "2026-10-12T15:27:09.215Z",
     "divisions": {
       "1st Year": [
         "Div A",
@@ -5154,15 +5047,6 @@
         "attendance": {
           "cprog": 100
         }
-      },
-      "stu_sync_1791818796497": {
-        "marks": {
-          "sub-cs101": {
-            "internal1": 19,
-            "internal2": 20,
-            "total": 39
-          }
-        }
       }
     },
     "customBreakRows": {},
@@ -5195,66 +5079,6 @@
       "faculty": "carol_fac_1791818787833",
       "createdAt": "2026-10-12T15:26:30.471Z",
       "updatedAt": "2026-10-12T15:26:30.471Z"
-    },
-    {
-      "_id": "6accfc2d05f942b0c90b1c92",
-      "semester": "1st Semester",
-      "time": "09:00-10:00",
-      "day": "Monday",
-      "division": "Div_A_1791818796497",
-      "createdAt": "2026-10-12T15:26:38.815Z",
-      "faculty": "fac_sync_1791818796497",
-      "subject": "sub-cs101",
-      "subjectText": "Advanced CS 101",
-      "updatedAt": "2026-10-12T15:26:40.452Z"
-    },
-    {
-      "_id": "6accfc2d05f942b0c90b1c93",
-      "semester": "1st Semester",
-      "time": "10:00-11:00",
-      "day": "Monday",
-      "division": "Div_A_1791818796497",
-      "createdAt": "2026-10-12T15:26:38.815Z",
-      "faculty": "fac_sync_1791818796497",
-      "subject": "sub-cs102",
-      "subjectText": "Data Structures",
-      "updatedAt": "2026-10-12T15:26:39.600Z"
-    },
-    {
-      "_id": "6accfc2e05f942b0c90b1c94",
-      "day": "Tuesday",
-      "semester": "1st Semester",
-      "division": "Div_A_1791818796497",
-      "time": "09:00-10:00",
-      "createdAt": "2026-10-12T15:26:39.600Z",
-      "faculty": "fac_sync_1791818796497",
-      "subject": "sub-cs103",
-      "subjectText": "Web Dev",
-      "updatedAt": "2026-10-12T15:26:39.600Z"
-    },
-    {
-      "_id": "6accfc2f05f942b0c90b1c96",
-      "day": "Wednesday",
-      "semester": "1st Semester",
-      "division": "Div_A_1791818796497",
-      "time": "11:00-12:00",
-      "createdAt": "2026-10-12T15:26:41.081Z",
-      "faculty": "fac_sync_1791818796497",
-      "subject": "sub-1",
-      "subjectText": "Parallel Class 2",
-      "updatedAt": "2026-10-12T15:26:41.145Z"
-    },
-    {
-      "_id": "6accfc2e05f942b0c90b1c95",
-      "day": "Monday",
-      "semester": "1st Semester",
-      "division": "Div_B_1791818796497",
-      "time": "09:00-10:00",
-      "createdAt": "2026-10-12T15:26:39.973Z",
-      "faculty": "fac_sync_1791818796497",
-      "subject": "sub-cs101",
-      "subjectText": "Intro to CS (B)",
-      "updatedAt": "2026-10-12T15:26:39.973Z"
     }
   ],
   "syllabi": []
