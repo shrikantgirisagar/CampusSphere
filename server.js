@@ -320,6 +320,7 @@ const BLOCKED_STATIC_DIRS = new Set([
   "scripts",
   "node_modules",
   "data",
+  "backups",
   ".vscode",
   ".git",
   ".system_generated",

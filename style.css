@@ -402,10 +402,7 @@ animated-background,
 }
 
 .login-page:before,
-.login-page:after,
-.login-particles,
-.login-glow,
-.login-shapes {
+.login-page:after {
   display: none !important;
 }
 
@@ -456,6 +453,7 @@ animated-background,
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  z-index: 0;
 }
 
 .login-shapes .shape {
@@ -470,16 +468,16 @@ animated-background,
 .login-shapes .shape-a {
   width: 150px;
   height: 150px;
-  left: 8%;
-  top: 30%;
+  left: 6%;
+  top: 26%;
   background: rgba(124, 58, 237, .38);
 }
 
 .login-shapes .shape-b {
   width: 200px;
   height: 200px;
-  right: 12%;
-  top: 18%;
+  right: 6%;
+  top: 16%;
   background: rgba(20, 184, 166, .34);
   animation-duration: 14s;
 }
@@ -487,8 +485,8 @@ animated-background,
 .login-shapes .shape-c {
   width: 120px;
   height: 120px;
-  left: 40%;
-  bottom: 22%;
+  left: 7%;
+  bottom: 16%;
   background: rgba(96, 165, 250, .3);
   animation-duration: 12s;
 }
@@ -496,8 +494,8 @@ animated-background,
 .login-shapes .shape-d {
   width: 90px;
   height: 90px;
-  right: 28%;
-  bottom: 15%;
+  right: 7%;
+  bottom: 14%;
   background: rgba(255, 255, 255, .18);
   animation-duration: 11s;
 }
@@ -520,7 +518,7 @@ animated-background,
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
   overflow: visible;
 }
 
@@ -537,37 +535,38 @@ animated-background,
   transform-origin: center;
   mix-blend-mode: normal;
   animation: objFloat 7s ease-in-out infinite;
+  user-select: none;
 }
 
 .login-objects .obj-book {
-  left: 8%;
-  top: 20%;
-  background: linear-gradient(135deg, #6d5eea, #8b5cf6)
+  left: clamp(16px, 4.5vw, 75px);
+  top: 18%;
+  background: linear-gradient(135deg, #6d5eea, #8b5cf6);
 }
 
 .login-objects .obj-pencil {
-  left: 22%;
-  top: 72%;
-  background: linear-gradient(135deg, #f59e0b, #f97316)
+  left: clamp(16px, 5.5vw, 90px);
+  bottom: 18%;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
 }
 
 .login-objects .obj-laptop {
-  right: 12%;
-  top: 26%;
-  background: linear-gradient(135deg, #06b6d4, #3b82f6)
+  right: clamp(16px, 4.5vw, 75px);
+  top: 22%;
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
 }
 
 .login-objects .obj-cap {
-  left: 62%;
-  bottom: 26%;
-  background: linear-gradient(135deg, #10b981, #06b6d4)
+  right: clamp(16px, 5.5vw, 90px);
+  bottom: 20%;
+  background: linear-gradient(135deg, #10b981, #06b6d4);
 }
 
 .login-objects .obj-star {
-  right: 20%;
-  bottom: 18%;
+  right: clamp(40px, 14vw, 200px);
+  top: 6%;
   background: linear-gradient(135deg, #facc15, #fb7185);
-  color: #fff
+  color: #fff;
 }
 
 @keyframes objFloat {
@@ -595,22 +594,23 @@ animated-background,
   pointer-events: none;
   opacity: .28;
   animation: glowPulse 8s ease-in-out infinite;
+  z-index: 0;
 }
 
 .glow-a {
   width: 280px;
   height: 280px;
-  right: 8%;
+  right: 6%;
   top: 6%;
-  background: rgba(124, 58, 237, .8)
+  background: rgba(124, 58, 237, .8);
 }
 
 .glow-b {
   width: 250px;
   height: 250px;
-  left: 12%;
-  bottom: 8%;
-  background: rgba(20, 184, 166, .75)
+  left: 6%;
+  bottom: 6%;
+  background: rgba(20, 184, 166, .75);
 }
 
 .glow-c {
@@ -675,6 +675,7 @@ animated-background,
 
 .login-card {
   position: relative;
+  z-index: 2;
   width: min(470px, 100%);
   padding: 32px;
   border: 1.5px solid rgba(226, 232, 240, 0.9);

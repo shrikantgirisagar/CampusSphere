@@ -18,3 +18,14 @@ Thumbs.db
 
 # Scratch and test caches
 scratch/
+
+# Local user-data backups & diagnostic dumps
+backups/
+data/backups/
+*.backup
+*.bak
+*.dump
+*.dump.json
+diagnostic*.json
+*.tmp
+*.tmp.*

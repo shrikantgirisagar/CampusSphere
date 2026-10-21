@@ -1,7 +1,7 @@
 {
   "system": "CampusSphere",
   "version": "2.0.0",
-  "lastSyncedAt": "2026-10-15T07:05:01.267Z",
+  "lastSyncedAt": "2026-10-21T11:06:36.704Z",
   "counts": {
     "totalUsers": 52,
     "students": 27,
@@ -3579,6 +3579,28 @@
         "student": "clean_user_1791818770116",
         "due": "2026-09-25",
         "fileName": ""
+      },
+      {
+        "id": "asgn-test-1792049485688",
+        "title": "DSA Lab Assignment 688",
+        "student": "stud_sync_1792049485688",
+        "subject": "cprog",
+        "due": "2026-10-20",
+        "status": "Submitted",
+        "description": "",
+        "fileName": "",
+        "submittedDate": "2026-10-15"
+      },
+      {
+        "id": "asgn-test-1792050868306",
+        "title": "DSA Lab Assignment 306",
+        "student": "stud_sync_1792050868306",
+        "subject": "cprog",
+        "due": "2026-10-20",
+        "status": "Submitted",
+        "description": "",
+        "fileName": "",
+        "submittedDate": "2026-10-15"
       }
     ],
     "notes": [
@@ -4430,6 +4452,30 @@
           "e2e_stu_a_718381": "P"
         },
         "isoDate": "2026-10-12"
+      },
+      {
+        "id": "att-test-1792049485688",
+        "date": "04-10-26",
+        "isoDate": "2026-10-04",
+        "subject": "cprog",
+        "division": "Div A",
+        "semester": "1st Semester",
+        "courseYear": "1st Year",
+        "records": {
+          "stud_sync_1792049485688": "P"
+        }
+      },
+      {
+        "id": "att-test-1792050868306",
+        "date": "04-10-26",
+        "isoDate": "2026-10-04",
+        "subject": "cprog",
+        "division": "Div A",
+        "semester": "1st Semester",
+        "courseYear": "1st Year",
+        "records": {
+          "stud_sync_1792050868306": "P"
+        }
       }
     ],
     "subjects": [
@@ -4687,7 +4733,7 @@
       }
     ],
     "createdAt": "2026-09-02T14:08:40.514Z",
-    "updatedAt": "2026-10-12T15:27:09.215Z",
+    "updatedAt": "2026-10-21T11:02:55.712Z",
     "divisions": {
       "1st Year": [
         "Div A",
@@ -5044,6 +5090,16 @@
         "assignments": []
       },
       "stud_sync_1791306702371": {
+        "attendance": {
+          "cprog": 100
+        }
+      },
+      "e2e_stu_a_718381": {
+        "attendance": {
+          "c_programming": 100
+        }
+      },
+      "stud_sync_1792049485688": {
         "attendance": {
           "cprog": 100
         }

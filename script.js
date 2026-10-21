@@ -3360,7 +3360,7 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
     const modeLabel = isI1Only ? "1st Int" : (isBoth ? "Both Int" : "Marks");
 
     if ($("aiModalHeaderIcon")) $("aiModalHeaderIcon").textContent = "📈";
-    $("aiModalTitle").textContent = `AI Marks Analytics: ${studentName}`;
+    $("aiModalTitle").textContent = `Academic Performance Diagnostics: ${studentName}`;
     $("aiModalSubtitle").textContent = isI1Only
       ? `1st Internal Test Real Marks Evaluation (${analytics.student ? (analytics.student.semester || 'Current Semester') : 'Student Portal'})`
       : (isBoth ? `1st & 2nd Internal Exams Real Marks Evaluation (${analytics.student ? (analytics.student.semester || 'Current Semester') : 'Student Portal'})` : `Academic Real Marks Evaluation`);
@@ -3449,7 +3449,7 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
   } else {
     // Attendance mode
     if ($("aiModalHeaderIcon")) $("aiModalHeaderIcon").textContent = "📊";
-    $("aiModalTitle").textContent = `AI Attendance Analytics: ${studentName}`;
+    $("aiModalTitle").textContent = `Attendance Diagnostics: ${studentName}`;
     $("aiModalSubtitle").textContent = `Theory Subject & Practical Lab Attendance Diagnostics (${analytics.student ? (analytics.student.semester || 'Current Semester') : 'Student Portal'})`;
 
     // Card 1: Top Attendance Subject (Theory)
@@ -10675,26 +10675,28 @@ function logout() {
 
 // Login background effects: dynamic particles and object timing
 (function initLoginEffects() {
-  const container = document.querySelector('.login-particles');
-  if (!container) return;
+  const containers = document.querySelectorAll('.login-particles');
+  if (!containers.length) return;
   const rand = (min, max) => Math.random() * (max - min) + min;
 
-  // generate small sprinkle particles
-  const count = 30;
-  for (let i = 0; i < count; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = Math.floor(rand(6, 18));
-    p.style.width = size + 'px';
-    p.style.height = size + 'px';
-    p.style.left = Math.floor(rand(2, 96)) + '%';
-    p.style.bottom = Math.floor(rand(6, 70)) + '%';
-    p.style.opacity = (rand(.35, 1)).toFixed(2);
-    p.style.animationDuration = (rand(3.5, 9)).toFixed(2) + 's';
-    p.style.animationDelay = (-rand(0, 9)).toFixed(2) + 's';
-    p.style.filter = 'blur(' + (rand(0, 3)).toFixed(1) + 'px)';
-    container.appendChild(p);
-  }
+  // generate small sprinkle particles for each auth container
+  containers.forEach(container => {
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.floor(rand(6, 18));
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.floor(rand(2, 96)) + '%';
+      p.style.bottom = Math.floor(rand(6, 70)) + '%';
+      p.style.opacity = (rand(.35, 1)).toFixed(2);
+      p.style.animationDuration = (rand(3.5, 9)).toFixed(2) + 's';
+      p.style.animationDelay = (-rand(0, 9)).toFixed(2) + 's';
+      p.style.filter = 'blur(' + (rand(0, 3)).toFixed(1) + 'px)';
+      container.appendChild(p);
+    }
+  });
 
   // randomize object animation timing for a more organic look
   document.querySelectorAll('.login-objects .obj').forEach(el => {

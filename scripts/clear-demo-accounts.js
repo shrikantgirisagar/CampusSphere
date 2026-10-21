@@ -13,7 +13,7 @@ async function clearDemoAccounts() {
   console.log(`Found ${nonAdminUsers.length} demo/test user accounts to remove.`);
 
   nonAdminUsers.forEach(u => {
-    console.log(` - Deleting [${u.role}] ${u.name} (username: ${u.username}, email: ${u.email})`);
+    console.log(` - Deleting [${u.role}] ${u.name} (username: ${u.username})`);
   });
 
   // Delete all non-admin users
@@ -24,7 +24,7 @@ async function clearDemoAccounts() {
   const remainingUsers = await User.find({});
   console.log(`Remaining accounts in MongoDB: ${remainingUsers.length}`);
   remainingUsers.forEach(u => {
-    console.log(` - Preserved: [${u.role}] ${u.name} (username: ${u.username}, email: ${u.email})`);
+    console.log(` - Preserved: [${u.role}] ${u.name} (username: ${u.username})`);
   });
 
   // 3. Clean up AcademicStore student demo records only for deleted users

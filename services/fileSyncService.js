@@ -17,27 +17,62 @@ const ACADEMIC_FILE = path.join(DATA_DIR, "academic.json");
 const DIVISIONS_FILE = path.join(DATA_DIR, "divisions.json");
 const TIMETABLES_FILE = path.join(DATA_DIR, "timetables.json");
 
+const SANITIZED_DIR = path.join(DATA_DIR, "sanitized");
+const SANITIZED_DB_FILE = path.join(SANITIZED_DIR, "database.json");
+const SANITIZED_USERS_FILE = path.join(SANITIZED_DIR, "users.json");
+
 let syncDebounceTimer = null;
 let isSyncing = false;
 let pendingSyncAgain = false;
 
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+function ensureDataDir(dirPath = DATA_DIR) {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
   }
 }
 
+/**
+ * Strips password hashes, raw passwords, authentication tokens, session secrets, and internal metadata
+ * from a user object for public, demo, or external distributable datasets.
+ */
+function sanitizeUserForExport(u) {
+  if (!u || typeof u !== "object") return {};
+  const copy = { ...u };
+  delete copy.passwordHash;
+  delete copy.password;
+  delete copy.__v;
+  delete copy.token;
+  delete copy.sessionToken;
+  delete copy.secret;
+  if (copy.subjectDivisions instanceof Map) {
+    copy.subjectDivisions = Object.fromEntries(copy.subjectDivisions);
+  } else if (!copy.subjectDivisions || typeof copy.subjectDivisions !== "object") {
+    copy.subjectDivisions = {};
+  }
+  return copy;
+}
+
 async function safeWriteJson(filePath, data) {
-  ensureDataDir();
+  const targetDir = path.dirname(filePath);
+  ensureDataDir(targetDir);
   const tmpPath = `${filePath}.tmp.${Date.now()}.${Math.floor(Math.random() * 10000)}`;
   const jsonStr = JSON.stringify(data, null, 2);
-  await fs.promises.writeFile(tmpPath, jsonStr, "utf8");
   try {
-    await fs.promises.rename(tmpPath, filePath);
-  } catch (renameErr) {
-    // Fallback on Windows if destination file exists and is locked momentarily
-    await fs.promises.copyFile(tmpPath, filePath);
-    await fs.promises.unlink(tmpPath).catch(() => {});
+    await fs.promises.writeFile(tmpPath, jsonStr, "utf8");
+    try {
+      await fs.promises.rename(tmpPath, filePath);
+    } catch (renameErr) {
+      // Fallback on Windows if destination file exists and is locked momentarily
+      await fs.promises.copyFile(tmpPath, filePath);
+      await fs.promises.unlink(tmpPath).catch(() => {});
+    }
+  } finally {
+    // Guarantees zero orphaned temporary files even if write or rename encounters exceptions
+    try {
+      if (fs.existsSync(tmpPath)) {
+        await fs.promises.unlink(tmpPath).catch(() => {});
+      }
+    } catch (_) {}
   }
 }
 
@@ -75,11 +110,15 @@ async function syncFromMongoToFiles() {
       Syllabus.find({}).sort({ yearLevel: 1 }).lean()
     ]);
 
-    const sanitizedUsers = (rawUsers || []).map(u => {
+    // Operational records: preserved with all necessary fields for local development, recovery & tests
+    const operationalUsers = (rawUsers || []).map(u => {
       const copy = { ...u };
       delete copy.__v;
       return copy;
     });
+
+    // Sanitized records: credentials, hashes, and session tokens completely excluded
+    const sanitizedUsers = (rawUsers || []).map(u => sanitizeUserForExport(u));
 
     const academicData = store ? { ...store } : {};
     delete academicData.__v;
@@ -96,6 +135,23 @@ async function syncFromMongoToFiles() {
       version: "2.0.0",
       lastSyncedAt: new Date().toISOString(),
       counts: {
+        totalUsers: operationalUsers.length,
+        students: operationalUsers.filter(u => u.role === "student").length,
+        faculty: operationalUsers.filter(u => u.role === "faculty").length,
+        admins: operationalUsers.filter(u => u.role === "admin").length,
+        timetables: (timetables || []).length,
+        syllabi: (syllabi || []).length
+      },
+      users: operationalUsers,
+      academic: academicData,
+      divisions,
+      timetables: (timetables || []).map(t => { const c = { ...t }; delete c.__v; return c; }),
+      syllabi: (syllabi || []).map(s => { const c = { ...s }; delete c.__v; return c; })
+    };
+
+    const sanitizedDatabaseDump = {
+      ...databaseDump,
+      counts: {
         totalUsers: sanitizedUsers.length,
         students: sanitizedUsers.filter(u => u.role === "student").length,
         faculty: sanitizedUsers.filter(u => u.role === "faculty").length,
@@ -103,24 +159,22 @@ async function syncFromMongoToFiles() {
         timetables: (timetables || []).length,
         syllabi: (syllabi || []).length
       },
-      users: sanitizedUsers,
-      academic: academicData,
-      divisions,
-      timetables: (timetables || []).map(t => { const c = { ...t }; delete c.__v; return c; }),
-      syllabi: (syllabi || []).map(s => { const c = { ...s }; delete c.__v; return c; })
+      users: sanitizedUsers
     };
 
-    // Synchronize to individual code data files
+    // Synchronize to individual operational code data files and separate sanitized export dataset
     await Promise.all([
       safeWriteJson(DB_FILE, databaseDump),
-      safeWriteJson(USERS_FILE, sanitizedUsers),
+      safeWriteJson(USERS_FILE, operationalUsers),
       safeWriteJson(ACADEMIC_FILE, academicData),
       safeWriteJson(DIVISIONS_FILE, divisions),
-      safeWriteJson(TIMETABLES_FILE, timetables || [])
+      safeWriteJson(TIMETABLES_FILE, timetables || []),
+      safeWriteJson(SANITIZED_DB_FILE, sanitizedDatabaseDump),
+      safeWriteJson(SANITIZED_USERS_FILE, sanitizedUsers)
     ]);
 
     syncEvents.emit("synced");
-    console.log(`[FileSync] Auto-synced to code files: ${sanitizedUsers.length} users, academic store, divisions & timetables.`);
+    console.log(`[FileSync] Auto-synced to code files: ${operationalUsers.length} users, academic store, divisions & timetables (plus sanitized export).`);
   } catch (err) {
     console.warn("[FileSync] Warning synchronizing data to files:", err.message);
   } finally {
@@ -177,10 +231,14 @@ module.exports = {
   triggerSync,
   waitForSync,
   syncEvents,
+  sanitizeUserForExport,
   DATA_DIR,
   DB_FILE,
   USERS_FILE,
   ACADEMIC_FILE,
   DIVISIONS_FILE,
-  TIMETABLES_FILE
+  TIMETABLES_FILE,
+  SANITIZED_DIR,
+  SANITIZED_DB_FILE,
+  SANITIZED_USERS_FILE
 };
