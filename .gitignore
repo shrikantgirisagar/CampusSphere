@@ -4,6 +4,16 @@
 !.env.example
 data/*.tmp*
 
+# Operational runtime data (contains real PII and credential hashes)
+/data/users.json
+/data/database.json
+/data/academic.json
+/data/divisions.json
+/data/timetables.json
+data/*.json
+!data/sanitized/
+!data/sanitized/**
+
 # Dependencies
 node_modules/
 
