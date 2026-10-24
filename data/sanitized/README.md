@@ -13,24 +13,29 @@ This directory (`data/sanitized/`) contains a sanitized snapshot of the CampusSp
 
 ## Dataset Contents
 
-| File | Purpose | Sensitive Fields Excluded |
+| File | Purpose | Sensitive Fields Excluded & Transformations |
 | :--- | :--- | :--- |
-| `data/sanitized/users.json` | Sanitized user accounts (Students, Faculty, Administrators) | `passwordHash`, `password`, `token`, `sessionToken`, `secret`, `__v` |
-| `data/sanitized/database.json` | Full academic database snapshot (Counts, AcademicStore, Divisions, Timetables, Syllabi) | All user credentials & tokens stripped from `users` array |
+| `data/sanitized/users.json` | Sanitized user accounts (Students, Faculty, Administrators) | Strict allowlist: `passwordHash`, `password`, `token`, `sessionToken`, `secret`, `authToken`, `resetToken`, `__v`, `_id`, and `profilePic` excluded. Real names and emails replaced with synthetic demo identities (`Demo Student`, `user@demo.campussphere.local`). |
+| `data/sanitized/database.json` | Full academic database snapshot (Counts, AcademicStore, Divisions, Timetables, Syllabi) | Strict allowlist: user credentials and PII replaced with synthetic demo data. Individual student mark profiles (`students`), daily attendance records (`dailyAttendance`), submissions, and server filesystem paths (`storagePath`) redacted. |
 
 ---
 
 ## Security Guarantees
 
 1. **Zero Credential Exposure**:
-   - Every user record in this directory has `passwordHash` and `password` removed.
-   - All session tokens, authentication secrets, and internal Mongoose version keys (`__v`) are stripped.
-2. **Schema & Relationship Preservation**:
-   - User `id`, `username`, `name`, `role`, `courseYear`, `semester`, `division`, `subject`, and `department` fields remain intact.
-   - Cross-collection references (e.g. between timetables, notes, assignments, and user records) are preserved.
-3. **Automated Synchronization**:
-   - `services/fileSyncService.js` automatically maintains this sanitized dataset using atomic file writes.
-   - Failed or interrupted write operations cannot leave orphaned temporary files or corrupt existing datasets.
+   - All password hashes, raw passwords, authentication tokens, session secrets, reset tokens, and internal database identifiers (`_id`, `__v`) are completely excluded.
+2. **Strict Schema Allowlist & Synthetic Demo Identities**:
+   - An explicit, schema-aware allowlist is enforced; unexpected or unknown fields are discarded.
+   - Real personal names and real institutional email addresses are replaced with synthetic demo identities (`Demo Student X`, `${username}@demo.campussphere.local`).
+3. **Academic PII Redaction**:
+   - Individual student mark profiles, daily attendance logs, and personal submissions are redacted from academic snapshots.
+   - System catalog configurations (curricula, subjects, divisions, timetables, syllabi metadata) remain preserved for sandbox testing.
+4. **Schema & Relationship Preservation**:
+   - User `id`, `username`, `role`, `courseYear`, `semester`, `division`, `subject`, and `department` fields remain structurally consistent.
+   - Cross-collection references are maintained for demo UI functionality.
+5. **Operational Data Isolation**:
+   - `services/fileSyncService.js` maintains this sanitized dataset using independent atomic file writes.
+   - Operational runtime files (`data/database.json` and `data/users.json`) remain strictly decoupled and intact.
 
 ---
 
