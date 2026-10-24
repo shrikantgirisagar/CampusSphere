@@ -335,9 +335,9 @@ async function main() {
   assert(facultyView.status === 200, "Faculty can view First Year BCA syllabus inline (200)");
   assert(facultyView.headers["content-disposition"]?.includes("inline"), "Inline query param sets Content-Disposition: inline");
 
-  // 5d. Token in query parameter for direct browser links
+  // 5d. Token in query parameter is rejected (SEC-002 remediation)
   const queryTokenDownload = await request("GET", `/api/syllabus/1/download?token=${encodeURIComponent(studentToken)}`);
-  assert(queryTokenDownload.status === 200, "Direct link with ?token=... successfully authenticates file stream");
+  assert(queryTokenDownload.status === 401, "Direct link with ?token=... is rejected with 401 Unauthorized");
 
   // 5e. Admin Replace Syllabus PDF
   const replacePdfBuffer = Buffer.from(

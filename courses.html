@@ -351,7 +351,7 @@
       .catch(() => {});
     }
 
-    function handleCoursesPageDownload(yearLevel, title) {
+    async function handleCoursesPageDownload(yearLevel, title) {
       const currentToken = sessionStorage.getItem("portalAuthToken") || "";
       if (toast && toastMsg) {
         clearTimeout(toastTimer);
@@ -372,12 +372,57 @@
       }
 
       if (currentToken) {
-        const downloadUrl = "/api/syllabus/" + yearLevel + "/download?token=" + encodeURIComponent(currentToken);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        try {
+          const res = await fetch("/api/syllabus/" + yearLevel + "/download", {
+            headers: {
+              "Authorization": "Bearer " + currentToken
+            }
+          });
+
+          if (!res.ok) {
+            let errorMsg = "Failed to download syllabus.";
+            if (res.status === 401) {
+              errorMsg = "Your session has expired. Please log in again.";
+              sessionStorage.removeItem("portalAuthToken");
+              sessionStorage.removeItem("portalUser");
+            } else {
+              try {
+                const errData = await res.json();
+                if (errData && errData.message) errorMsg = errData.message;
+              } catch (_) {}
+            }
+            if (toast && toastMsg) {
+              clearTimeout(toastTimer);
+              toastMsg.textContent = errorMsg;
+              toast.classList.add("is-visible");
+              toastTimer = setTimeout(() => {
+                toast.classList.remove("is-visible");
+              }, 4000);
+            }
+            return;
+          }
+
+          const blob = await res.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = objectUrl;
+          a.download = "BCA_Year_" + yearLevel + "_Syllabus.pdf";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => {
+            try { URL.revokeObjectURL(objectUrl); } catch (_) {}
+          }, 1000);
+        } catch (fetchErr) {
+          if (toast && toastMsg) {
+            clearTimeout(toastTimer);
+            toastMsg.textContent = fetchErr.message || "Network error downloading syllabus.";
+            toast.classList.add("is-visible");
+            toastTimer = setTimeout(() => {
+              toast.classList.remove("is-visible");
+            }, 4000);
+          }
+        }
       }
     }
   </script>

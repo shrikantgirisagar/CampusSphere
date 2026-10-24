@@ -13723,30 +13723,81 @@ async function handleDeleteSyllabusSubmit(yearLevel) {
   }
 }
 
-function previewSyllabusPdf(yearLevel) {
+async function previewSyllabusPdf(yearLevel) {
   const token = getStoredAuthToken();
   if (!token) {
     showToast("Please log in to view the syllabus.", "warning");
     return;
   }
-  const url = `${API_BASE_URL}/api/syllabus/${yearLevel}/download?inline=1&token=${encodeURIComponent(token)}`;
-  window.open(url, "_blank");
+  showToast("Loading syllabus preview...", "info");
+  try {
+    const url = `${API_BASE_URL}/api/syllabus/${yearLevel}/download?inline=1`;
+    const res = await authenticatedFetch(url);
+    if (!res.ok) {
+      if (res.status === 401) {
+        showToast("Your session has expired. Please log in again.", "error");
+        return;
+      }
+      let errorMsg = "Failed to load syllabus preview.";
+      try {
+        const errJson = await res.json();
+        if (errJson && errJson.message) errorMsg = errJson.message;
+      } catch (_) {}
+      showToast(errorMsg, "error");
+      return;
+    }
+    const blob = await res.blob();
+    const pdfBlob = blob.type === "application/pdf" ? blob : new Blob([blob], { type: "application/pdf" });
+    const objectUrl = URL.createObjectURL(pdfBlob);
+    const win = window.open(objectUrl, "_blank");
+    if (!win) {
+      showToast("Pop-up blocked. Please allow pop-ups to preview the syllabus.", "warning");
+    }
+    setTimeout(() => {
+      try { URL.revokeObjectURL(objectUrl); } catch (_) {}
+    }, 60000);
+  } catch (err) {
+    showToast(err.message || "Failed to preview syllabus.", "error");
+  }
 }
 
-function downloadSyllabusPdf(yearLevel, filename) {
+async function downloadSyllabusPdf(yearLevel, filename) {
   const token = getStoredAuthToken();
   if (!token) {
     showToast("Please log in to download the syllabus.", "warning");
     return;
   }
   showToast("Downloading syllabus PDF...", "info");
-  const url = `${API_BASE_URL}/api/syllabus/${yearLevel}/download?token=${encodeURIComponent(token)}`;
-  const a = document.createElement("a");
-  a.href = url;
-  if (filename) a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  try {
+    const url = `${API_BASE_URL}/api/syllabus/${yearLevel}/download`;
+    const res = await authenticatedFetch(url);
+    if (!res.ok) {
+      if (res.status === 401) {
+        showToast("Your session has expired. Please log in again.", "error");
+        return;
+      }
+      let errorMsg = "Failed to download syllabus.";
+      try {
+        const errJson = await res.json();
+        if (errJson && errJson.message) errorMsg = errJson.message;
+      } catch (_) {}
+      showToast(errorMsg, "error");
+      return;
+    }
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = filename || `BCA_Year_${yearLevel}_Syllabus.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => {
+      try { URL.revokeObjectURL(objectUrl); } catch (_) {}
+    }, 1000);
+  } catch (err) {
+    showToast(err.message || "Failed to download syllabus.", "error");
+  }
 }
 
 window.openAdminYearSyllabusModal = openAdminYearSyllabusModal;

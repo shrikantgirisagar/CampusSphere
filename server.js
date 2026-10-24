@@ -20,6 +20,7 @@ const Timetable = require("./models/Timetable");
 const Note = require("./models/Note");
 const AcademicStore = require("./models/AcademicStore");
 const Syllabus = require("./models/Syllabus");
+const PushSubscription = require("./models/PushSubscription");
 const { VALID_YEAR_CONFIG, VALID_SEMESTER_YEAR_MAP } = require("./models/Syllabus");
 const multer = require("multer");
 const pushService = require("./services/pushNotificationService");
@@ -321,32 +322,82 @@ const BLOCKED_STATIC_DIRS = new Set([
   "node_modules",
   "data",
   "backups",
+  "services",
+  "uploads",
+  "scratch",
   ".vscode",
   ".git",
+  ".antigravity",
   ".system_generated",
   "brain"
 ]);
 
 app.use((req, res, next) => {
-  const reqPath = decodeURIComponent(req.path).replace(/^\/+/, "");
-  const segments = reqPath.split(/[/\\]/);
-  const firstSegment = (segments[0] || "").toLowerCase();
-  const filename = (segments[segments.length - 1] || "").toLowerCase();
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(req.path);
+  } catch {
+    return res.status(400).json({ success: false, message: "Invalid request path encoding." });
+  }
 
-  // Prompt 29: Exempt standard PWA & Web Push static files
-  if (filename === "manifest.json" || filename === "manifest.webmanifest" || filename === "service-worker.js") {
+  // Reject control characters and null bytes
+  if (/[\x00-\x1f\x7f]/.test(decodedPath)) {
+    return res.status(400).json({ success: false, message: "Invalid characters in request path." });
+  }
+
+  // Normalize path using POSIX slashes to resolve relative traversal segments (., ..)
+  const cleanSlash = decodedPath.replace(/\\+/g, "/");
+  const normalizedPosix = path.posix.normalize(cleanSlash);
+  const safePosix = normalizedPosix.startsWith("/") ? normalizedPosix : "/" + normalizedPosix;
+
+  // Dynamic API routes are delegated directly to Express route handlers
+  if (safePosix === "/api" || safePosix.startsWith("/api/")) {
     return next();
   }
 
-  if (BLOCKED_STATIC_DIRS.has(firstSegment)) {
+  const segments = safePosix.split("/").filter(Boolean);
+  const lowerSegments = segments.map(s => s.toLowerCase());
+  const filename = lowerSegments.length > 0 ? lowerSegments[lowerSegments.length - 1] : "";
+
+  // Prompt 29: Exempt standard PWA & Web Push static files at project root
+  if (segments.length === 1 && (filename === "manifest.json" || filename === "manifest.webmanifest" || filename === "service-worker.js")) {
+    return next();
+  }
+
+  // Block hidden files or directories starting with a dot
+  if (lowerSegments.some(seg => seg.startsWith("."))) {
     return res.status(404).json({ success: false, message: "Resource not found." });
   }
 
-  if (BLOCKED_STATIC_FILES.has(filename) || filename.startsWith(".")) {
+  // Block any path attempting to enter or traverse into protected directories
+  if (lowerSegments.some(seg => BLOCKED_STATIC_DIRS.has(seg))) {
     return res.status(404).json({ success: false, message: "Resource not found." });
   }
 
-  if (/\.(json|bat|md|env|lock|log|yml|yaml)$/i.test(filename)) {
+  // Resolve absolute path containment to guarantee requests remain strictly within project root
+  const rootDir = path.resolve(__dirname);
+  const rootWithSep = rootDir + path.sep;
+  const resolvedTarget = path.resolve(rootDir, "." + safePosix);
+
+  if (resolvedTarget !== rootDir && !resolvedTarget.startsWith(rootWithSep)) {
+    return res.status(404).json({ success: false, message: "Resource not found." });
+  }
+
+  // Block resolved paths falling within any blocked directory
+  for (const dirName of BLOCKED_STATIC_DIRS) {
+    const blockedDirResolved = path.resolve(rootDir, dirName);
+    if (resolvedTarget === blockedDirResolved || resolvedTarget.startsWith(blockedDirResolved + path.sep)) {
+      return res.status(404).json({ success: false, message: "Resource not found." });
+    }
+  }
+
+  // Block protected server-side system files and configuration
+  if (BLOCKED_STATIC_FILES.has(filename)) {
+    return res.status(404).json({ success: false, message: "Resource not found." });
+  }
+
+  // Block sensitive file extensions, backups, logs, and temporary files
+  if (/\.(json|bat|md|env|lock|log|yml|yaml|tmp|bak|backup|dump)$/i.test(filename) || filename.includes(".tmp.")) {
     return res.status(404).json({ success: false, message: "Resource not found." });
   }
 
@@ -656,7 +707,7 @@ function verifyAuthToken(token) {
 }
 
 async function authenticateRequest(req, res, next) {
-  const authHeader = req.headers["authorization"] || req.headers["x-auth-token"] || req.query.token;
+  const authHeader = req.headers["authorization"] || req.headers["x-auth-token"];
   let token = "";
   if (authHeader && String(authHeader).startsWith("Bearer ")) {
     token = String(authHeader).slice(7).trim();
@@ -1425,36 +1476,95 @@ app.delete("/api/users/:role/:username", requireAuth(["admin"]), async (req, res
       return res.status(400).json({ success: false, message: "Invalid username format." });
     }
 
-    const result = await User.deleteOne({
+    // Prohibit self-deletion by an authenticated administrator
+    if (req.user && req.user.username && req.user.username.toLowerCase() === targetUsername.toLowerCase()) {
+      return res.status(400).json({ success: false, message: "You cannot delete your own administrative account." });
+    }
+
+    // Step 1: Verify target account exists
+    const targetUser = await User.findOne({
       role: targetRole,
       username: new RegExp(`^${escapeRegex(targetUsername)}$`, "i")
     });
 
-    if (result.deletedCount === 0) return res.status(404).json({ success: false, message: "Account not found." });
-    invalidateUserCountsCache();
-    fileSyncService.triggerSync();
+    if (!targetUser) return res.status(404).json({ success: false, message: "Account not found." });
 
-    // Clean up academic records if student
+    const canonicalUsername = targetUser.username;
+    const userRegex = new RegExp(`^${escapeRegex(canonicalUsername)}$`, "i");
+
+    // Step 2: Cascading cleanup of associated academic records if student
     if (targetRole === "student") {
-      try {
-        const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
-        if (store) {
-          if (store.students && store.students[targetUsername]) {
-            delete store.students[targetUsername];
+      // 2a. Clean up AcademicStore state
+      const store = await AcademicStore.findOne({ storeKey: "default_academic_store" });
+      if (store) {
+        if (store.students && typeof store.students === "object") {
+          const studentKey = Object.keys(store.students).find(k => k.toLowerCase() === canonicalUsername.toLowerCase()) || canonicalUsername;
+          if (store.students[studentKey]) {
+            delete store.students[studentKey];
             store.markModified("students");
           }
-          if (Array.isArray(store.assignments)) {
-            store.assignments.filter(a => (a.student || "").toLowerCase() !== targetUsername.toLowerCase());
-          }
-          if (Array.isArray(store.deletedAssignments)) {
-            store.deletedAssignments = store.deletedAssignments.filter(k => !String(k || "").toLowerCase().startsWith(`${targetUsername.toLowerCase()}___`));
-          }
-          await store.save();
         }
-      } catch (storeErr) {
-        console.warn("Academic cleanup warning:", storeErr.message);
+        if (Array.isArray(store.assignments)) {
+          store.assignments = store.assignments.filter(a => (a.student || "").toLowerCase() !== canonicalUsername.toLowerCase());
+          store.markModified("assignments");
+        }
+        if (Array.isArray(store.deletedAssignments)) {
+          store.deletedAssignments = store.deletedAssignments.filter(k => !String(k || "").toLowerCase().startsWith(`${canonicalUsername.toLowerCase()}___`));
+          store.markModified("deletedAssignments");
+        }
+        if (Array.isArray(store.dailyAttendance)) {
+          let dailyAttModified = false;
+          store.dailyAttendance.forEach(att => {
+            if (att && att.records && typeof att.records === "object") {
+              const matchedKey = Object.keys(att.records).find(k => k.toLowerCase() === canonicalUsername.toLowerCase());
+              if (matchedKey) {
+                delete att.records[matchedKey];
+                dailyAttModified = true;
+              }
+            }
+          });
+          if (dailyAttModified) {
+            store.markModified("dailyAttendance");
+          }
+        }
+        await store.save();
       }
+
+      // 2b. Clean up dedicated collections using verified schema relationships
+      // Remove student-assigned assignments
+      await Assignment.deleteMany({ student: userRegex });
+
+      // Pull student submissions from class-wide assignments
+      await Assignment.updateMany(
+        { "submissions.studentUsername": userRegex },
+        { $pull: { submissions: { studentUsername: userRegex } } }
+      );
+
+      // Remove student attendance records
+      await Attendance.deleteMany({ studentUsername: userRegex });
+
+      // Remove student mark records
+      await Mark.deleteMany({ studentUsername: userRegex });
     }
+
+    // Step 3: Remove user-owned PushSubscription records (strictly scoped to target user)
+    await PushSubscription.deleteMany({
+      role: targetRole,
+      $or: [
+        { username: userRegex },
+        { userId: targetUser.id || String(targetUser._id) }
+      ]
+    });
+
+    // Step 4: Delete the User document itself
+    const deleteResult = await User.deleteOne({ _id: targetUser._id });
+    if (deleteResult.deletedCount === 0) {
+      return res.status(500).json({ success: false, message: "Failed to remove user account." });
+    }
+
+    // Step 5: Invalidate caches and trigger synchronization
+    invalidateUserCountsCache();
+    fileSyncService.triggerSync();
 
     const remaining = await User.countDocuments();
     res.json({ success: true, message: "Account and details removed permanently from MongoDB.", remaining });

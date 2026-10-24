@@ -5,6 +5,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const EventEmitter = require("events");
 
 const syncEvents = new EventEmitter();
@@ -32,30 +33,168 @@ function ensureDataDir(dirPath = DATA_DIR) {
 }
 
 /**
- * Strips password hashes, raw passwords, authentication tokens, session secrets, and internal metadata
- * from a user object for public, demo, or external distributable datasets.
+ * Strict schema-aware allowlist sanitizer for user objects exported to public or demo datasets.
+ * Excludes all authentication secrets, password hashes, tokens, internal IDs, and personal PII.
+ * Generates synthetic demo identities (names and emails) while preserving schema relationships.
  */
-function sanitizeUserForExport(u) {
+function sanitizeUserForExport(u, index = 0) {
   if (!u || typeof u !== "object") return {};
-  const copy = { ...u };
-  delete copy.passwordHash;
-  delete copy.password;
-  delete copy.__v;
-  delete copy.token;
-  delete copy.sessionToken;
-  delete copy.secret;
-  if (copy.subjectDivisions instanceof Map) {
-    copy.subjectDivisions = Object.fromEntries(copy.subjectDivisions);
-  } else if (!copy.subjectDivisions || typeof copy.subjectDivisions !== "object") {
-    copy.subjectDivisions = {};
+  const validRoles = ["admin", "faculty", "student"];
+  const role = validRoles.includes(u.role) ? u.role : "student";
+  const id = typeof u.id === "string" && u.id.trim()
+    ? u.id.trim()
+    : (u._id ? String(u._id) : `demo-user-${index + 1}`);
+
+  const rawUsername = typeof u.username === "string" && u.username.trim()
+    ? u.username.trim()
+    : `user_${index + 1}`;
+  const cleanUsername = rawUsername.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+
+  let syntheticName = `Demo Student ${index + 1}`;
+  if (role === "admin") syntheticName = `Demo Administrator ${index + 1}`;
+  else if (role === "faculty") syntheticName = `Demo Faculty ${index + 1}`;
+
+  const syntheticEmail = `${cleanUsername || `user_${index + 1}`}@demo.campussphere.local`;
+
+  // Explicit allowlist construction
+  const sanitized = {
+    id,
+    role,
+    name: syntheticName,
+    username: rawUsername,
+    email: syntheticEmail
+  };
+
+  if (typeof u.department === "string" && u.department.trim()) sanitized.department = u.department.trim();
+  if (typeof u.course === "string" && u.course.trim()) sanitized.course = u.course.trim();
+  if (typeof u.courseYear === "string" && u.courseYear.trim()) sanitized.courseYear = u.courseYear.trim();
+  if (typeof u.semester === "string" && u.semester.trim()) sanitized.semester = u.semester.trim();
+  if (typeof u.division === "string" && u.division.trim()) sanitized.division = u.division.trim();
+  if (typeof u.subject === "string" && u.subject.trim()) sanitized.subject = u.subject.trim();
+
+  if (Array.isArray(u.subjects)) {
+    sanitized.subjects = u.subjects.map(s => String(s).trim()).filter(Boolean);
   }
-  return copy;
+
+  if (u.subjectDivisions && typeof u.subjectDivisions === "object") {
+    const cleanSubDivs = {};
+    const entries = u.subjectDivisions instanceof Map ? u.subjectDivisions.entries() : Object.entries(u.subjectDivisions);
+    for (const [sub, divs] of entries) {
+      if (Array.isArray(divs)) {
+        cleanSubDivs[String(sub).trim()] = divs.map(d => String(d).trim()).filter(Boolean);
+      }
+    }
+    sanitized.subjectDivisions = cleanSubDivs;
+  } else {
+    sanitized.subjectDivisions = {};
+  }
+
+  if (typeof u.languageChoice === "string" && u.languageChoice.trim()) sanitized.languageChoice = u.languageChoice.trim();
+  if (typeof u.mathChoice === "string" && u.mathChoice.trim()) sanitized.mathChoice = u.mathChoice.trim();
+
+  return sanitized;
+}
+
+/**
+ * Strict schema-aware allowlist sanitizer for full database exports.
+ * Redacts personal identifying records from academic store while preserving public system catalog.
+ */
+function sanitizeDatabaseForExport(databaseDump, sanitizedUsers = []) {
+  if (!databaseDump || typeof databaseDump !== "object") return {};
+
+  const cleanUsers = Array.isArray(sanitizedUsers) && sanitizedUsers.length > 0
+    ? sanitizedUsers
+    : (Array.isArray(databaseDump.users) ? databaseDump.users.map((u, i) => sanitizeUserForExport(u, i)) : []);
+
+  const counts = {
+    totalUsers: cleanUsers.length,
+    students: cleanUsers.filter(u => u.role === "student").length,
+    faculty: cleanUsers.filter(u => u.role === "faculty").length,
+    admins: cleanUsers.filter(u => u.role === "admin").length,
+    timetables: Array.isArray(databaseDump.timetables) ? databaseDump.timetables.length : 0,
+    syllabi: Array.isArray(databaseDump.syllabi) ? databaseDump.syllabi.length : 0
+  };
+
+  const cleanDivisions = databaseDump.divisions && typeof databaseDump.divisions === "object"
+    ? JSON.parse(JSON.stringify(databaseDump.divisions))
+    : {
+        "1st Year": ["Div A", "Div B"],
+        "2nd Year": ["Div A", "Div B"],
+        "3rd Year": ["Div A", "Div B"]
+      };
+
+  const cleanTimetables = Array.isArray(databaseDump.timetables)
+    ? databaseDump.timetables.map(t => ({
+        semester: t.semester,
+        division: t.division,
+        day: t.day,
+        time: t.time,
+        subject: t.subject,
+        subjectText: t.subjectText || t.subject || "",
+        faculty: t.faculty || ""
+      }))
+    : [];
+
+  const cleanSyllabi = Array.isArray(databaseDump.syllabi)
+    ? databaseDump.syllabi.map(s => ({
+        yearLevel: s.yearLevel,
+        semester: s.semester,
+        yearTitle: s.yearTitle,
+        originalFilename: s.originalFilename || ""
+      }))
+    : [];
+
+  const rawAcademic = databaseDump.academic && typeof databaseDump.academic === "object" ? databaseDump.academic : {};
+  const cleanAcademic = {
+    storeKey: "default_academic_store",
+    divisions: cleanDivisions,
+    subjects: Array.isArray(rawAcademic.subjects) ? [...rawAcademic.subjects] : [],
+    subjectMarksConfig: rawAcademic.subjectMarksConfig && typeof rawAcademic.subjectMarksConfig === "object"
+      ? JSON.parse(JSON.stringify(rawAcademic.subjectMarksConfig))
+      : {},
+    timetableHeader: rawAcademic.timetableHeader && typeof rawAcademic.timetableHeader === "object"
+      ? JSON.parse(JSON.stringify(rawAcademic.timetableHeader))
+      : {},
+    customBreakRows: rawAcademic.customBreakRows && typeof rawAcademic.customBreakRows === "object"
+      ? JSON.parse(JSON.stringify(rawAcademic.customBreakRows))
+      : {},
+    notices: Array.isArray(rawAcademic.notices)
+      ? rawAcademic.notices.map(n => ({
+          id: n.id || n.noticeId || "",
+          title: n.title || "",
+          text: n.text || n.content || "",
+          content: n.content || n.text || "",
+          date: n.date || "",
+          authorRole: n.authorRole === "admin" ? "admin" : "faculty"
+        }))
+      : [],
+    // Identifying individual student activity / personal records redacted in public export
+    students: {},
+    dailyAttendance: [],
+    assignments: [],
+    deletedAssignments: [],
+    deletedDailyAttendance: [],
+    notes: []
+  };
+
+  return {
+    system: "CampusSphere",
+    version: "2.0.0",
+    lastSyncedAt: new Date().toISOString(),
+    counts,
+    users: cleanUsers,
+    academic: cleanAcademic,
+    divisions: cleanDivisions,
+    timetables: cleanTimetables,
+    syllabi: cleanSyllabi
+  };
 }
 
 async function safeWriteJson(filePath, data) {
   const targetDir = path.dirname(filePath);
   ensureDataDir(targetDir);
-  const tmpPath = `${filePath}.tmp.${Date.now()}.${Math.floor(Math.random() * 10000)}`;
+  const randomSuffix = crypto.randomBytes(6).toString("hex");
+  const tmpPath = `${filePath}.tmp.${process.pid}.${Date.now()}.${randomSuffix}`;
   const jsonStr = JSON.stringify(data, null, 2);
   try {
     await fs.promises.writeFile(tmpPath, jsonStr, "utf8");
@@ -67,7 +206,7 @@ async function safeWriteJson(filePath, data) {
       await fs.promises.unlink(tmpPath).catch(() => {});
     }
   } finally {
-    // Guarantees zero orphaned temporary files even if write or rename encounters exceptions
+    // Guarantees zero orphaned temporary files created by this specific invocation
     try {
       if (fs.existsSync(tmpPath)) {
         await fs.promises.unlink(tmpPath).catch(() => {});
@@ -117,8 +256,8 @@ async function syncFromMongoToFiles() {
       return copy;
     });
 
-    // Sanitized records: credentials, hashes, and session tokens completely excluded
-    const sanitizedUsers = (rawUsers || []).map(u => sanitizeUserForExport(u));
+    // Sanitized records: credentials, hashes, and session tokens completely excluded via strict allowlist
+    const sanitizedUsers = (rawUsers || []).map((u, i) => sanitizeUserForExport(u, i));
 
     const academicData = store ? { ...store } : {};
     delete academicData.__v;
@@ -149,18 +288,7 @@ async function syncFromMongoToFiles() {
       syllabi: (syllabi || []).map(s => { const c = { ...s }; delete c.__v; return c; })
     };
 
-    const sanitizedDatabaseDump = {
-      ...databaseDump,
-      counts: {
-        totalUsers: sanitizedUsers.length,
-        students: sanitizedUsers.filter(u => u.role === "student").length,
-        faculty: sanitizedUsers.filter(u => u.role === "faculty").length,
-        admins: sanitizedUsers.filter(u => u.role === "admin").length,
-        timetables: (timetables || []).length,
-        syllabi: (syllabi || []).length
-      },
-      users: sanitizedUsers
-    };
+    const sanitizedDatabaseDump = sanitizeDatabaseForExport(databaseDump, sanitizedUsers);
 
     // Synchronize to individual operational code data files and separate sanitized export dataset
     await Promise.all([
@@ -231,7 +359,9 @@ module.exports = {
   triggerSync,
   waitForSync,
   syncEvents,
+  safeWriteJson,
   sanitizeUserForExport,
+  sanitizeDatabaseForExport,
   DATA_DIR,
   DB_FILE,
   USERS_FILE,
