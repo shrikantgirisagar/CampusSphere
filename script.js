@@ -3546,7 +3546,7 @@ function bindAiAnalysisEvents() {
           renderAiCharts(analytics, currentAiAnalysisMode);
         }
         refreshBtn.disabled = false;
-        refreshBtn.innerHTML = `<span>🔄 Refresh AI Insights</span>`;
+        refreshBtn.innerHTML = `<span>🔄 Refresh Insights</span>`;
       }, 400);
     };
   }
