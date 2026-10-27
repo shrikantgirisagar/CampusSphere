@@ -4016,8 +4016,8 @@ function sendDesktopNotification({ title, body, icon, tag, onClick }) {
         if (reg && reg.showNotification) {
           reg.showNotification(title || "CampusSphere Alert", {
             body: body || "",
-            icon: icon || "/CampusSphere-logo.png?v=20260915_hq1",
-            badge: "/CampusSphere-logo.png?v=20260915_hq1",
+            icon: icon || "/CampusSphere-logo.png?v=20261027_opt",
+            badge: "/CampusSphere-logo.png?v=20261027_opt",
             tag: tag || "campussphere-notification",
             renotify: true
           });
@@ -4028,9 +4028,9 @@ function sendDesktopNotification({ title, body, icon, tag, onClick }) {
 
     const notif = new Notification(title || "CampusSphere Alert", {
       body: body || "",
-      icon: icon || "/CampusSphere-logo.png?v=20260915_hq1",
+      icon: icon || "/CampusSphere-logo.png?v=20261027_opt",
       tag: tag || "campussphere-notification",
-      badge: "/CampusSphere-logo.png?v=20260915_hq1",
+      badge: "/CampusSphere-logo.png?v=20261027_opt",
       renotify: true,
       silent: false
     });
@@ -4135,7 +4135,7 @@ function checkPromptDesktopNotifications() {
 function buildNav() {
   const isStudentOrFaculty = currentUser && (currentUser.role === "student" || currentUser.role === "faculty");
   const items = isStudentOrFaculty
-    ? [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Profile"], ["attendance", "📊", "Attendance"], ["marks", "📈", "Marks"], ["assignments", "📝", "Assignments"], ["notes", "📚", "Notes"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"], ["syllabus", "📖", "Courses & Syllabus"]]
+    ? [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Profile"], ["attendance", "📊", "Attendance"], ["marks", "📈", "Marks"], ["assignments", "📝", "Assignments"], ["notes", "📚", "Notes"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"]]
     : [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Admin Profile"], ["divisions", "🏫", "Divisions"], ["subjects", "📚", "Semester Subjects"], ["students", "👥", "Students"], ["faculty", "🧑‍🏫", "Faculty"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"], ["syllabus", "📖", "Courses & Syllabus"]];
 
   const unreadNoticeCount = getUnreadNoticeCount();

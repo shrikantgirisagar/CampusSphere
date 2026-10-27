@@ -4,7 +4,7 @@
    - Versioned Safe Static Asset Caching (Never caches /api)
    ============================================================================ */
 
-const CACHE_NAME = "campussphere-static-v1";
+const CACHE_NAME = "campussphere-static-v2";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -123,8 +123,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: body,
-    icon: "/CampusSphere-logo.png?v=20260915_hq1",
-    badge: "/CampusSphere-logo.png?v=20260915_hq1",
+    icon: "/CampusSphere-logo.png?v=20261027_opt",
+    badge: "/CampusSphere-logo.png?v=20261027_opt",
     tag: tag,
     renotify: true,
     data: {
