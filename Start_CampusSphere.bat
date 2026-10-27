@@ -24,10 +24,10 @@ if not exist "node_modules\express" (
 )
 
 if not exist ".env" (
-  (echo PORT=3000 & echo MONGODB_URI=mongodb://127.0.0.1:27017/CampusSphere) > ".env"
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$sec = (node -e 'process.stdout.write(require(\"crypto\").randomBytes(32).toString(\"hex\"))'); (('PORT=3000' + [Environment]::NewLine + 'NODE_ENV=development' + [Environment]::NewLine + 'SESSION_SECRET=' + $sec + [Environment]::NewLine + 'MONGODB_URI=mongodb://127.0.0.1:27017/CampusSphere') | Set-Content -Path '.env' -Encoding utf8)"
 )
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$here = (Get-Location).Path; $p = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if ($p) { try { $pids = $p | Select-Object -ExpandProperty OwningProcess -Unique; foreach ($id in $pids) { $proc = Get-CimInstance Win32_Process -Filter ('ProcessId = ' + $id) -ErrorAction SilentlyContinue; if ($proc -and $proc.CommandLine -notlike ('*' + $here + '*')) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue } } } catch {} }; $check = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if (-not $check) { Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-NoExit','-Command',('Set-Location -LiteralPath ''' + $here + '''; node server.js') }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$here = (Get-Location).Path; $p = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if ($p) { try { $pids = $p | Select-Object -ExpandProperty OwningProcess -Unique; foreach ($id in $pids) { $proc = Get-CimInstance Win32_Process -Filter ('ProcessId = ' + $id) -ErrorAction SilentlyContinue; if ($proc -and $proc.CommandLine -like ('*' + $here + '*')) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue } } } catch {} }; $check = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if (-not $check) { Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-NoExit','-Command',('Set-Location -LiteralPath ''' + $here + '''; node server.js') }"
 
 echo Waiting for the CampusSphere backend...
 set READY=

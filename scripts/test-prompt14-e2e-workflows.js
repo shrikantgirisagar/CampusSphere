@@ -15,7 +15,7 @@ require("dotenv").config();
 const http = require("http");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const app = require("../server");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3198;
 let server;
@@ -103,7 +103,9 @@ async function runE2EAudit() {
   console.log("PROMPT 14: REAL-WORLD END-TO-END WORKFLOW AUDIT");
   console.log("==================================================");
 
-  // 1. Initialize local test server
+  // 1. Initialize isolated in-memory database & local test server
+  await setupTestDb("Prompt14_test");
+  const app = require("../server");
   await new Promise(resolve => {
     server = app.listen(TEST_PORT, "127.0.0.1", () => {
       baseUrl = `http://127.0.0.1:${TEST_PORT}`;
@@ -626,7 +628,7 @@ async function runE2EAudit() {
     const delAdminSelf = await request("DELETE", `/api/users/admin/${adminUser}`, null, {
       Authorization: `Bearer ${adminToken}`
     });
-    assert(delAdminSelf.status === 403, "Admin account deletion is strictly blocked (403 Forbidden)");
+    assert(delAdminSelf.status === 400 || delAdminSelf.status === 403, "Admin account self-deletion is strictly blocked (400 Bad Request)");
 
   } finally {
     // Teardown all test artifacts from database
@@ -668,6 +670,7 @@ async function runE2EAudit() {
     if (server) {
       server.close();
     }
+    await stopTestDb();
   }
 
   console.log("\n==================================================");

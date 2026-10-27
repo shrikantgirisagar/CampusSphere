@@ -380,7 +380,7 @@ async function main() {
   // TEST SECTION 6: UI Files & Responsiveness Verification
   // -------------------------------------------------------------
   console.log("\n--- SECTION 6: UI Files & Responsiveness Verification ---");
-  const coursesHtml = fs.readFileSync(path.join(__dirname, "../courses.html"), "utf8");
+  const coursesHtml = fs.existsSync(path.join(__dirname, "../public/courses.html")) ? fs.readFileSync(path.join(__dirname, "../public/courses.html"), "utf8") : fs.readFileSync(path.join(__dirname, "../courses.html"), "utf8");
   assert(coursesHtml.includes("First Year BCA"), "courses.html contains First Year BCA card");
   assert(coursesHtml.includes("Second Year BCA"), "courses.html contains Second Year BCA card");
   assert(coursesHtml.includes("Third Year BCA"), "courses.html contains Third Year BCA card");
@@ -394,13 +394,13 @@ async function main() {
   assert(adminHtml.includes("openSyllabusUploadModal"), "admin-courses-syllabus.html references openSyllabusUploadModal");
   assert(adminHtml.includes("adminAuthGate"), "admin-courses-syllabus.html contains admin authentication gate");
 
-  const scriptJs = fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
+  const scriptJs = fs.existsSync(path.join(__dirname, "../public/script.js")) ? fs.readFileSync(path.join(__dirname, "../public/script.js"), "utf8") : fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
   assert(scriptJs.includes('["syllabus", "📖", "Courses & Syllabus"]'), "script.js buildNav() contains syllabus navigation item");
   assert(scriptJs.includes("openSyllabusUploadModal"), "script.js includes openSyllabusUploadModal");
   assert(scriptJs.includes("confirmDeleteSyllabus"), "script.js includes confirmDeleteSyllabus");
   assert(scriptJs.includes("downloadSyllabusPdf"), "script.js includes downloadSyllabusPdf");
 
-  const styleCss = fs.readFileSync(path.join(__dirname, "../style.css"), "utf8");
+  const styleCss = fs.existsSync(path.join(__dirname, "../public/style.css")) ? fs.readFileSync(path.join(__dirname, "../public/style.css"), "utf8") : fs.readFileSync(path.join(__dirname, "../style.css"), "utf8");
   assert(styleCss.includes(".syllabus-mgmt-page"), "style.css contains .syllabus-mgmt-page");
   assert(styleCss.includes(".syllabus-sem-card"), "style.css contains .syllabus-sem-card");
   assert(styleCss.includes(".syllabus-dropzone"), "style.css contains .syllabus-dropzone");

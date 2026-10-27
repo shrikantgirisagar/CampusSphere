@@ -376,8 +376,8 @@ function runGroup3() {
   console.log("\n--- Group 3: SEC-002 Static Analysis of Frontend & Server Code ---");
 
   const serverCode = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
-  const scriptCode = fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
-  const coursesCode = fs.readFileSync(path.join(__dirname, "../courses.html"), "utf8");
+  const scriptCode = fs.existsSync(path.join(__dirname, "../public/script.js")) ? fs.readFileSync(path.join(__dirname, "../public/script.js"), "utf8") : fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
+  const coursesCode = fs.existsSync(path.join(__dirname, "../public/courses.html")) ? fs.readFileSync(path.join(__dirname, "../public/courses.html"), "utf8") : fs.readFileSync(path.join(__dirname, "../courses.html"), "utf8");
   const adminCoursesCode = fs.readFileSync(path.join(__dirname, "../admin-courses-syllabus.html"), "utf8");
 
   // 1. Verify req.query.token is not in server.js authenticateRequest

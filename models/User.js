@@ -25,9 +25,19 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      minlength: 2,
-      maxlength: 50,
+      minlength: 4,
+      maxlength: 30,
+      match: /^[A-Za-z0-9_.-]{4,30}$/,
       index: true
+    },
+    usernameLower: {
+      type: String,
+      trim: true,
+      lowercase: true
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0
     },
     email: {
       type: String,
@@ -109,7 +119,20 @@ const userSchema = new mongoose.Schema(
 );
 
 // Compound index for role-scoped username lookups and queries
+userSchema.index({ role: 1, usernameLower: 1 });
 userSchema.index({ role: 1, username: 1 });
+
+userSchema.pre("save", function () {
+  if (this.username) {
+    this.usernameLower = this.username.toLowerCase();
+  }
+});
+
+// Partial unique index on usernameLower: guarantees case-insensitive uniqueness among non-empty usernames
+userSchema.index(
+  { usernameLower: 1 },
+  { unique: true, partialFilterExpression: { usernameLower: { $type: "string", $gt: "" } } }
+);
 
 // Partial unique index on email: guarantees uniqueness among non-empty emails while permitting multiple empty strings
 userSchema.index(

@@ -5,6 +5,7 @@ const http = require("http");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3099;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -56,7 +57,7 @@ function runClientUtilityUnitTests() {
   console.log("\n--- 1. Client-Side Sanitization Utility Unit Tests ---");
 
   // Read script.js to extract the canonical functions
-  const scriptContent = fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
+  const scriptContent = fs.existsSync(path.join(__dirname, "..", "public", "script.js")) ? fs.readFileSync(path.join(__dirname, "..", "public", "script.js"), "utf8") : fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8");
 
   // Define minimal scope for evaluating client functions
   const sandbox = {};
@@ -115,15 +116,49 @@ function runClientUtilityUnitTests() {
   assert(sanitizeImageUrl("javascript:alert(1)") === "", "Blocks javascript: protocol in image source");
   assert(sanitizeImageUrl("data:text/html,<script>alert(1)</script>") === "", "Blocks data:text/html in image source");
   assert(sanitizeImageUrl('" onerror="alert(1)') === "", "Blocks attribute breakout payload in image source");
+
+  // 4. Fixed XSS Spots Audit in script.js (Item 20 Verification)
+  console.log("\n--- 1b. Verification of Fixed XSS Render Spots in script.js ---");
+  assert(
+    scriptContent.includes('escapeHtml(adminNotice.text)'),
+    "Fixed spot 1 (getAdminNoticeMarkup): adminNotice.text is escaped via escapeHtml"
+  );
+  assert(
+    scriptContent.includes('escapeHtml(s.name)} (${escapeHtml(s.username)})'),
+    "Fixed spot 2 (buildStudentOptions): s.name and s.username are escaped via escapeHtml"
+  );
+  assert(
+    scriptContent.includes('escapeHtml(s.name)} — ${escapeHtml(sem)} (${escapeHtml(yr)})'),
+    "Fixed spot 3 (optgroup option): s.name, sem, and yr are escaped via escapeHtml"
+  );
+  assert(
+    scriptContent.includes('<b>${escapeHtml(s.short)}</b><small>${escapeHtml(s.name)}</small>'),
+    "Fixed spot 4 (subjectCards): s.short and s.name are escaped via escapeHtml"
+  );
+  assert(
+    scriptContent.includes('id="profileStatusMessage" class="message ${escapeAttr(profileStatus.type)}">${escapeHtml(profileStatus.message)}'),
+    "Fixed spot 5 (profile statusMarkup): profileStatus.message is escaped via escapeHtml"
+  );
+  assert(
+    scriptContent.includes('Stored Daily Attendance Records (${escapeHtml(subjectObj ? subjectObj.name : "")})'),
+    "Fixed spot 6 (attendance history header): subjectObj.name is escaped via escapeHtml"
+  );
+  assert(
+    scriptContent.includes('No attendance records stored for ${escapeHtml(subjectObj ? subjectObj.name : "")} yet.'),
+    "Fixed spot 7 (empty attendance history): subjectObj.name is escaped via escapeHtml"
+  );
+  assert(
+    scriptContent.includes('<span class="subj-name">${escapeHtml(e.subjectName)}</span>'),
+    "Fixed spot 8 (daily student log): e.subjectName is escaped via escapeHtml"
+  );
 }
 
 async function runBackendXssTests() {
   console.log("\n--- 2. Backend Input Validation & Stored XSS Prevention Tests ---");
 
-  // Connect to MongoDB
-  const mongoUri = process.env.MONGODB_URI || "mongodb://localhost:27017/CampusSphere";
-  await mongoose.connect(mongoUri);
-  console.log("✓ Connected to MongoDB");
+  // Connect to isolated in-memory MongoDB
+  const mongoUri = await setupTestDb("XssSecurity_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
 
   // Start test server instance
   process.env.PORT = String(TEST_PORT);
@@ -383,9 +418,7 @@ async function main() {
     console.error("Test execution error:", err);
     failedCount++;
   } finally {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
+    await stopTestDb();
     console.log("\n==============================================");
     console.log(`Results: ${passedCount} passed, ${failedCount} failed.`);
     console.log("==============================================");

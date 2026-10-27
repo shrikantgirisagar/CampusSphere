@@ -68,9 +68,28 @@ const academicStoreSchema = new mongoose.Schema(
   {
     timestamps: true,
     strict: true,
-    versionKey: false
+    versionKey: "__v",
+    optimisticConcurrency: true
   }
 );
+
+const MAX_ACADEMIC_STORE_BYTES = 16 * 1024 * 1024; // 16 MB BSON document limit
+
+// Size check guard before save to prevent MongoDB BSON size overflow and return HTTP 413
+academicStoreSchema.pre("save", function () {
+  try {
+    const jsonStr = JSON.stringify(this.toObject());
+    const approxBytes = Buffer.byteLength(jsonStr, "utf8");
+    if (approxBytes > MAX_ACADEMIC_STORE_BYTES) {
+      const err = new Error("Academic store payload exceeds maximum document size limit (16MB).");
+      err.status = 413;
+      err.statusCode = 413;
+      throw err;
+    }
+  } catch (err) {
+    if (err.status === 413) throw err;
+  }
+});
 
 module.exports = mongoose.model("AcademicStore", academicStoreSchema);
 

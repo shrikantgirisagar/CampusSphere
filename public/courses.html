@@ -135,7 +135,7 @@
                 <span style="color:#64748b; font-weight:600;">Status:</span>
                 <span class="courses-sem-status" id="coursesStatusYear1">Available</span>
               </div>
-              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear1" data-sem-id="coursesBtnSem1" onclick="handleCoursesPageDownload(1, 'First Year BCA')" aria-label="Download Syllabus for First Year BCA">
+              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear1" data-sem-id="coursesBtnSem1" data-action="download-courses-syllabus" data-year="1" data-label="First Year BCA" aria-label="Download Syllabus for First Year BCA">
                 DOWNLOAD SYLLABUS
               </button>
             </div>
@@ -162,7 +162,7 @@
                 <span style="color:#64748b; font-weight:600;">Status:</span>
                 <span class="courses-sem-status" id="coursesStatusYear2">Available</span>
               </div>
-              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear2" onclick="handleCoursesPageDownload(2, 'Second Year BCA')" aria-label="Download Syllabus for Second Year BCA">
+              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear2" data-action="download-courses-syllabus" data-year="2" data-label="Second Year BCA" aria-label="Download Syllabus for Second Year BCA">
                 DOWNLOAD SYLLABUS
               </button>
             </div>
@@ -189,7 +189,7 @@
                 <span style="color:#64748b; font-weight:600;">Status:</span>
                 <span class="courses-sem-status" id="coursesStatusYear3">Available</span>
               </div>
-              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear3" data-sem-id="coursesBtnSem6" onclick="handleCoursesPageDownload(3, 'Third Year BCA')" aria-label="Download Syllabus for Third Year BCA">
+              <button type="button" class="syllabus-download-btn full-width" id="coursesBtnYear3" data-sem-id="coursesBtnSem6" data-action="download-courses-syllabus" data-year="3" data-label="Third Year BCA" aria-label="Download Syllabus for Third Year BCA">
                 DOWNLOAD SYLLABUS
               </button>
             </div>
@@ -273,159 +273,7 @@
     <span id="syllabusToastMsg">Downloading syllabus...</span>
   </div>
 
-  <script>
-    // Year
-    const yearEl = document.getElementById("coursesCurrentYear");
-    if (yearEl) yearEl.textContent = String(new Date().getFullYear());
-
-    // Navigation Menu Toggle on Mobile
-    const menuToggle = document.getElementById("coursesMenuToggle");
-    const nav = document.querySelector(".public-nav");
-    if (menuToggle && nav) {
-      menuToggle.addEventListener("click", () => {
-        const open = nav.classList.toggle("is-open");
-        menuToggle.setAttribute("aria-expanded", String(open));
-        menuToggle.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
-      });
-      nav.querySelectorAll(".public-nav-link").forEach(link => {
-        link.addEventListener("click", () => {
-          nav.classList.remove("is-open");
-          menuToggle.setAttribute("aria-expanded", "false");
-          menuToggle.setAttribute("aria-label", "Open navigation menu");
-        });
-      });
-    }
-
-    // Prevent default on placeholder footer links
-    document.querySelectorAll("[data-footer-placeholder]").forEach(link => {
-      link.addEventListener("click", e => e.preventDefault());
-    });
-
-    // Download Syllabus interaction feedback & real PDF streaming
-    const toast = document.getElementById("syllabusToast");
-    const toastMsg = document.getElementById("syllabusToastMsg");
-    let toastTimer;
-
-    const token = sessionStorage.getItem("portalAuthToken") || "";
-    let user = null;
-    try {
-      user = JSON.parse(sessionStorage.getItem("portalUser") || "null");
-    } catch (_) {}
-
-    // Show admin banner if logged in as administrator
-    if (user && user.role === "admin") {
-      const adminBanner = document.getElementById("coursesAdminBanner");
-      if (adminBanner) {
-        adminBanner.classList.remove("hidden");
-        adminBanner.style.removeProperty("display");
-      }
-    }
-
-    // Hydrate live syllabus status if authenticated
-    if (token) {
-      fetch("/api/syllabus", {
-        headers: { "Authorization": "Bearer " + token }
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.syllabi)) {
-          data.syllabi.forEach(item => {
-            const yr = item.yearLevel;
-            const statusEl = document.getElementById("coursesStatusYear" + yr);
-            const btn = document.getElementById("coursesBtnYear" + yr);
-            if (statusEl && btn) {
-              if (item.isUploaded) {
-                statusEl.textContent = "✓ Available (" + (item.formattedSize || "PDF") + ")";
-                statusEl.className = "courses-sem-status";
-                btn.disabled = false;
-              } else {
-                statusEl.textContent = "⏳ Pending Upload";
-                statusEl.className = "courses-sem-status pending";
-                btn.disabled = true;
-                btn.title = "Syllabus not yet published by department";
-              }
-            }
-          });
-        }
-      })
-      .catch(() => {});
-    }
-
-    async function handleCoursesPageDownload(yearLevel, title) {
-      const currentToken = sessionStorage.getItem("portalAuthToken") || "";
-      if (toast && toastMsg) {
-        clearTimeout(toastTimer);
-        if (!currentToken) {
-          toastMsg.innerHTML = '<span>Please <a href="index.html#login" style="color:#60a5fa; text-decoration:underline; font-weight:700;">Login</a> to download official syllabus PDFs.</span>';
-          toast.classList.add("is-visible");
-          toastTimer = setTimeout(() => {
-            toast.classList.remove("is-visible");
-          }, 4500);
-          return;
-        }
-
-        toastMsg.textContent = "Downloading " + title + " Syllabus PDF...";
-        toast.classList.add("is-visible");
-        toastTimer = setTimeout(() => {
-          toast.classList.remove("is-visible");
-        }, 3500);
-      }
-
-      if (currentToken) {
-        try {
-          const res = await fetch("/api/syllabus/" + yearLevel + "/download", {
-            headers: {
-              "Authorization": "Bearer " + currentToken
-            }
-          });
-
-          if (!res.ok) {
-            let errorMsg = "Failed to download syllabus.";
-            if (res.status === 401) {
-              errorMsg = "Your session has expired. Please log in again.";
-              sessionStorage.removeItem("portalAuthToken");
-              sessionStorage.removeItem("portalUser");
-            } else {
-              try {
-                const errData = await res.json();
-                if (errData && errData.message) errorMsg = errData.message;
-              } catch (_) {}
-            }
-            if (toast && toastMsg) {
-              clearTimeout(toastTimer);
-              toastMsg.textContent = errorMsg;
-              toast.classList.add("is-visible");
-              toastTimer = setTimeout(() => {
-                toast.classList.remove("is-visible");
-              }, 4000);
-            }
-            return;
-          }
-
-          const blob = await res.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = objectUrl;
-          a.download = "BCA_Year_" + yearLevel + "_Syllabus.pdf";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => {
-            try { URL.revokeObjectURL(objectUrl); } catch (_) {}
-          }, 1000);
-        } catch (fetchErr) {
-          if (toast && toastMsg) {
-            clearTimeout(toastTimer);
-            toastMsg.textContent = fetchErr.message || "Network error downloading syllabus.";
-            toast.classList.add("is-visible");
-            toastTimer = setTimeout(() => {
-              toast.classList.remove("is-visible");
-            }, 4000);
-          }
-        }
-      }
-    }
-  </script>
+  <script src="/js/courses.js"></script>
 </body>
 </html>
 

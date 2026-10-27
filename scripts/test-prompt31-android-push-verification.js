@@ -38,12 +38,13 @@ async function runPrompt31Tests() {
   console.log('====================================================================\n');
 
   const rootDir = path.resolve(__dirname, '..');
-  const indexHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf-8');
-  const styleCss = fs.readFileSync(path.join(rootDir, 'style.css'), 'utf-8');
-  const scriptJs = fs.readFileSync(path.join(rootDir, 'script.js'), 'utf-8');
+const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir, 'public') : rootDir;
+  const indexHtml = fs.readFileSync(path.join(assetDir, 'index.html'), 'utf-8');
+  const styleCss = fs.readFileSync(path.join(assetDir, 'style.css'), 'utf-8');
+  const scriptJs = fs.readFileSync(path.join(assetDir, 'script.js'), 'utf-8');
   const serverJs = fs.readFileSync(path.join(rootDir, 'server.js'), 'utf-8');
-  const swJs = fs.readFileSync(path.join(rootDir, 'service-worker.js'), 'utf-8');
-  const manifestJson = fs.readFileSync(path.join(rootDir, 'manifest.json'), 'utf-8');
+  const swJs = fs.readFileSync(path.join(assetDir, 'service-worker.js'), 'utf-8');
+  const manifestJson = fs.readFileSync(path.join(assetDir, 'manifest.json'), 'utf-8');
   const pushServiceJs = fs.readFileSync(path.join(rootDir, 'services', 'pushNotificationService.js'), 'utf-8');
   const pushSubModelJs = fs.readFileSync(path.join(rootDir, 'models', 'PushSubscription.js'), 'utf-8');
 
@@ -52,9 +53,9 @@ async function runPrompt31Tests() {
   // -------------------------------------------------------------------------
   console.log('--- TEST SUITE 1: Pre-Flight Code & VAPID Security Verification ---');
 
-  logTest('service-worker.js exists at project root', fs.existsSync(path.join(rootDir, 'service-worker.js')));
+  logTest('service-worker.js exists at project root', fs.existsSync(path.join(assetDir, 'service-worker.js')));
   logTest('server.js serves service-worker.js with Service-Worker-Allowed header', serverJs.includes('Service-Worker-Allowed') && serverJs.includes('/service-worker.js'));
-  logTest('manifest.json exists and is linked in HTML head', fs.existsSync(path.join(rootDir, 'manifest.json')) && indexHtml.includes('href="/manifest.json"'));
+  logTest('manifest.json exists and is linked in HTML head', fs.existsSync(path.join(assetDir, 'manifest.json')) && indexHtml.includes('href="/manifest.json"'));
   logTest('script.js registers /service-worker.js', scriptJs.includes('registerCampusSphereServiceWorker') && scriptJs.includes('/service-worker.js'));
   logTest('script.js subscribes to PushManager with applicationServerKey', scriptJs.includes('pushManager.subscribe') && scriptJs.includes('applicationServerKey'));
   logTest('server.js defines GET /api/push/public-key', serverJs.includes('/api/push/public-key'));

@@ -26,6 +26,27 @@ let syncDebounceTimer = null;
 let isSyncing = false;
 let pendingSyncAgain = false;
 
+function cleanStaleTempFiles(dir = DATA_DIR) {
+  try {
+    if (!fs.existsSync(dir)) return;
+    const entries = fs.readdirSync(dir);
+    for (const entry of entries) {
+      if (entry.includes(".tmp.")) {
+        const full = path.join(dir, entry);
+        try {
+          fs.unlinkSync(full);
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+}
+
+// Clean stale temporary files on service startup
+cleanStaleTempFiles(DATA_DIR);
+if (fs.existsSync(SANITIZED_DIR)) {
+  cleanStaleTempFiles(SANITIZED_DIR);
+}
+
 function ensureDataDir(dirPath = DATA_DIR) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -205,6 +226,11 @@ async function safeWriteJson(filePath, data) {
       await fs.promises.copyFile(tmpPath, filePath);
       await fs.promises.unlink(tmpPath).catch(() => {});
     }
+  } catch (err) {
+    if (fs.existsSync(tmpPath)) {
+      await fs.promises.unlink(tmpPath).catch(() => {});
+    }
+    throw err;
   } finally {
     // Guarantees zero orphaned temporary files created by this specific invocation
     try {
@@ -219,6 +245,14 @@ async function safeWriteJson(filePath, data) {
  * Synchronize authoritative MongoDB collections directly to local code/data files
  */
 async function syncFromMongoToFiles() {
+  if (process.env.NODE_ENV === "test") {
+    return;
+  }
+  const mongoose = require("mongoose");
+  if (mongoose.connection && mongoose.connection.name && mongoose.connection.name.endsWith("_test")) {
+    return;
+  }
+
   if (isSyncing) {
     pendingSyncAgain = true;
     return;
@@ -249,13 +283,6 @@ async function syncFromMongoToFiles() {
       Syllabus.find({}).sort({ yearLevel: 1 }).lean()
     ]);
 
-    // Operational records: preserved with all necessary fields for local development, recovery & tests
-    const operationalUsers = (rawUsers || []).map(u => {
-      const copy = { ...u };
-      delete copy.__v;
-      return copy;
-    });
-
     // Sanitized records: credentials, hashes, and session tokens completely excluded via strict allowlist
     const sanitizedUsers = (rawUsers || []).map((u, i) => sanitizeUserForExport(u, i));
 
@@ -269,40 +296,38 @@ async function syncFromMongoToFiles() {
       "3rd Year": ["Div A", "Div B"]
     };
 
-    const databaseDump = {
+    const databaseDump = sanitizeDatabaseForExport({
       system: "CampusSphere",
       version: "2.0.0",
       lastSyncedAt: new Date().toISOString(),
       counts: {
-        totalUsers: operationalUsers.length,
-        students: operationalUsers.filter(u => u.role === "student").length,
-        faculty: operationalUsers.filter(u => u.role === "faculty").length,
-        admins: operationalUsers.filter(u => u.role === "admin").length,
+        totalUsers: sanitizedUsers.length,
+        students: sanitizedUsers.filter(u => u.role === "student").length,
+        faculty: sanitizedUsers.filter(u => u.role === "faculty").length,
+        admins: sanitizedUsers.filter(u => u.role === "admin").length,
         timetables: (timetables || []).length,
         syllabi: (syllabi || []).length
       },
-      users: operationalUsers,
+      users: sanitizedUsers,
       academic: academicData,
       divisions,
       timetables: (timetables || []).map(t => { const c = { ...t }; delete c.__v; return c; }),
       syllabi: (syllabi || []).map(s => { const c = { ...s }; delete c.__v; return c; })
-    };
+    }, sanitizedUsers);
 
-    const sanitizedDatabaseDump = sanitizeDatabaseForExport(databaseDump, sanitizedUsers);
-
-    // Synchronize to individual operational code data files and separate sanitized export dataset
+    // Synchronize to individual operational code data files (sanitized only) and separate sanitized export dataset
     await Promise.all([
       safeWriteJson(DB_FILE, databaseDump),
-      safeWriteJson(USERS_FILE, operationalUsers),
+      safeWriteJson(USERS_FILE, sanitizedUsers),
       safeWriteJson(ACADEMIC_FILE, academicData),
       safeWriteJson(DIVISIONS_FILE, divisions),
       safeWriteJson(TIMETABLES_FILE, timetables || []),
-      safeWriteJson(SANITIZED_DB_FILE, sanitizedDatabaseDump),
+      safeWriteJson(SANITIZED_DB_FILE, databaseDump),
       safeWriteJson(SANITIZED_USERS_FILE, sanitizedUsers)
     ]);
 
     syncEvents.emit("synced");
-    console.log(`[FileSync] Auto-synced to code files: ${operationalUsers.length} users, academic store, divisions & timetables (plus sanitized export).`);
+    console.log(`[FileSync] Auto-synced to code files: ${sanitizedUsers.length} users, academic store, divisions & timetables (sanitized form only).`);
   } catch (err) {
     console.warn("[FileSync] Warning synchronizing data to files:", err.message);
   } finally {
@@ -360,6 +385,7 @@ module.exports = {
   waitForSync,
   syncEvents,
   safeWriteJson,
+  cleanStaleTempFiles,
   sanitizeUserForExport,
   sanitizeDatabaseForExport,
   DATA_DIR,

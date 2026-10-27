@@ -7,10 +7,44 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node scripts/test-mongodb-users.js && node scripts/test-academic-mongodb.js",
+    "package": "node scripts/make-clean-zip.js",
+    "check:secrets": "node scripts/check-secrets.js",
+    "test": "node scripts/test-production-auth-config.js && node scripts/test-sensitive-data-audit.js && node scripts/test-prompt27-light-mode-enforcement.js && node scripts/test-prompt33-card-hover-stability.js && node scripts/test-prompt23-mobile-screen-fit.js && node scripts/test-prompt22-mobile-responsive.js",
+    "test:unit": "npm test",
+    "test:integration": "node scripts/test-phase-a3-security-proofs.js && node scripts/test-academic-security.js && node scripts/test-login-rate-limit.js && node scripts/test-user-api-security.js && node scripts/test-sync-safety.js",
+    "test:static": "node scripts/test-static-assets-integrity.js",
+    "test:xss-lint": "node scripts/test-xss-lint.js",
+    "test:smoke": "node scripts/test-headless-smoke.js",
+    "test:all": "npm test && npm run test:integration && npm run test:static && npm run test:xss-lint && npm run test:smoke",
     "test:syllabus": "node scripts/test-courses-syllabus.js",
     "test:divisions": "node scripts/test-division-sync.js",
     "test:file-sync": "node scripts/test-file-sync.js",
+    "test:login-ratelimit": "node scripts/test-login-rate-limit.js",
+    "test:sensitive-audit": "node scripts/test-sensitive-data-audit.js",
+    "test:xss": "node scripts/test-xss-security.js",
+    "test:auth-config": "node scripts/test-production-auth-config.js",
+    "test:phase1a": "node scripts/test-phase1a-regression.js",
+    "test:phase1b": "node scripts/test-phase1b-deletion.js",
+    "test:e2e": "node scripts/test-prompt14-e2e-workflows.js",
+    "test:performance": "node scripts/test-prompt15-performance-reliability.js",
+    "test:deployment-readiness": "node scripts/test-prompt16-deployment-readiness.js",
+    "test:timetable-structure": "node scripts/test-prompt17-timetable.js",
+    "test:timetable-crud": "node scripts/test-prompt18-timetable.js",
+    "test:timetable-workflow": "node scripts/test-prompt19-timetable-workflow.js",
+    "test:timetable-persistence": "node scripts/test-prompt20-timetable-persistence.js",
+    "test:attendance": "node scripts/test-prompt21-attendance.js",
+    "test:mobile-responsive": "node scripts/test-prompt22-mobile-responsive.js",
+    "test:mobile-screen-fit": "node scripts/test-prompt23-mobile-screen-fit.js",
+    "test:signup-mobile": "node scripts/test-prompt24-signup-mobile.js",
+    "test:auth-nav": "node scripts/test-prompt25-auth-page-navigation.js",
+    "test:a11y": "node scripts/test-prompt26-accessibility-browser.js",
+    "test:light-mode": "node scripts/test-prompt27-light-mode-enforcement.js",
+    "test:ux": "node scripts/test-prompt28-error-loading-ux.js",
+    "test:push": "node scripts/test-prompt29-push-notifications.js",
+    "test:push-verification": "node scripts/test-prompt30-final-push-verification.js",
+    "test:android-push": "node scripts/test-prompt31-android-push-verification.js",
+    "test:predeployment-audit": "node scripts/test-prompt32-final-predeployment-audit.js",
+    "test:card-hover": "node scripts/test-prompt33-card-hover-stability.js",
     "test:prompt14": "node scripts/test-prompt14-e2e-workflows.js",
     "test:prompt15": "node scripts/test-prompt15-performance-reliability.js",
     "test:prompt16": "node scripts/test-prompt16-deployment-readiness.js",
@@ -31,9 +65,10 @@
     "test:prompt31": "node scripts/test-prompt31-android-push-verification.js",
     "test:prompt32": "node scripts/test-prompt32-final-predeployment-audit.js",
     "test:prompt33": "node scripts/test-prompt33-card-hover-stability.js",
-    "test:login-ratelimit": "node scripts/test-login-rate-limit.js",
-    "test:sensitive-audit": "node scripts/test-sensitive-data-audit.js",
-    "test:all": "node scripts/test-login-rate-limit.js && node scripts/test-sensitive-data-audit.js && node scripts/test-prompt33-card-hover-stability.js && node scripts/test-prompt31-android-push-verification.js && node scripts/test-prompt30-final-push-verification.js && node scripts/test-prompt29-push-notifications.js && node scripts/test-prompt28-error-loading-ux.js && node scripts/test-prompt27-light-mode-enforcement.js && node scripts/test-prompt26-accessibility-browser.js && node scripts/test-prompt25-auth-page-navigation.js && node scripts/test-prompt24-signup-mobile.js && node scripts/test-prompt23-mobile-screen-fit.js && node scripts/test-prompt22-mobile-responsive.js && node scripts/test-prompt21-attendance.js && node scripts/test-prompt20-timetable-persistence.js && node scripts/test-prompt19-timetable-workflow.js && node scripts/test-prompt18-timetable.js && node scripts/test-prompt17-timetable.js && node scripts/test-prompt16-deployment-readiness.js && node scripts/test-prompt15-performance-reliability.js && node scripts/test-prompt14-e2e-workflows.js && node scripts/test-prompt11-production-readiness.js && node scripts/test-production-auth-config.js && node scripts/test-mongodb-integrity.js && node scripts/test-api-hardening.js && node scripts/test-xss-security.js && node scripts/test-user-api-security.js && node scripts/test-academic-security.js && node scripts/test-sync-safety.js && npm test"
+    "test:all": "node scripts/test-login-rate-limit.js && node scripts/test-sensitive-data-audit.js && node scripts/test-prompt33-card-hover-stability.js && node scripts/test-prompt31-android-push-verification.js && node scripts/test-prompt30-final-push-verification.js && node scripts/test-prompt29-push-notifications.js && node scripts/test-prompt28-error-loading-ux.js && node scripts/test-prompt27-light-mode-enforcement.js && node scripts/test-prompt26-accessibility-browser.js && node scripts/test-prompt25-auth-page-navigation.js && node scripts/test-prompt24-signup-mobile.js && node scripts/test-prompt23-mobile-screen-fit.js && node scripts/test-prompt22-mobile-responsive.js && node scripts/test-prompt21-attendance.js && node scripts/test-prompt20-timetable-persistence.js && node scripts/test-prompt19-timetable-workflow.js && node scripts/test-prompt18-timetable.js && node scripts/test-prompt17-timetable.js && node scripts/test-prompt16-deployment-readiness.js && node scripts/test-prompt15-performance-reliability.js && node scripts/test-prompt14-e2e-workflows.js && node scripts/test-prompt11-production-readiness.js && node scripts/test-production-auth-config.js && node scripts/test-mongodb-integrity.js && node scripts/test-api-hardening.js && node scripts/test-xss-security.js && node scripts/test-user-api-security.js && node scripts/test-academic-security.js && node scripts/test-sync-safety.js"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -42,5 +77,8 @@
     "mongoose": "^9.9.3",
     "multer": "^2.4.0",
     "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.3.0"
   }
 }

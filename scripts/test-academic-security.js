@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { spawn } = require('child_process');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const { setupTestDb, stopTestDb } = require('./lib/test-db');
 
 const User = require('../models/User');
 const AcademicStore = require('../models/AcademicStore');
@@ -44,9 +45,9 @@ function wait(ms) {
 async function run() {
   console.log('=== Academic Data APIs Security Test Suite ===\n');
 
-  // 1. Connect to MongoDB
-  await mongoose.connect(process.env.MONGODB_URI, { dbName: 'CampusSphere', serverSelectionTimeoutMS: 8000 });
-  console.log('✓ Connected to MongoDB');
+  // 1. Connect to isolated in-memory MongoDB
+  const mongoUri = await setupTestDb('AcademicSecurity_test');
+  console.log('✓ Connected to isolated in-memory MongoDB at:', mongoUri);
 
   // 2. Start server instance on test port
   console.log(`Starting test server on port ${TEST_PORT}...`);
@@ -126,6 +127,19 @@ async function run() {
     const bobLogin = await request('POST', '/api/auth/login', {}, { role: 'student', username: bobUser, password: testPassword });
     const facultyLogin = await request('POST', '/api/auth/login', {}, { role: 'faculty', username: facultyUser, password: testPassword });
     const adminLogin = await request('POST', '/api/auth/login', {}, { role: 'admin', username: adminUser, password: testPassword });
+
+    if (!aliceLogin.body?.token) {
+      console.error('Alice login failed:', aliceLogin.status, aliceLogin.body);
+    }
+    if (!bobLogin.body?.token) {
+      console.error('Bob login failed:', bobLogin.status, bobLogin.body);
+    }
+    if (!facultyLogin.body?.token) {
+      console.error('Faculty login failed:', facultyLogin.status, facultyLogin.body);
+    }
+    if (!adminLogin.body?.token) {
+      console.error('Admin login failed:', adminLogin.status, adminLogin.body);
+    }
 
     const aliceToken = aliceLogin.body?.token;
     const bobToken = bobLogin.body?.token;
@@ -370,7 +384,7 @@ async function run() {
         }
         await store.save();
       }
-      await mongoose.disconnect();
+      await stopTestDb();
     } catch (cleanErr) {
       console.warn('Cleanup warning:', cleanErr.message);
     }

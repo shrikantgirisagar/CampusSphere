@@ -39,6 +39,7 @@ require('dotenv').config();
 const http = require('http');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+const { setupTestDb, stopTestDb } = require('./lib/test-db');
 
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
@@ -167,9 +168,9 @@ async function runPrompt21TestSuite() {
   console.log('PROMPT 21: COMPLETE ATTENDANCE SYSTEM SECURITY & VERIFICATION');
   console.log('==================================================');
 
-  // Connect to DB directly
-  await mongoose.connect(process.env.MONGODB_URI);
-  console.log('Connected to MongoDB successfully for test assertions.');
+  // Connect to isolated in-memory DB directly
+  const mongoUri = await setupTestDb("Prompt21_test");
+  console.log('Connected to isolated in-memory MongoDB at:', mongoUri);
   await Attendance.syncIndexes();
 
   // Pre-cleanup of any stray test accounts
@@ -679,7 +680,7 @@ async function runPrompt21TestSuite() {
   console.log('✓ Prompt 21 test records cleaned up safely.');
 
   await stopServer(serverInstance);
-  await mongoose.disconnect();
+  await stopTestDb();
   console.log('✓ Test server stopped and MongoDB connection closed.');
 
   console.log('\n==================================================');

@@ -34,6 +34,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3099;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -103,17 +104,9 @@ async function runPrompt19TestSuite() {
   console.log("PROMPT 19: COMPLETE TIMETABLE WORKFLOW TEST SUITE");
   console.log("==================================================");
 
-  // 1. Connect to MongoDB directly
-  const mongoUri = process.env.MONGODB_URI;
-  if (!mongoUri) throw new Error("Missing MONGODB_URI in environment.");
-
-  while (mongoose.connection.readyState === 2) {
-    await new Promise(r => setTimeout(r, 100));
-  }
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(mongoUri, { dbName: "CampusSphere" });
-  }
-  console.log("Connected to MongoDB successfully for test assertions.");
+  // 1. Connect to isolated in-memory MongoDB directly
+  const mongoUri = await setupTestDb("Prompt19_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
 
   const User = require("../models/User");
   const Timetable = require("../models/Timetable");
@@ -253,7 +246,7 @@ async function runPrompt19TestSuite() {
     // CATEGORY B: SPLIT CELLS REMOVAL & EXACT 4 RIBBON FORMATTING TOOLS
     // =========================================================================
     console.log("\n--- Category B: Split Cells Removal & Exact 4 Ribbon Formatting Tools ---");
-    const scriptContent = fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
+    const scriptContent = fs.existsSync(path.join(__dirname, "../public/script.js")) ? fs.readFileSync(path.join(__dirname, "../public/script.js"), "utf8") : fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
     assert(!scriptContent.includes('id="tbBtnSplit"'), "4. Button #tbBtnSplit completely absent from script.js HTML");
     assert(!scriptContent.includes("function splitSelectedCells"), "5. Function splitSelectedCells completely removed from script.js");
     assert(!scriptContent.includes("tbBtnSplit.addEventListener") && !scriptContent.includes("splitSelectedCells);"), "6. Split Cells event listeners absent from script.js");
@@ -746,6 +739,7 @@ async function runPrompt19TestSuite() {
     if (serverProcess && typeof serverProcess.close === "function") {
       serverProcess.close();
     }
+    await stopTestDb();
   }
 
   console.log("\n==================================================");

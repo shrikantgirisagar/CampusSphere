@@ -10,6 +10,7 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3096;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -75,6 +76,7 @@ function generateTokenFor(user, secret) {
     id: String(user.id || ""),
     role: String(user.role || ""),
     username: String(user.username || ""),
+    tokenVersion: typeof user.tokenVersion === "number" ? user.tokenVersion : 0,
     exp: expiresAt
   });
   const payload = Buffer.from(data).toString("base64url");
@@ -85,9 +87,8 @@ function generateTokenFor(user, secret) {
 async function runPrompt11Suite() {
   console.log("=== CampusSphere Prompt 11: Production Readiness & Regression Suite ===\n");
 
-  const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/CampusSphere";
-  await mongoose.connect(MONGODB_URI, { dbName: "CampusSphere", serverSelectionTimeoutMS: 10000 });
-  console.log("Connected to MongoDB successfully.\n");
+  const mongoUri = await setupTestDb("Prompt11_test");
+  console.log("Connected to isolated in-memory MongoDB at:", mongoUri, "\n");
 
   const User = require("../models/User");
   const AcademicStore = require("../models/AcademicStore");
@@ -96,9 +97,10 @@ async function runPrompt11Suite() {
   const Mark = require("../models/Mark");
 
   // Determine auth secret
+  process.env.SESSION_SECRET = "prompt11_test_secret_must_be_at_least_32_characters_long_12345";
   const app = require("../server.js");
-  const authConfig = app.validateAuthConfig ? app.validateAuthConfig(process.env) : { secret: "campussphere_dev_session_secret_2026_insecure" };
-  const authSecret = authConfig.secret || "campussphere_dev_session_secret_2026_insecure";
+  const authConfig = app.validateAuthConfig ? app.validateAuthConfig(process.env) : { secret: process.env.SESSION_SECRET };
+  const authSecret = process.env.SESSION_SECRET;
 
   // Create isolated test accounts
   const testSuffix = Date.now();
@@ -405,14 +407,14 @@ async function runPrompt11Suite() {
     const rootDir = path.resolve(__dirname, "..");
 
     // 5.1 index.html contains responsive viewport meta tag
-    const indexHtml = fs.readFileSync(path.join(rootDir, "index.html"), "utf8");
+    const indexHtml = fs.readFileSync(fs.existsSync(path.join(rootDir, "public", "index.html")) ? path.join(rootDir, "public", "index.html") : path.join(rootDir, "index.html"), "utf8");
     assert(indexHtml.includes('name="viewport"'), "index.html contains viewport meta tag for mobile/tablet responsiveness");
     assert(indexHtml.includes("script.js"), "index.html includes script.js");
     assert(indexHtml.includes("style.css"), "index.html includes style.css");
 
     // 5.2 courses.html and about.html contain viewport meta tags
-    const coursesHtml = fs.readFileSync(path.join(rootDir, "courses.html"), "utf8");
-    const aboutHtml = fs.readFileSync(path.join(rootDir, "about.html"), "utf8");
+    const coursesHtml = fs.readFileSync(fs.existsSync(path.join(rootDir, "public", "courses.html")) ? path.join(rootDir, "public", "courses.html") : path.join(rootDir, "courses.html"), "utf8");
+    const aboutHtml = fs.readFileSync(fs.existsSync(path.join(rootDir, "public", "about.html")) ? path.join(rootDir, "public", "about.html") : path.join(rootDir, "about.html"), "utf8");
     assert(coursesHtml.includes('name="viewport"'), "courses.html contains viewport meta tag");
     assert(aboutHtml.includes('name="viewport"'), "about.html contains viewport meta tag");
 
@@ -465,7 +467,7 @@ async function runPrompt11Suite() {
 
     // Close test server and database connection
     server.close();
-    await mongoose.disconnect();
+    await stopTestDb();
   }
 
   console.log("\n======================================================================");

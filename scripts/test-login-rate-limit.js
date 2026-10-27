@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3097;
 const BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
@@ -78,10 +79,9 @@ async function main() {
   console.log("CAMPUSSPHERE — LOCAL LOGIN API RATE-LIMIT FIX VERIFICATION SUITE");
   console.log("====================================================================\n");
 
-  // Connect to MongoDB
-  const mongoUri = process.env.MONGODB_URI || "mongodb://localhost:27017/CampusSphere";
-  await mongoose.connect(mongoUri);
-  console.log("✓ Connected to MongoDB");
+  // Connect to isolated in-memory test database
+  const mongoUri = await setupTestDb("LoginRateLimit_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
 
   // Start test server instance with NODE_ENV = "test"
   process.env.PORT = String(TEST_PORT);
@@ -112,7 +112,10 @@ async function main() {
   // SUITE 1: Frontend Code & Architecture Inspection
   // =========================================================================
   console.log("--- SUITE 1: Frontend Code & Architecture Inspection ---");
-  const scriptContent = fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
+  const scriptPath = fs.existsSync(path.join(__dirname, "../public/script.js"))
+    ? path.join(__dirname, "../public/script.js")
+    : path.join(__dirname, "../script.js");
+  const scriptContent = fs.readFileSync(scriptPath, "utf8");
   const serverContent = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
 
   assert(
@@ -217,7 +220,7 @@ async function main() {
   assert(!!retryAfterHeader, `HTTP 429 response includes Retry-After header: ${retryAfterHeader}`);
   assert(rateLimitLimit === "25", `HTTP 429 response includes RateLimit-Limit header: ${rateLimitLimit}`);
   assert(
-    rateLimitMessage && rateLimitMessage.includes("Too many login attempts"),
+    rateLimitMessage && (rateLimitMessage.includes("Too many login attempts") || rateLimitMessage.includes("Too many failed login attempts")),
     `HTTP 429 returns dedicated login message (not general API message): "${rateLimitMessage}"`
   );
   assert(
@@ -251,6 +254,7 @@ async function main() {
   // Clean up test student
   await User.deleteMany({ username: testStudentUser });
   console.log("\n✓ Cleaned up test user data");
+  await stopTestDb();
 
   // =========================================================================
   // SUMMARY

@@ -7,6 +7,7 @@ const http = require("http");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const path = require("path");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3098;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -75,10 +76,9 @@ function hashPassword(pwd) {
 async function main() {
   console.log("=== CampusSphere API & Application Hardening Test Suite (Prompt 8) ===");
 
-  // Connect to MongoDB
-  const mongoUri = process.env.MONGODB_URI || "mongodb://localhost:27017/CampusSphere";
-  await mongoose.connect(mongoUri);
-  console.log("✓ Connected to MongoDB");
+  // Connect to isolated in-memory MongoDB
+  const mongoUri = await setupTestDb("ApiHardening_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
 
   // Start test server instance
   process.env.PORT = String(TEST_PORT);
@@ -373,9 +373,7 @@ async function main() {
 
 main()
   .then(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
+    await stopTestDb();
     console.log("\n==============================================");
     console.log(`Results: ${passedCount} passed, ${failedCount} failed.`);
     console.log("==============================================");
@@ -383,9 +381,7 @@ main()
   })
   .catch(async (err) => {
     console.error("Test execution error:", err);
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
+    await stopTestDb();
     process.exit(1);
   });
 

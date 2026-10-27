@@ -1,15 +1,89 @@
 /* ============================================================================
    CampusSphere Service Worker
-   Real System-Level Web Push Notifications (Web Push API / Notifications API)
-   Works in background, minimized, locked screen, and when tab/PWA is closed.
+   - Real System-Level Web Push Notifications (Web Push API / Notifications API)
+   - Versioned Safe Static Asset Caching (Never caches /api)
    ============================================================================ */
 
+const CACHE_NAME = "campussphere-static-v1";
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/courses.html",
+  "/about.html",
+  "/style.css",
+  "/script.js",
+  "/animated-background.js",
+  "/manifest.json",
+  "/favicon.ico",
+  "/icon-192x192.png",
+  "/icon-512x512.png",
+  "/CampusSphere-logo.png"
+];
+
 self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).catch(() => {})
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name.startsWith("campussphere-static-") && name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// Safe Fetch Handler: caches only static assets, never /api or non-GET requests
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // Strictly skip non-GET, cross-origin, and all API endpoints
+  if (event.request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  // Network-first strategy for navigation requests
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((res) => res || caches.match("/index.html")))
+    );
+    return;
+  }
+
+  // Cache-first strategy with network fallback and background refresh for static assets
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) {
+        fetch(event.request).then((networkRes) => {
+          if (networkRes && networkRes.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkRes)).catch(() => {});
+          }
+        }).catch(() => {});
+        return cached;
+      }
+      return fetch(event.request).then((networkRes) => {
+        if (networkRes && networkRes.status === 200) {
+          const clone = networkRes.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
+        }
+        return networkRes;
+      });
+    })
+  );
 });
 
 self.addEventListener("push", (event) => {

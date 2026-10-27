@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+.dev-secret
+CampusSphere-clean.zip
+*.zip
 data/*.tmp*
 
 # Operational runtime data (contains real PII and credential hashes)
@@ -28,6 +31,9 @@ Thumbs.db
 
 # Scratch and test caches
 scratch/
+
+# Uploads directory
+uploads/
 
 # Local user-data backups & diagnostic dumps
 backups/

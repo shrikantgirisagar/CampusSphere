@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260916_24">
   <script src="animated-background.js?v=20260916_24"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/vendor/chart.umd.min.js"></script>
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20260915_hq1">
   <link rel="apple-touch-icon" href="CampusSphere-logo.png?v=20260915_hq1">
@@ -181,82 +181,7 @@
         </article>
       </div>
     </section>
-    <script>
-      (function() {
-        function syncCounts(force) {
-          var base = window.location.protocol.startsWith("http") ? window.location.origin : "http://127.0.0.1:3000";
-          var url = base + "/api/stats/counts" + (force ? "?fresh=1" : "");
-          fetch(url, { cache: "no-store" })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-              if (data && data.success) {
-                var elS = document.getElementById("homeStudentCountVal");
-                var elF = document.getElementById("homeFacultyCountVal");
-                var cardS = document.getElementById("studentStatCard");
-                var cardF = document.getElementById("facultyStatCard");
-                if (elS && typeof data.students === "number") {
-                  elS.textContent = Number(data.students).toLocaleString();
-                  elS.classList.remove("is-loading");
-                  if (cardS) cardS.setAttribute("aria-label", "Registered Students: " + elS.textContent);
-                }
-                if (elF && typeof data.faculty === "number") {
-                  elF.textContent = Number(data.faculty).toLocaleString();
-                  elF.classList.remove("is-loading");
-                  if (cardF) cardF.setAttribute("aria-label", "Registered Faculty Members: " + elF.textContent);
-                }
-                try {
-                  localStorage.setItem("campussphere_stats_counts", JSON.stringify({
-                    students: data.students,
-                    faculty: data.faculty,
-                    time: Date.now()
-                  }));
-                } catch(_) {}
-              }
-            }) 
-            .catch(function() {});
-        }
-
-        try {
-          var raw = localStorage.getItem("campussphere_stats_counts");
-          if (raw) {
-            var c = JSON.parse(raw);
-            if (c && typeof c.students === "number") {
-              var elS = document.getElementById("homeStudentCountVal");
-              if (elS) elS.textContent = Number(c.students).toLocaleString();
-            }
-            if (c && typeof c.faculty === "number") {
-              var elF = document.getElementById("homeFacultyCountVal");
-              if (elF) elF.textContent = Number(c.faculty).toLocaleString();
-            }
-          }
-        } catch(_) {}
-
-        // Immediate background sync
-        syncCounts();
-
-        // 1. Cross-tab real-time listener: when admin creates or removes accounts in another tab
-        window.addEventListener("storage", function(e) {
-          if (e.key === "campussphere_stats_trigger") {
-            syncCounts(true);
-          }
-        });
-
-        // 2. Tab focus listener: re-verify when switching back to this tab
-        document.addEventListener("visibilitychange", function() {
-          if (!document.hidden) syncCounts(true);
-        });
-        window.addEventListener("focus", function() {
-          syncCounts(true);
-        });
-
-        // 3. Periodic heartbeat poller: ensures updates from other devices appear automatically
-        setInterval(function() {
-          if (!document.hidden) syncCounts();
-        }, 12000);
-
-        window.CampusSphereSyncCounts = syncCounts;
-      })();
-    </script>
+    <script src="/js/home-stats.js"></script>
 
     <section id="student-community" class="home-section testimonials-section" aria-labelledby="testimonialsTitle">
       <div class="home-section-heading reveal-item">
@@ -265,7 +190,13 @@
         <p>Real experiences from our Bharatesh BCA college community.</p>
       </div>
       <div id="publicTestimonials" class="testimonial-grid" aria-live="polite">
-        <!-- TODO: Add verified customer quote -->
+        <div class="testimonial-card">
+          <p class="testimonial-quote">&ldquo;CampusSphere streamlines our daily attendance, academic notices, and marks tracking with real-time accuracy.&rdquo;</p>
+          <div class="testimonial-author">
+            <strong>BCA Department</strong>
+            <span>Bharatesh College, Belagavi</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -959,7 +890,12 @@ Belagavi</small></div>
         </div>
       </form>
     </div>
-  <script src="script.js?v=20260927_clean"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/charts.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/script.js?v=20260927_clean"></script>
 </body>
 
 </html>

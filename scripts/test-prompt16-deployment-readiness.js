@@ -20,9 +20,10 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const app = require("../server");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3196;
+let app;
 let server;
 let baseUrl;
 
@@ -98,7 +99,12 @@ async function runPreflightTests() {
   console.log("PROMPT 16: FREE-DEPLOYMENT READINESS PREFLIGHT");
   console.log("==================================================");
 
-  // 1. Initialize local test server
+  // 1. Initialize isolated in-memory test database
+  const mongoUri = await setupTestDb("Prompt16_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
+
+  // 2. Initialize local test server
+  app = require("../server");
   await new Promise(resolve => {
     server = app.listen(TEST_PORT, "127.0.0.1", () => {
       baseUrl = `http://127.0.0.1:${TEST_PORT}`;
@@ -205,8 +211,8 @@ async function runPreflightTests() {
     assert(httpsRes.headers["strict-transport-security"]?.includes("max-age="), "Strict-Transport-Security (HSTS) emitted when request is forwarded as HTTPS");
 
     // Content-Security-Policy Source-of-Truth Check
-    // We confirm that CSP is NOT currently emitted in headers to avoid breaking existing inline scripts
-    assert(rootRes.headers["content-security-policy"] === undefined, "Content-Security-Policy is NOT active in headers (Source of truth confirmed: CSP not implemented)");
+    // We confirm that CSP is active in headers as required by security hardening
+    assert(rootRes.headers["content-security-policy"] !== undefined, "Content-Security-Policy header is active and verified");
 
     // -------------------------------------------------------------------------
     // TEST GROUP 5: CORS Configuration Readiness
@@ -262,8 +268,8 @@ async function runPreflightTests() {
     // -------------------------------------------------------------------------
     console.log("\n--- Group 8: Dynamic Frontend API Resolution ---");
 
-    const scriptJsSrc = fs.readFileSync(path.join(rootDir, "script.js"), "utf8");
-    const indexHtmlSrc = fs.readFileSync(path.join(rootDir, "index.html"), "utf8");
+    const scriptJsSrc = fs.readFileSync(fs.existsSync(path.join(rootDir, "public", "script.js")) ? path.join(rootDir, "public", "script.js") : path.join(rootDir, "script.js"), "utf8");
+    const indexHtmlSrc = fs.readFileSync(fs.existsSync(path.join(rootDir, "public", "index.html")) ? path.join(rootDir, "public", "index.html") : path.join(rootDir, "index.html"), "utf8");
 
     assert(
       scriptJsSrc.includes('window.location.protocol.startsWith("http") ? window.location.origin : "http://127.0.0.1:3000"'),
@@ -292,6 +298,7 @@ async function runPreflightTests() {
     if (server) {
       server.close();
     }
+    await stopTestDb();
   }
 
   console.log("\n==================================================");

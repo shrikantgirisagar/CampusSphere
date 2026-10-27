@@ -23,9 +23,10 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const app = require("../server");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3205;
+let app;
 let server;
 let baseUrl;
 
@@ -111,21 +112,18 @@ async function runTimetableTestSuite() {
   console.log("PROMPT 17: DYNAMIC TIMETABLE SYSTEM TEST SUITE");
   console.log("==================================================");
 
-  // 1. Initialize local test server
+  // 1. Initialize isolated in-memory test database
+  const mongoUri = await setupTestDb("Prompt17_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
+
+  // 2. Initialize local test server
+  app = require("../server");
   await new Promise(resolve => {
     server = app.listen(TEST_PORT, "127.0.0.1", () => {
       baseUrl = `http://127.0.0.1:${TEST_PORT}`;
       resolve();
     });
   });
-
-  // 2. Ensure MongoDB connected
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "CampusSphere",
-      serverSelectionTimeoutMS: 15000
-    });
-  }
 
   const User = require("../models/User");
   const Timetable = require("../models/Timetable");
@@ -440,7 +438,7 @@ async function runTimetableTestSuite() {
     assert(savedSecondary && savedSecondary.mergedInto?.dayIndex === 0 && savedSecondary.mergedInto?.slotIndex === 0, "18. Secondary subsumed cell has mergedInto pointing to origin cell");
 
     // 19. Merged cells render properly: frontend script verifies secondary cells are omitted from DOM
-    const scriptContent = fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
+    const scriptContent = fs.existsSync(path.join(__dirname, "../public/script.js")) ? fs.readFileSync(path.join(__dirname, "../public/script.js"), "utf8") : fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
     assert(scriptContent.includes("cell.mergedInto") && scriptContent.includes("rowspan="), "19. Frontend rendering logic detects mergedInto and applies rowspan/colspan");
 
     // 20. Subject text is preserved in merged cell
@@ -922,6 +920,7 @@ async function runTimetableTestSuite() {
     if (server) {
       await new Promise(r => server.close(r));
     }
+    await stopTestDb();
   }
 
   console.log("\n==================================================");

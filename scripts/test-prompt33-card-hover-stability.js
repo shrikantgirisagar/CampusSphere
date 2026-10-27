@@ -17,9 +17,10 @@ const { spawn } = require('child_process');
 const os = require('os');
 
 const rootDir = path.resolve(__dirname, '..');
-const styleCss = fs.readFileSync(path.join(rootDir, 'style.css'), 'utf8');
-const scriptJs = fs.readFileSync(path.join(rootDir, 'script.js'), 'utf8');
-const indexHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir, 'public') : rootDir;
+const styleCss = fs.readFileSync(path.join(assetDir, 'style.css'), 'utf8');
+const scriptJs = fs.readFileSync(path.join(assetDir, 'script.js'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(assetDir, 'index.html'), 'utf8');
 const usersData = JSON.parse(fs.readFileSync(path.join(rootDir, 'data', 'users.json'), 'utf8'));
 
 let passed = 0;

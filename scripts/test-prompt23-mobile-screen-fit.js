@@ -30,12 +30,13 @@ async function runPrompt23Tests() {
   console.log('====================================================================\n');
 
   const rootDir = path.resolve(__dirname, '..');
-  const indexHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf-8');
-  const coursesHtml = fs.readFileSync(path.join(rootDir, 'courses.html'), 'utf-8');
-  const aboutHtml = fs.readFileSync(path.join(rootDir, 'about.html'), 'utf-8');
-  const studentsHtml = fs.readFileSync(path.join(rootDir, 'students.html'), 'utf-8');
-  const styleCss = fs.readFileSync(path.join(rootDir, 'style.css'), 'utf-8');
-  const scriptJs = fs.readFileSync(path.join(rootDir, 'script.js'), 'utf-8');
+const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir, 'public') : rootDir;
+  const indexHtml = fs.readFileSync(path.join(assetDir, 'index.html'), 'utf-8');
+  const coursesHtml = fs.readFileSync(path.join(assetDir, 'courses.html'), 'utf-8');
+  const aboutHtml = fs.readFileSync(path.join(assetDir, 'about.html'), 'utf-8');
+  const studentsHtml = fs.readFileSync(path.join(assetDir, 'students.html'), 'utf-8');
+  const styleCss = fs.readFileSync(path.join(assetDir, 'style.css'), 'utf-8');
+  const scriptJs = fs.readFileSync(path.join(assetDir, 'script.js'), 'utf-8');
   const serverJs = fs.readFileSync(path.join(rootDir, 'server.js'), 'utf-8');
 
   // -------------------------------------------------------------------------

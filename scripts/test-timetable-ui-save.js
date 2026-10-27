@@ -209,7 +209,7 @@ async function runTest() {
 
     // Read and evaluate script.js
     const fs = require('fs');
-    const scriptSrc = fs.readFileSync('script.js', 'utf8');
+    const scriptSrc = fs.existsSync('public/script.js') ? fs.readFileSync('public/script.js', 'utf8') : fs.readFileSync('script.js', 'utf8');
 
     // Run in isolated context
     const vm = require('vm');

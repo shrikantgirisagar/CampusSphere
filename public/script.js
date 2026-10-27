@@ -236,7 +236,7 @@ function sanitizeClientUser(user) {
       safe.subjectDivisions = {};
     }
     safe.division = safe.division || "Both Divisions";
-    safe.email = safe.email || (safe.username ? `${safe.username}@smartportal.edu` : "faculty@smartportal.edu");
+    safe.email = safe.email || (safe.username ? `${safe.username}@campussphere.edu` : "faculty@campussphere.edu");
     safe.profilePic = safe.profilePic || "";
   }
   if (safe && safe.role === "admin") {
@@ -589,6 +589,13 @@ async function authenticatedFetch(url, options = {}) {
     response = await fetch(url, optionsCopy);
   } catch (netErr) {
     throw new Error("Unable to connect to the server. Please check your connection and try again.");
+  }
+
+  if (response && response.headers) {
+    const refreshed = response.headers.get("x-refreshed-token");
+    if (refreshed && typeof setStoredAuthToken === "function") {
+      setStoredAuthToken(refreshed);
+    }
   }
 
   if (response.status === 401) {
@@ -1001,8 +1008,13 @@ function validateUserInput({ username, password, email, role, subject, currentUs
     const field = "Username";
     return `${field} must be 4–30 letters, numbers, dot, dash or underscore.`;
   }
-  if (password && password.length < 6) {
-    return "Password must contain at least 6 characters.";
+  if (password) {
+    if (password.length < 10) {
+      return "Password must contain at least 10 characters.";
+    }
+    if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      return "Password must contain at least one letter and one number.";
+    }
   }
   if (role === "faculty" && !subject) {
     return "Please select a subject for the faculty member.";
@@ -1037,7 +1049,7 @@ let adminNoticeTimer = null;
 
 function getAdminNoticeMarkup() {
   if (!adminNotice.text) return "";
-  return `<div class="admin-feedback ${adminNotice.type}">${adminNotice.text}</div>`;
+  return `<div class="admin-feedback ${escapeAttr(adminNotice.type)}">${escapeHtml(adminNotice.text)}</div>`;
 }
 
 function setAdminNotice(text, type = "success") {
@@ -1427,7 +1439,7 @@ function ensureStudentRecord(username) {
 
 function buildStudentOptions() {
   if (!USERS.student.length) return "";
-  return USERS.student.map(s => `<option value="${s.username}">${s.name} (${s.username})</option>`).join("");
+  return USERS.student.map(s => `<option value="${escapeAttr(s.username)}">${escapeHtml(s.name)} (${escapeHtml(s.username)})</option>`).join("");
 }
 
 let currentUser = null;
@@ -1565,11 +1577,11 @@ function getGroupedSubjectOptionsHTML(selectedIds = [], query = "") {
     });
 
     if (filtered.length) {
-      html += `<optgroup label="${g.label}">`;
+      html += `<optgroup label="${escapeAttr(g.label)}">`;
       filtered.forEach(s => {
         const sem = s.semester || getSemesterForSubject(s.id);
         const yr = getCourseYearForSemester(sem);
-        html += `<option value="${s.id}">${s.name} — ${sem} (${yr})</option>`;
+        html += `<option value="${escapeAttr(s.id)}">${escapeHtml(s.name)} — ${escapeHtml(sem)} (${escapeHtml(yr)})</option>`;
       });
       html += `</optgroup>`;
     }
@@ -1631,7 +1643,7 @@ function renderDirectSubjectSearchResults({ containerId, query, selectedIds, onA
               ✓ Added
             </button>
           ` : `
-            <button type="button" onclick="${escapeHtml(onAddFnName)}('${encodeURIComponent(s.id)}')" class="primary-btn" style="padding: 5px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; white-space: nowrap; margin: 0; cursor: pointer;">
+            <button type="button" data-action="add-faculty-subject-direct" data-fn="${escapeHtml(onAddFnName)}" data-subject-id="${encodeURIComponent(s.id)}" class="primary-btn" style="padding: 5px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; white-space: nowrap; margin: 0; cursor: pointer;">
               + Add
             </button>
           `}
@@ -1679,10 +1691,10 @@ function renderSignupFacultySubjectChips() {
           ${idx === 0 ? `<span style="font-size:9.5px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; font-weight:700;">Primary</span>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-          <select onchange="updateSignupFacultySubjectDivision('${escapeHtml(id)}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
+          <select data-onchange="update-signup-faculty-division" data-subject-id="${escapeHtml(id)}" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
             ${renderFacultyDivisionSelectOptions(currentDiv, yr)}
           </select>
-          <button type="button" onclick="removeSignupFacultySubject('${escapeHtml(id)}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>
+          <button type="button" data-action="remove-signup-faculty-subject" data-subject-id="${escapeHtml(id)}" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>
         </div>
       </div>
     `;
@@ -1747,7 +1759,7 @@ signupModal.innerHTML = `
       <label for="signupPassword">Password</label>
       <div class="password-wrap">
         <span class="input-icon">🔒</span>
-        <input id="signupPassword" type="password" required minlength="6" placeholder="Create a password" autocomplete="new-password">
+        <input id="signupPassword" type="password" required minlength="10" placeholder="At least 10 chars (letters & numbers)" autocomplete="new-password">
         <button type="button" id="toggleSignupPassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
           <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path>
@@ -4480,8 +4492,9 @@ function initStudentProfilePage() {
         if ($("studentNewPassword")) $("studentNewPassword").focus();
         return;
       }
-      if (newPassword.length < 6) {
-        showFeedback("New password must contain at least 6 characters.", "error");
+      const pwdCheck = validatePasswordStrength(newPassword);
+      if (pwdCheck) {
+        showFeedback(pwdCheck, "error");
         if ($("studentNewPassword")) $("studentNewPassword").focus();
         return;
       }
@@ -4740,8 +4753,9 @@ function initFacultyProfilePage() {
         if ($("facultyNewPassword")) $("facultyNewPassword").focus();
         return;
       }
-      if (newPassword.length < 6) {
-        showFeedback("New password must contain at least 6 characters.", "error");
+      const pwdCheck = validatePasswordStrength(newPassword);
+      if (pwdCheck) {
+        showFeedback(pwdCheck, "error");
         if ($("facultyNewPassword")) $("facultyNewPassword").focus();
         return;
       }
@@ -4995,8 +5009,9 @@ function initAdminProfilePage() {
         if ($("adminNewPassword")) $("adminNewPassword").focus();
         return;
       }
-      if (newPassword.length < 6) {
-        showFeedback("New password must contain at least 6 characters.", "error");
+      const pwdCheck = validatePasswordStrength(newPassword);
+      if (pwdCheck) {
+        showFeedback(pwdCheck, "error");
         if ($("adminNewPassword")) $("adminNewPassword").focus();
         return;
       }
@@ -5289,10 +5304,10 @@ function renderFacultyEditSubjectChips() {
           ${isPrimary ? `<span style="font-size:9.5px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; font-weight:700;">Active</span>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-          <select onchange="updateFacultyEditSubjectDivision('${escapeHtml(id)}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
+          <select data-onchange="update-faculty-edit-division" data-subject-id="${escapeHtml(id)}" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
             ${renderFacultyDivisionSelectOptions(currentDiv, yr)}
           </select>
-          ${facultyEditSelectedSubjects.length > 1 ? `<button type="button" onclick="removeFacultyEditSubject('${escapeHtml(id)}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>` : ''}
+          ${facultyEditSelectedSubjects.length > 1 ? `<button type="button" data-action="remove-faculty-edit-subject" data-subject-id="${escapeHtml(id)}" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>` : ''}
         </div>
       </div>
     `;
@@ -5354,7 +5369,7 @@ function openFacultyEditProfileModal() {
   if (!currentUser || currentUser.role !== "faculty") return;
   $("facultyEditName").value = currentUser.name || "";
   $("facultyEditUsername").value = currentUser.username || "";
-  $("facultyEditEmail").value = currentUser.email || `${currentUser.username}@smartportal.edu`;
+  $("facultyEditEmail").value = currentUser.email || `${currentUser.username}@campussphere.edu`;
   if ($("facultyEditDivision")) $("facultyEditDivision").value = currentUser.division || "All Divisions";
 
   facultyEditSelectedSubjects = Array.isArray(currentUser.subjects) && currentUser.subjects.length
@@ -5579,10 +5594,10 @@ function renderAdminEditFacultySubjectChips() {
           ${idx === 0 ? `<span style="font-size:9.5px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; font-weight:700;">Primary</span>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-          <select onchange="updateAdminEditFacultySubjectDivision('${escapeHtml(id)}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #a5b4fc; background:#ffffff; color:#1e293b; cursor:pointer;">
+          <select data-onchange="update-admin-edit-division" data-subject-id="${escapeHtml(id)}" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #a5b4fc; background:#ffffff; color:#1e293b; cursor:pointer;">
             ${renderFacultyDivisionSelectOptions(currentDiv, yr)}
           </select>
-          <button type="button" onclick="removeAdminEditFacultySubject('${escapeHtml(id)}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove subject">✕</button>
+          <button type="button" data-action="remove-admin-edit-subject" data-subject-id="${escapeHtml(id)}" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove subject">✕</button>
         </div>
       </div>
     `;
@@ -7861,8 +7876,8 @@ function subjectCards(type) {
   return subjectsToDisplay.map(s => {
     const value = type === "attendance" ? (record.attendance[s.id] ?? 0) + "%" : (record.marks[s.id] !== undefined ? record.marks[s.id] + "/100" : "--");
     return `<div class="subject-card">
-      ${s.icon ? `<div class="subject-icon">${s.icon}</div>` : ''}<div><b>${s.short}</b><small>${s.name}</small></div>
-      <strong>${value}</strong>
+      ${s.icon ? `<div class="subject-icon">${escapeHtml(s.icon)}</div>` : ''}<div><b>${escapeHtml(s.short)}</b><small>${escapeHtml(s.name)}</small></div>
+      <strong>${escapeHtml(value)}</strong>
     </div>`;
   }).join("");
 }
@@ -7908,12 +7923,12 @@ const pages = {
       const subtitleParts = [course, year, sem, div].filter(p => p !== "Not Selected");
       const subtitleText = subtitleParts.length ? subtitleParts.join(" • ") : "Profile setup pending";
       const profileStatus = getProfileStatusMessage();
-      const statusMarkup = profileStatus ? `<p id="profileStatusMessage" class="message ${profileStatus.type}">${profileStatus.message}</p>` : "";
+      const statusMarkup = profileStatus ? `<p id="profileStatusMessage" class="message ${escapeAttr(profileStatus.type)}">${escapeHtml(profileStatus.message)}</p>` : "";
 
       const setupBanner = !isConfigured ? `
         <div class="profile-notice-banner" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:14px 18px; border-radius:16px; margin-bottom:20px; font-size:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
           <div><strong>⚠️ Profile Setup Required:</strong> You haven't selected your academic details yet. Click <b>Edit Profile</b> to choose your Course Year, Semester, Division, and Language.</div>
-          <button onclick="openEditProfileModal()" class="primary-btn" style="padding:6px 14px; font-size:13px;" type="button">Edit Profile Now</button>
+          <button data-action="open-edit-profile" class="primary-btn" style="padding:6px 14px; font-size:13px;" type="button">Edit Profile Now</button>
         </div>` : "";
 
       const allEnrolled = getSubjectsForStudent(currentUser);
@@ -8064,7 +8079,7 @@ const pages = {
             </label>
             <div class="input-wrap">
               <span class="input-icon">✉️</span>
-              <input id="studentProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="student@smartportal.edu">
+              <input id="studentProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="student@campussphere.edu">
             </div>
           </div>
 
@@ -8131,10 +8146,10 @@ const pages = {
     }
 
     if (currentUser.role === "faculty") {
-      const email = currentUser.email || `${currentUser.username}@smartportal.edu`;
+      const email = currentUser.email || `${currentUser.username}@campussphere.edu`;
       const subjectObj = subjectById(currentUser.subject);
       const profileStatus = getProfileStatusMessage();
-      const statusMarkup = profileStatus ? `<p id="profileStatusMessage" class="message ${profileStatus.type}">${profileStatus.message}</p>` : "";
+      const statusMarkup = profileStatus ? `<p id="profileStatusMessage" class="message ${escapeAttr(profileStatus.type)}">${escapeHtml(profileStatus.message)}</p>` : "";
 
       return `<section class="panel profile">
         <div class="profile-head">
@@ -8246,7 +8261,7 @@ const pages = {
               </label>
               <div class="input-wrap">
                 <span class="input-icon">✉️</span>
-                <input id="facultyProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="faculty@smartportal.edu">
+                <input id="facultyProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="faculty@campussphere.edu">
               </div>
             </div>
 
@@ -8336,10 +8351,10 @@ const pages = {
 
     const adminName = (currentUser && currentUser.name) ? currentUser.name : "Administrator";
     const adminUsername = (currentUser && currentUser.username) ? currentUser.username : "admin";
-    const adminEmail = (currentUser && currentUser.email) ? currentUser.email : "admin@smartportal.edu";
+    const adminEmail = (currentUser && currentUser.email) ? currentUser.email : "admin@campussphere.edu";
     const adminId = (currentUser && currentUser.id) ? currentUser.id : "admin-001";
     const profileStatus = getProfileStatusMessage();
-    const statusMarkup = profileStatus ? `<p id="profileStatusMessage" class="message ${profileStatus.type}">${profileStatus.message}</p>` : "";
+    const statusMarkup = profileStatus ? `<p id="profileStatusMessage" class="message ${escapeAttr(profileStatus.type)}">${escapeHtml(profileStatus.message)}</p>` : "";
 
     return `<section class="panel profile admin-profile-panel">
       <div class="profile-head admin-profile-head">
@@ -8466,7 +8481,7 @@ const pages = {
           </label>
           <div class="input-wrap">
             <span class="input-icon">✉️</span>
-            <input id="adminProfileEmail" type="email" value="${escapeHtml(adminEmail)}" placeholder="admin@smartportal.edu">
+            <input id="adminProfileEmail" type="email" value="${escapeHtml(adminEmail)}" placeholder="admin@campussphere.edu">
           </div>
         </div>
 
@@ -8749,7 +8764,7 @@ const pages = {
 
         <section class="panel attendance-history-panel" style="margin-top:24px;">
           <div class="panel-head">
-            <h3>Stored Daily Attendance Records (${subjectObj.name})</h3>
+            <h3>Stored Daily Attendance Records (${escapeHtml(subjectObj ? subjectObj.name : "")})</h3>
             <div style="display:flex; gap:8px; align-items:center;">
               <span class="badge">Subject Logs</span>
               ${historyRows ? `
@@ -8776,7 +8791,7 @@ const pages = {
               </table>
             </div>
           ` : `
-            <p style="color:#64748b; font-size:14px; padding:12px 0;">No attendance records stored for ${subjectObj.name} yet.</p>
+            <p style="color:#64748b; font-size:14px; padding:12px 0;">No attendance records stored for ${escapeHtml(subjectObj ? subjectObj.name : "")} yet.</p>
           `}
         </section>
       `;
@@ -8822,8 +8837,8 @@ const pages = {
       const subjectItemsMarkup = dateObj.entries.map(e => `
         <div class="daily-subject-item">
           <div class="subj-info">
-            ${e.subjectIcon ? `<span class="subj-icon">${e.subjectIcon}</span>` : ''}
-            <span class="subj-name">${e.subjectName}</span>
+            ${e.subjectIcon ? `<span class="subj-icon">${escapeHtml(e.subjectIcon)}</span>` : ''}
+            <span class="subj-name">${escapeHtml(e.subjectName)}</span>
           </div>
           <div class="subj-status">
             ${e.status === "P"
@@ -8870,7 +8885,7 @@ const pages = {
         <div class="panel-head">
           <h3>Subject Attendance Summary</h3>
           <div style="display:flex; gap:10px; align-items:center;">
-            <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" onclick="openAiAnalysisModal('${currentUser.username}', 'attendance')">
+            <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" data-action="open-ai-analysis" data-username="${encodeURIComponent(currentUser.username)}" data-analysis-type="attendance">
               <span>📊 AI Attendance Analysis</span>
             </button>
             <span class="badge">Overall Progress</span>
@@ -9157,7 +9172,7 @@ const pages = {
             <small style="color:#64748b;">Detailed breakdown of Internal Exams & Assignment Marks • ${escapeHtml(currentUser.semester || '1st Semester')} (${escapeHtml(currentUser.division || 'Div A')})</small>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
-            <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" onclick="openAiAnalysisModal('${encodeURIComponent(currentUser.username)}', 'marks')">
+            <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" data-action="open-ai-analysis" data-username="${encodeURIComponent(currentUser.username)}" data-analysis-type="marks">
               <span>📈 AI Marks Analysis</span>
             </button>
             <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;">${escapeHtml(currentUser.division || 'Div A')} • Student Statement</span>
@@ -9220,15 +9235,15 @@ const pages = {
         <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
           <div>
             <h3 style="margin:0;">Assignments</h3>
-            <small style="color:#64748b; font-weight:600;">Active Class: <strong>${subjectObj.name}</strong> • ${facultySem} (${facultyYear}) • Assigned: <strong>${activeClassDivision || 'All Divisions'}</strong></small>
+            <small style="color:#64748b; font-weight:600;">Active Class: <strong>${escapeHtml(subjectObj.name)}</strong> • ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)}) • Assigned: <strong>${escapeHtml(activeClassDivision || 'All Divisions')}</strong></small>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
-            <span class="badge" style="background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; font-weight:700; padding:6px 12px;">Active Class: ${subjectObj.name} — ${facultySem} (${facultyYear})</span>
+            <span class="badge" style="background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; font-weight:700; padding:6px 12px;">Active Class: ${escapeHtml(subjectObj.name)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})</span>
             <span class="badge">Faculty Input</span>
           </div>
         </div>
         <form id="assignmentForm" class="entry-form" style="display:flex; flex-direction:column; gap:16px;">
-        <input type="hidden" id="assignmentTargetSubject" value="${currentUser.subject}">
+        <input type="hidden" id="assignmentTargetSubject" value="${escapeHtml(currentUser.subject)}">
 
         <div style="margin-bottom:4px;">
           <label style="display:block; margin-bottom:6px; font-weight:700; color:#334155; font-size:13px;">Assignment Title</label>
@@ -9387,16 +9402,16 @@ const pages = {
         <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
           <div>
             <h3 style="margin:0;">Subject Notes & Study Materials</h3>
-            <small style="color:#64748b; font-weight:600;">Active Class: <strong>${subjectName}</strong> • ${facultySem} (${facultyYear}) • Assigned: <strong>${activeClassDivision || 'All Divisions'}</strong></small>
+            <small style="color:#64748b; font-weight:600;">Active Class: <strong>${escapeHtml(subjectName)}</strong> • ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)}) • Assigned: <strong>${escapeHtml(activeClassDivision || 'All Divisions')}</strong></small>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
-            <span class="badge" style="background:#e0f2fe; color:#0369a1; padding:6px 12px; font-weight:700;">Active Class: ${subjectName} — ${facultySem} (${facultyYear})</span>
+            <span class="badge" style="background:#e0f2fe; color:#0369a1; padding:6px 12px; font-weight:700;">Active Class: ${escapeHtml(subjectName)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})</span>
             <span class="badge" style="background:#e0f2fe; color:#0369a1; padding:6px 12px; font-weight:700;">Faculty Portal</span>
           </div>
         </div>
 
         <form id="notesUploadForm" class="entry-form" style="background:#f8fafc; border:1px solid #e2e8f0; padding:18px; border-radius:12px; margin-bottom:24px;">
-          <input type="hidden" id="notesTargetSubject" value="${currentUser.subject}">
+          <input type="hidden" id="notesTargetSubject" value="${escapeHtml(currentUser.subject)}">
           <h4 style="margin:0 0 14px 0; color:#1e293b; display:flex; align-items:center; gap:6px;"><span>📤</span> Share New Study Notes</h4>
           
           <label style="font-weight:700; color:#334155;">1. Note Title / Topic</label>
@@ -9709,7 +9724,7 @@ const pages = {
           ${allFacultySubjects.map(s => {
             const sSem = s.semester || getSemesterForSubject(s.id);
             const isCurrent = (displaySemester === sSem);
-            return `<button type="button" onclick="activeTimetableSemester='${escapeHtml(sSem)}'; navigate('timetable');" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#1459d9' : '#cbd5e1'}; background:${isCurrent ? '#1459d9' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${escapeHtml(s.icon || '📚')} ${escapeHtml(s.short || s.name)} (${escapeHtml(sSem)})</button>`;
+            return `<button type="button" data-action="switch-timetable-semester" data-semester="${escapeHtml(sSem)}" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#1459d9' : '#cbd5e1'}; background:${isCurrent ? '#1459d9' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${escapeHtml(s.icon || '📚')} ${escapeHtml(s.short || s.name)} (${escapeHtml(sSem)})</button>`;
           }).join("")}
         </div>
       ` : ''}
@@ -9957,10 +9972,10 @@ const pages = {
           <span class="badge">${studentCount} Registered Students</span>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button type="button" class="secondary-btn" data-refresh-admin-users="student" onclick="refreshAdminUserList('student')" style="padding:6px 12px; font-size:12px; font-weight:700; margin:0; cursor:pointer;" title="Refresh list from server">
+          <button type="button" class="secondary-btn" data-refresh-admin-users="student" data-action="refresh-admin-users" data-role="student" style="padding:6px 12px; font-size:12px; font-weight:700; margin:0; cursor:pointer;" title="Refresh list from server">
             <span>🔄 Refresh List</span>
           </button>
-          <button type="button" class="primary-btn" onclick="openSignup('student')" style="padding:6px 14px; font-size:12px; font-weight:700; margin:0; cursor:pointer;">
+          <button type="button" class="primary-btn" data-action="open-signup" data-role="student" style="padding:6px 14px; font-size:12px; font-weight:700; margin:0; cursor:pointer;">
             <span>+ Register Student</span>
           </button>
         </div>
@@ -9983,10 +9998,10 @@ const pages = {
           <span class="badge">${facultyCount} Faculty Members</span>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button type="button" class="secondary-btn" data-refresh-admin-users="faculty" onclick="refreshAdminUserList('faculty')" style="padding:6px 12px; font-size:12px; font-weight:700; margin:0; cursor:pointer;" title="Refresh list from server">
+          <button type="button" class="secondary-btn" data-refresh-admin-users="faculty" data-action="refresh-admin-users" data-role="faculty" style="padding:6px 12px; font-size:12px; font-weight:700; margin:0; cursor:pointer;" title="Refresh list from server">
             <span>🔄 Refresh List</span>
           </button>
-          <button type="button" class="primary-btn" onclick="openSignup('faculty')" style="padding:6px 14px; font-size:12px; font-weight:700; margin:0; cursor:pointer;">
+          <button type="button" class="primary-btn" data-action="open-signup" data-role="faculty" style="padding:6px 14px; font-size:12px; font-weight:700; margin:0; cursor:pointer;">
             <span>+ Register Faculty</span>
           </button>
         </div>
@@ -10011,7 +10026,7 @@ const pages = {
           <small>Username: ${escapeHtml(f.username)}</small>
           <span class="status good">Active</span>
           <div class="admin-actions admin-actions-stack">
-            <button class="secondary-btn full-width" type="button" onclick="openAdminFacultyEditModal('${encodeURIComponent(f.username)}')" style="margin-bottom:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px; cursor:pointer;">✏️ Manage Classes</button>
+            <button class="secondary-btn full-width" type="button" data-action="open-admin-faculty-edit" data-username="${encodeURIComponent(f.username)}" style="margin-bottom:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px; cursor:pointer;">✏️ Manage Classes</button>
             <button class="danger-btn full-width" type="button" data-remove-user-role="faculty" data-remove-user-username="${escapeHtml(f.username)}" data-remove-user-name="${escapeHtml(f.name)}">Remove</button>
           </div>
         </div>`;
@@ -10106,7 +10121,7 @@ function facultyDashboard() {
   const notesCount = (ACADEMIC && Array.isArray(ACADEMIC.notes))
     ? ACADEMIC.notes.filter(n => allFacultySubjects.some(s => s.id === n.subject) || n.uploadedBy === currentUser.username).length
     : 0;
-  const email = (currentUser && currentUser.email) ? currentUser.email : (currentUser ? `${currentUser.username}@smartportal.edu` : "");
+  const email = (currentUser && currentUser.email) ? currentUser.email : (currentUser ? `${currentUser.username}@campussphere.edu` : "");
   const facultyName = (currentUser && currentUser.name) ? currentUser.name : "Faculty Member";
 
   return `<div class="welcome">
@@ -10118,19 +10133,19 @@ function facultyDashboard() {
   </div>
 
   <div class="stat-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:17px;">
-    <div class="stat" style="cursor: pointer;" onclick="document.querySelector('.faculty-classes-panel')?.scrollIntoView({ behavior: 'smooth' })">
+    <div class="stat" style="cursor: pointer;" data-action="scroll-faculty-classes">
       <span>📚</span><b>${allFacultySubjects.length}</b><small>Assigned Classes</small>
     </div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('attendance')">
+    <div class="stat" style="cursor: pointer;" data-navigate="attendance">
       <span>👥</span><b>${totalEnrolledAcrossClasses}</b><small>Total Enrolled Students</small>
     </div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('assignments')">
+    <div class="stat" style="cursor: pointer;" data-navigate="assignments">
       <span>📝</span><b>${assignmentCount}</b><small>Total Assignments</small>
     </div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('notes')">
+    <div class="stat" style="cursor: pointer;" data-navigate="notes">
       <span>📖</span><b>${notesCount}</b><small>Subject Notes</small>
     </div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('notices')">
+    <div class="stat" style="cursor: pointer;" data-navigate="notices">
       <span>📢</span><b>${noticeCount}</b><small>Notices</small>
     </div>
   </div>
@@ -10142,7 +10157,7 @@ function facultyDashboard() {
         <h3 style="display:flex; align-items:center; gap:8px;"><span>📚</span> All Managed Classes & Subjects (${allFacultySubjects.length})</h3>
         <small style="color:#64748b; font-weight:600;">You manage classes across different course years & semesters from this single portal</small>
       </div>
-      <button type="button" onclick="openFacultyEditProfileModal()" class="secondary-btn" style="padding:6px 14px; font-size:12.5px; font-weight:700; border-radius:8px; margin:0; cursor:pointer;">
+      <button type="button" data-action="open-faculty-edit-profile" class="secondary-btn" style="padding:6px 14px; font-size:12.5px; font-weight:700; border-radius:8px; margin:0; cursor:pointer;">
         <span>+ Add / Manage Classes</span>
       </button>
     </div>
@@ -10152,7 +10167,7 @@ function facultyDashboard() {
         <div class="empty-state" style="padding: 28px 20px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1.5px dashed #cbd5e1; grid-column: 1 / -1;">
           <p style="font-size: 15px; font-weight: 700; color: #334155; margin: 0 0 6px;">No classes or subjects assigned yet</p>
           <p style="font-size: 13px; color: #64748b; margin: 0 0 16px;">Add the subjects and class divisions you teach to start taking attendance and posting marks.</p>
-          <button type="button" onclick="openFacultyEditProfileModal()" class="primary-btn" style="width: auto !important; margin: 0 auto; padding: 8px 18px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer;">
+          <button type="button" data-action="open-faculty-edit-profile" class="primary-btn" style="width: auto !important; margin: 0 auto; padding: 8px 18px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer;">
             <span>+ Add Your Classes Now</span>
           </button>
         </div>
@@ -10190,11 +10205,11 @@ function facultyDashboard() {
             <div style="margin-top:10px; display:flex; gap:6px; flex-direction:column;">
               ${isActive ? `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                  <button type="button" class="btn-sm" onclick="navigate('attendance')" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer;">📊 Attendance</button>
-                  <button type="button" class="btn-sm" onclick="navigate('marks')" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;">📈 Marks</button>
+                  <button type="button" class="btn-sm" data-navigate="attendance" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer;">📊 Attendance</button>
+                  <button type="button" class="btn-sm" data-navigate="marks" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;">📈 Marks</button>
                 </div>
               ` : `
-                <button type="button" onclick="switchFacultyActiveSubject('${escapeHtml(s.id)}')" class="primary-btn" style="width:100% !important; margin:0; padding:8px 12px; font-size:12px; font-weight:700; border-radius:8px; cursor:pointer;">
+                <button type="button" data-action="switch-faculty-active-subject" data-subject-id="${escapeHtml(s.id)}" class="primary-btn" style="width:100% !important; margin:0; padding:8px 12px; font-size:12px; font-weight:700; border-radius:8px; cursor:pointer;">
                   <span>Switch to Manage This Class</span>
                   <span class="arrow">→</span>
                 </button>
@@ -10216,7 +10231,7 @@ function facultyDashboard() {
       </div>
       <div style="padding: 24px; text-align: center; color: #64748b;">
         <p style="font-size: 14px; margin: 0 0 14px;">Please assign at least one class or subject to manage attendance, marks, and assignments.</p>
-        <button type="button" onclick="openFacultyEditProfileModal()" class="primary-btn" style="width: auto !important; margin: 0 auto; padding: 7px 16px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer;">
+        <button type="button" data-action="open-faculty-edit-profile" class="primary-btn" style="width: auto !important; margin: 0 auto; padding: 7px 16px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer;">
           <span>+ Add Class Now</span>
         </button>
       </div>
@@ -10278,11 +10293,11 @@ function facultyDashboard() {
       </div>
 
       <div class="course-actions-row" style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button type="button" class="action-btn-secondary" onclick="navigate('attendance')" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📊 Manage Attendance</button>
-        <button type="button" class="action-btn-secondary" onclick="navigate('marks')" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📈 Manage Marks</button>
-        <button type="button" class="action-btn-secondary" onclick="navigate('assignments')" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📝 View Assignments</button>
-        <button type="button" class="action-btn-secondary" onclick="navigate('notes')" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📚 Upload Notes</button>
-        <button type="button" class="action-btn-secondary" onclick="navigate('timetable')" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">🗓️ Timetable</button>
+        <button type="button" class="action-btn-secondary" data-navigate="attendance" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📊 Manage Attendance</button>
+        <button type="button" class="action-btn-secondary" data-navigate="marks" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📈 Manage Marks</button>
+        <button type="button" class="action-btn-secondary" data-navigate="assignments" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📝 View Assignments</button>
+        <button type="button" class="action-btn-secondary" data-navigate="notes" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📚 Upload Notes</button>
+        <button type="button" class="action-btn-secondary" data-navigate="timetable" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">🗓️ Timetable</button>
       </div>
     </section>
   `}
@@ -10293,7 +10308,7 @@ function facultyDashboard() {
         <h3>👤 Faculty Information</h3>
         <span class="badge">Faculty Account</span>
       </div>
-      <button type="button" id="openFacultyEditProfileBtn" onclick="openFacultyEditProfileModal()" class="primary-btn profile-edit-btn" style="width: auto !important; margin: 0; padding: 6px 14px; cursor:pointer;">
+      <button type="button" id="openFacultyEditProfileBtn" data-action="open-faculty-edit-profile" class="primary-btn profile-edit-btn" style="width: auto !important; margin: 0; padding: 6px 14px; cursor:pointer;">
         <span>✏️ Edit Details</span>
       </button>
     </div>
@@ -10358,12 +10373,12 @@ function adminDashboard() {
   </div>
 
   <div class="stat-grid">
-    <div class="stat" style="cursor: pointer;" onclick="navigate('profile')"><span>👤</span><b>${escapeHtml(adminName)}</b><small>Admin (@${escapeHtml(adminUsername)})</small></div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('divisions')"><span>🏫</span><b>${totalDivisions}</b><small>Class Divisions</small></div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('subjects')"><span>📚</span><b>${totalSubjects}</b><small>Semester Subjects</small></div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('students')"><span>👥</span><b>${USERS.student.length}</b><small>Students</small></div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('faculty')"><span>🧑‍🏫</span><b>${USERS.faculty.length}</b><small>Faculty</small></div>
-    <div class="stat" style="cursor: pointer;" onclick="navigate('notices')"><span>📢</span><b>${noticeCount}</b><small>Notices</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="profile"><span>👤</span><b>${escapeHtml(adminName)}</b><small>Admin (@${escapeHtml(adminUsername)})</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="divisions"><span>🏫</span><b>${totalDivisions}</b><small>Class Divisions</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="subjects"><span>📚</span><b>${totalSubjects}</b><small>Semester Subjects</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="students"><span>👥</span><b>${USERS.student.length}</b><small>Students</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="faculty"><span>🧑‍🏫</span><b>${USERS.faculty.length}</b><small>Faculty</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="notices"><span>📢</span><b>${noticeCount}</b><small>Notices</small></div>
   </div>
 
   <section class="panel" style="margin-top: 18px;">
@@ -10374,25 +10389,25 @@ function adminDashboard() {
       </div>
     </div>
     <div class="admin-quick-actions-bar">
-      <button type="button" class="admin-quick-btn" onclick="navigate('profile')">
+      <button type="button" class="admin-quick-btn" data-navigate="profile">
         <span>👤</span> Admin Profile & Security
       </button>
-      <button type="button" class="admin-quick-btn" onclick="navigate('divisions')">
+      <button type="button" class="admin-quick-btn" data-navigate="divisions">
         <span>🏫</span> Manage Class Divisions
       </button>
-      <button type="button" class="admin-quick-btn" onclick="navigate('subjects')">
+      <button type="button" class="admin-quick-btn" data-navigate="subjects">
         <span>📚</span> Manage Semester-wise Subjects
       </button>
-      <button type="button" class="admin-quick-btn" onclick="navigate('students')">
+      <button type="button" class="admin-quick-btn" data-navigate="students">
         <span>👥</span> Manage Students
       </button>
-      <button type="button" class="admin-quick-btn" onclick="navigate('faculty')">
+      <button type="button" class="admin-quick-btn" data-navigate="faculty">
         <span>🧑‍🏫</span> Manage Faculty
       </button>
-      <button type="button" class="admin-quick-btn" onclick="navigate('timetable')">
+      <button type="button" class="admin-quick-btn" data-navigate="timetable">
         <span>🗓️</span> Manage Timetable
       </button>
-      <button type="button" class="admin-quick-btn" onclick="navigate('notices')">
+      <button type="button" class="admin-quick-btn" data-navigate="notices">
         <span>📢</span> Publish Notices
       </button>
     </div>
@@ -10404,7 +10419,7 @@ function adminDashboard() {
         <h3>📚 Semester-wise Curriculum Overview</h3>
         <span class="badge">6 Semesters • ${totalSubjects} Subjects</span>
       </div>
-      <button type="button" class="primary-btn" onclick="navigate('subjects')" style="width: auto !important; margin: 0; padding: 6px 14px; font-size: 12.5px;">
+      <button type="button" class="primary-btn" data-navigate="subjects" style="width: auto !important; margin: 0; padding: 6px 14px; font-size: 12.5px;">
         <span>Open Subjects Section →</span>
       </button>
     </div>
@@ -10425,7 +10440,7 @@ function adminDashboard() {
               <span>•</span>
               <span>${labs} Labs</span>
             </div>
-            <button type="button" class="btn-sem-jump" onclick="activeSubjectSemesterFilter='${sem}'; navigate('subjects');">
+            <button type="button" class="btn-sem-jump" data-action="switch-subject-semester-filter" data-semester="${escapeHtml(sem)}">
               <span>Configure ${sem} (${year}) →</span>
             </button>
           </div>
@@ -10481,7 +10496,7 @@ function adminSubjects() {
               <p class="sem-meta-text">${semSubjects.length} Total Subjects • ${semTheory} Theory • ${semLab} Practical Labs</p>
             </div>
           </div>
-          <button type="button" class="primary-btn btn-add-subject-sem" onclick="openAddSubjectModal('${escapeHtml(sem)}')">
+          <button type="button" class="primary-btn btn-add-subject-sem" data-action="open-add-subject" data-semester="${escapeHtml(sem)}">
             <span>➕ Add Subject to ${escapeHtml(sem)}</span>
           </button>
         </div>
@@ -10512,10 +10527,10 @@ function adminSubjects() {
                   ${facultyNames ? `<div class="faculty-assigned-text">🧑‍🏫 <span>${escapeHtml(facultyNames)}</span></div>` : `<div class="faculty-assigned-text unassigned">⚪ No faculty assigned</div>`}
                 </div>
                 <div class="card-actions">
-                  <button type="button" class="btn-action-edit" onclick="openEditSubjectModal('${escapeHtml(s.id)}')" title="Edit Subject Details">
+                  <button type="button" class="btn-action-edit" data-action="open-edit-subject" data-subject-id="${escapeHtml(s.id)}" title="Edit Subject Details">
                     <span>✏️ Edit</span>
                   </button>
-                  <button type="button" class="btn-action-delete" onclick="deleteSubject('${escapeHtml(s.id)}')" title="Delete Subject">
+                  <button type="button" class="btn-action-delete" data-action="delete-subject" data-subject-id="${escapeHtml(s.id)}" title="Delete Subject">
                     <span>🗑️ Delete</span>
                   </button>
                 </div>
@@ -10525,7 +10540,7 @@ function adminSubjects() {
             <div class="empty-state-box">
               <span class="empty-icon">📂</span>
               <p>No subjects configured for ${escapeHtml(sem)} yet.</p>
-              <button type="button" class="secondary-btn" onclick="openAddSubjectModal('${escapeHtml(sem)}')">➕ Add Subject to ${escapeHtml(sem)}</button>
+              <button type="button" class="secondary-btn" data-action="open-add-subject" data-semester="${escapeHtml(sem)}">➕ Add Subject to ${escapeHtml(sem)}</button>
             </div>
           `}
         </div>
@@ -11239,11 +11254,11 @@ function adminDivisions() {
           </div>
 
           <div class="card-actions" style="display:flex; align-items:center; gap:8px;">
-            <button type="button" class="secondary-btn" onclick="renameDivision('${escapeHtml(divName)}', '${escapeHtml(yr)}')" style="margin:0; padding:6px 12px; font-size:12px; font-weight:700;">
+            <button type="button" class="secondary-btn" data-action="rename-division" data-div-name="${escapeHtml(divName)}" data-year="${escapeHtml(yr)}" style="margin:0; padding:6px 12px; font-size:12px; font-weight:700;">
               <span>✏️ Rename</span>
             </button>
             ${isRemovable ? `
-              <button type="button" class="danger-btn" onclick="deleteDivision('${escapeHtml(divName)}', '${escapeHtml(yr)}')" style="margin:0; padding:6px 14px; font-size:12px; font-weight:700;">
+              <button type="button" class="danger-btn" data-action="delete-division" data-div-name="${escapeHtml(divName)}" data-year="${escapeHtml(yr)}" style="margin:0; padding:6px 14px; font-size:12px; font-weight:700;">
                 <span>🗑️ Remove</span>
               </button>
             ` : `
@@ -11269,7 +11284,7 @@ function adminDivisions() {
               </p>
             </div>
           </div>
-          <button type="button" class="primary-btn btn-add-subject-sem" onclick="openAddDivisionModal('${escapeHtml(yr)}')">
+          <button type="button" class="primary-btn btn-add-subject-sem" data-action="open-add-division" data-year="${escapeHtml(yr)}">
             <span>+ Add Division to ${escapeHtml(yr)}</span>
           </button>
         </div>
@@ -11310,7 +11325,7 @@ function adminDivisions() {
           <span class="badge" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-weight:700;">⚡ Multi-System Auto-Sync Active</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="primary-btn" onclick="openAddDivisionModal('All Years')" style="margin: 0; padding: 8px 16px; font-size: 13px; font-weight: 700; background: #0A2540;">
+          <button type="button" class="primary-btn" data-action="open-add-division" data-year="All Years" style="margin: 0; padding: 8px 16px; font-size: 13px; font-weight: 700; background: #0A2540;">
             <span>+ Add Division to All Years</span>
           </button>
         </div>
@@ -11905,7 +11920,7 @@ function updateFacultySubjectSwitcher() {
       <span style="font-size: 14px;">👨‍🏫</span>
       <div style="display:flex; flex-direction:column; line-height:1.1;">
         <small style="color: #64748b; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px;">Active Class</small>
-        <select onchange="switchFacultyActiveSubject(this.value)" aria-label="Select Active Subject" style="padding: 2px 6px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 700; color: #1e293b; background: #f8fafc; cursor: pointer; outline: none; height: 26px; margin-top:2px;">
+        <select data-onchange="switch-faculty-active-subject" aria-label="Select Active Subject" style="padding: 2px 6px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 700; color: #1e293b; background: #f8fafc; cursor: pointer; outline: none; height: 26px; margin-top:2px;">
           ${eligibleSubjects.map(s => {
             const sSem = s.semester || getSemesterForSubject(s.id);
             const sYear = getCourseYearForSemester(sSem);
@@ -11919,7 +11934,7 @@ function updateFacultySubjectSwitcher() {
           }).join("")}
         </select>
       </div>
-      <button type="button" onclick="openFacultyEditProfileModal()" title="Manage or Add More Subjects" style="border:none; background:#f1f5f9; color:#475569; padding:4px 7px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; margin-left:2px;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">+ Classes</button>
+      <button type="button" data-action="open-faculty-edit-profile" title="Manage or Add More Subjects" style="border:none; background:#f1f5f9; color:#475569; padding:4px 7px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; margin-left:2px;">+ Classes</button>
     </div>
   `;
 }
@@ -12510,10 +12525,10 @@ executeUniversalAutoSync();
             ${idx === 0 ? `<span style="font-size:9.5px; background:#dbeafe; color:#1d4ed8; padding:1px 5px; border-radius:4px; font-weight:700;">Primary</span>` : ''}
           </div>
           <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-            <select onchange="window.updatePageFacultySubjectDivision('${escapeHtml(id)}', this.value)" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
+            <select data-onchange="update-page-faculty-division" data-subject-id="${escapeHtml(id)}" title="Assigned division for this subject" style="padding:3px 6px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid #93c5fd; background:#ffffff; color:#1e293b; cursor:pointer;">
               ${typeof renderFacultyDivisionSelectOptions === "function" ? renderFacultyDivisionSelectOptions(currentDiv, yr) : `<option value="Both Divisions">Both Divisions</option>`}
             </select>
-            <button type="button" onclick="window.removePageFacultySubject('${escapeHtml(id)}')" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>
+            <button type="button" data-action="remove-page-faculty-subject" data-subject-id="${escapeHtml(id)}" style="border:none; background:transparent; color:#ef4444; font-size:14px; cursor:pointer; padding:0 3px; line-height:1; font-weight:bold;" title="Remove">✕</button>
           </div>
         </div>
       `;
@@ -13110,7 +13125,7 @@ async function loadSyllabusData() {
           <div style="font-size: 32px; margin-bottom: 10px;">⚠️</div>
           <h3 style="color: #0f172a; margin: 0 0 6px 0;">Unable to Load Syllabus</h3>
           <p style="color: #64748b; margin: 0 0 16px 0; font-size: 14px;">${escapeHtml(error.message || "Please check your network connection.")}</p>
-          <button type="button" class="primary-btn" onclick="loadSyllabusData()">Retry</button>
+          <button type="button" class="primary-btn" data-action="retry-syllabus">Retry</button>
         </div>
       `;
     }
@@ -13167,7 +13182,7 @@ function renderSyllabusCards(syllabi, maxMb) {
             </div>
           </div>
 
-          <button type="button" class="syllabus-download-btn admin-upload-btn" onclick="openAdminYearSyllabusModal(${yearGroup.yearLevel})" aria-label="Upload Syllabus for ${escapeHtml(yearGroup.yearTitle)}">
+          <button type="button" class="syllabus-download-btn admin-upload-btn" data-action="open-admin-year-syllabus" data-year-level="${yearGroup.yearLevel}" aria-label="Upload Syllabus for ${escapeHtml(yearGroup.yearTitle)}">
             ${isUp ? "MANAGE / REPLACE SYLLABUS" : "UPLOAD SYLLABUS"}
           </button>
         </article>
@@ -13219,7 +13234,7 @@ function renderSyllabusCards(syllabi, maxMb) {
           </div>
         </div>
 
-        <button type="button" class="syllabus-download-btn full-width" ${!isUp ? "disabled" : ""} onclick="downloadSyllabusPdf(${yearGroup.yearLevel}, '${escapeHtml(doc?.originalFilename || "")}')" aria-label="Download Syllabus for ${escapeHtml(yearGroup.yearTitle)}">
+        <button type="button" class="syllabus-download-btn full-width" ${!isUp ? "disabled" : ""} data-action="download-syllabus-pdf" data-year-level="${yearGroup.yearLevel}" data-filename="${escapeHtml(doc?.originalFilename || '')}" aria-label="Download Syllabus for ${escapeHtml(yearGroup.yearTitle)}">
           ${isUp ? "📥 DOWNLOAD SYLLABUS" : "⏳ PENDING UPLOAD"}
         </button>
       </article>
@@ -13310,29 +13325,29 @@ function renderAdminModalContent() {
         </div>
 
         <div class="admin-modal-action-bar">
-          <button type="button" class="syllabus-btn syllabus-btn-view" onclick="previewSyllabusPdf(${currentAdminModalYearLevel})" title="View PDF in new tab">
+          <button type="button" class="syllabus-btn syllabus-btn-view" data-action="preview-syllabus-pdf" data-year-level="${currentAdminModalYearLevel}" title="View PDF in new tab">
             👁️ View
           </button>
-          <button type="button" class="syllabus-btn syllabus-btn-download" onclick="downloadSyllabusPdf(${currentAdminModalYearLevel}, '${escapeHtml(currentDoc.originalFilename || '')}')" title="Download PDF file">
+          <button type="button" class="syllabus-btn syllabus-btn-download" data-action="download-current-syllabus-pdf" data-filename="${escapeHtml(currentDoc.originalFilename || '')}" title="Download PDF file">
             📥 Download
           </button>
-          <button type="button" class="syllabus-btn syllabus-btn-replace" onclick="setAdminModalReplaceMode(true)" title="Replace with a new PDF file">
+          <button type="button" class="syllabus-btn syllabus-btn-replace" data-action="set-admin-modal-replace-mode" data-replace="true" title="Replace with a new PDF file">
             🔄 Replace
           </button>
-          <button type="button" class="syllabus-btn syllabus-btn-delete" onclick="confirmDeleteSyllabus(${currentAdminModalYearLevel}, '${escapeHtml(currentDoc.originalFilename || '')}')" title="Delete this syllabus PDF">
+          <button type="button" class="syllabus-btn syllabus-btn-delete" data-action="confirm-delete-syllabus" data-filename="${escapeHtml(currentDoc.originalFilename || '')}" title="Delete this syllabus PDF">
             🗑️ Delete
           </button>
         </div>
       </div>
 
       <div class="modal-actions" style="margin-top: 16px; display: flex; justify-content: flex-end;">
-        <button type="button" class="secondary-btn" onclick="closeSyllabusUploadModal()">Close</button>
+        <button type="button" class="secondary-btn" data-action="close-syllabus-modal">Close</button>
       </div>
     `;
   } else {
     // Upload or Replace file form
     html = `
-      <form id="syllabusUploadForm" class="syllabus-upload-form" onsubmit="handleSyllabusUploadSubmit(event)">
+      <form id="syllabusUploadForm" class="syllabus-upload-form">
         <div class="admin-upload-prompt-text" style="margin-bottom: 14px; font-size: 13.5px; color: #334155;">
           ${isSyllabusReplaceMode 
             ? `<strong>Replace Syllabus:</strong> Select a new genuine PDF file to replace the existing syllabus for <em>${escapeHtml(yearGroup.yearTitle)} (${escapeHtml(yearGroup.semesterLabel)})</em>.` 
@@ -13355,7 +13370,7 @@ function renderAdminModalContent() {
               <strong id="syllabusSelectedFileName">document.pdf</strong>
               <span id="syllabusSelectedFileSize">0 MB</span>
             </div>
-            <button type="button" class="remove-file-btn" onclick="clearSyllabusSelectedFile()" aria-label="Remove selected file">&times;</button>
+            <button type="button" class="remove-file-btn" data-action="clear-syllabus-file" aria-label="Remove selected file">&times;</button>
           </div>
         </div>
 
@@ -13370,12 +13385,12 @@ function renderAdminModalContent() {
 
         <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
           ${isSyllabusReplaceMode ? `
-            <button type="button" class="secondary-btn" onclick="setAdminModalReplaceMode(false)">Back to Details</button>
+            <button type="button" class="secondary-btn" data-action="set-admin-modal-replace-mode" data-replace="false">Back to Details</button>
             <button type="submit" id="syllabusUploadSubmitBtn" class="primary-btn">
               <span>🔄</span> <span id="syllabusUploadSubmitText">Replace Syllabus</span>
             </button>
           ` : `
-            <button type="button" class="secondary-btn" onclick="closeSyllabusUploadModal()">Cancel</button>
+            <button type="button" class="secondary-btn" data-action="close-syllabus-modal">Cancel</button>
             <button type="submit" id="syllabusUploadSubmitBtn" class="primary-btn">
               <span>📤</span> <span id="syllabusUploadSubmitText">Upload Syllabus</span>
             </button>
@@ -13436,7 +13451,7 @@ function ensureSyllabusModalsInDom() {
             <h3 id="syllabusUploadModalTitle">Upload &amp; Manage Syllabus</h3>
             <p id="syllabusUploadModalSubtitle" class="modal-sub">First Year BCA • Academic Year: 2025–26</p>
           </div>
-          <button type="button" class="modal-close" onclick="closeSyllabusUploadModal()" aria-label="Close dialog">&times;</button>
+          <button type="button" class="modal-close" data-action="close-syllabus-modal" aria-label="Close dialog">&times;</button>
         </div>
         <div id="adminModalDynamicContent" style="padding: 16px 0 0 0;"></div>
       </div>
@@ -13455,7 +13470,7 @@ function ensureSyllabusModalsInDom() {
       <div class="modal syllabus-delete-modal">
         <div class="modal-header">
           <h3 id="syllabusDeleteModalTitle">Delete Syllabus PDF</h3>
-          <button type="button" class="modal-close" onclick="closeDeleteSyllabusModal()" aria-label="Close dialog">&times;</button>
+          <button type="button" class="modal-close" data-action="close-delete-syllabus-modal" aria-label="Close dialog">&times;</button>
         </div>
         <div class="modal-body" style="padding: 16px 0;">
           <p style="color: #334155; margin-bottom: 12px; font-size: 14px;">
@@ -13473,7 +13488,7 @@ function ensureSyllabusModalsInDom() {
         </div>
         <div id="syllabusDeleteAlert" class="message hidden" role="alert"></div>
         <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" class="secondary-btn" onclick="closeDeleteSyllabusModal()">Cancel</button>
+          <button type="button" class="secondary-btn" data-action="close-delete-syllabus-modal">Cancel</button>
           <button type="button" id="confirmDeleteSyllabusBtn" class="danger-btn">
             <span>🗑️</span> Delete Syllabus
           </button>
@@ -13587,8 +13602,8 @@ function handleSyllabusUploadSubmit(e) {
   }
 
   const formData = new FormData();
-  formData.append("file", file);
   formData.append("yearLevel", String(yearLevel));
+  formData.append("file", file);
 
   const endpoint = isSyllabusReplaceMode
     ? `${API_BASE_URL}/api/syllabus/${yearLevel}`
@@ -13618,6 +13633,11 @@ function handleSyllabusUploadSubmit(e) {
     try {
       json = JSON.parse(xhr.responseText || "{}");
     } catch (_) {}
+
+    const refreshed = xhr.getResponseHeader("x-refreshed-token");
+    if (refreshed && typeof setStoredAuthToken === "function") {
+      setStoredAuthToken(refreshed);
+    }
 
     if (xhr.status >= 200 && xhr.status < 300 && json.success) {
       const yrConfig = SYLLABUS_ACADEMIC_YEARS.find(y => y.yearLevel === yearLevel);
@@ -13811,3 +13831,283 @@ window.closeDeleteSyllabusModal = closeDeleteSyllabusModal;
 window.previewSyllabusPdf = previewSyllabusPdf;
 window.downloadSyllabusPdf = downloadSyllabusPdf;
 
+
+
+// -------------------------------------------------------------
+// Global Delegated Event Listeners for Strict CSP Compliance
+// -------------------------------------------------------------
+document.addEventListener("click", (e) => {
+  const navEl = e.target.closest("[data-navigate]");
+  if (navEl) {
+    e.preventDefault();
+    const page = navEl.getAttribute("data-navigate");
+    if (typeof navigate === "function") navigate(page);
+    return;
+  }
+
+  const actEl = e.target.closest("[data-action]");
+  if (!actEl) return;
+  const action = actEl.getAttribute("data-action");
+
+  switch (action) {
+    case "scroll-faculty-classes":
+      e.preventDefault();
+      document.querySelector(".faculty-classes-panel")?.scrollIntoView({ behavior: "smooth" });
+      break;
+
+    case "add-faculty-subject-direct": {
+      e.preventDefault();
+      const fnName = actEl.getAttribute("data-fn");
+      const subId = decodeURIComponent(actEl.getAttribute("data-subject-id") || "");
+      if (fnName && typeof window[fnName] === "function") {
+        window[fnName](subId);
+      }
+      break;
+    }
+
+    case "remove-signup-faculty-subject": {
+      e.preventDefault();
+      const id = actEl.getAttribute("data-subject-id");
+      if (typeof removeSignupFacultySubject === "function") removeSignupFacultySubject(id);
+      break;
+    }
+
+    case "remove-faculty-edit-subject": {
+      e.preventDefault();
+      const id = actEl.getAttribute("data-subject-id");
+      if (typeof removeFacultyEditSubject === "function") removeFacultyEditSubject(id);
+      break;
+    }
+
+    case "remove-admin-edit-subject": {
+      e.preventDefault();
+      const id = actEl.getAttribute("data-subject-id");
+      if (typeof removeAdminEditFacultySubject === "function") removeAdminEditFacultySubject(id);
+      break;
+    }
+
+    case "remove-page-faculty-subject": {
+      e.preventDefault();
+      const id = actEl.getAttribute("data-subject-id");
+      if (typeof window.removePageFacultySubject === "function") window.removePageFacultySubject(id);
+      break;
+    }
+
+    case "open-edit-profile":
+      e.preventDefault();
+      if (typeof openEditProfileModal === "function") openEditProfileModal();
+      break;
+
+    case "open-faculty-edit-profile":
+      e.preventDefault();
+      if (typeof openFacultyEditProfileModal === "function") openFacultyEditProfileModal();
+      break;
+
+    case "open-signup": {
+      e.preventDefault();
+      const role = actEl.getAttribute("data-role") || "student";
+      if (typeof openSignup === "function") openSignup(role);
+      break;
+    }
+
+    case "refresh-admin-users": {
+      e.preventDefault();
+      const role = actEl.getAttribute("data-role") || "student";
+      if (typeof refreshAdminUserList === "function") refreshAdminUserList(role);
+      break;
+    }
+
+    case "open-admin-faculty-edit": {
+      e.preventDefault();
+      const username = decodeURIComponent(actEl.getAttribute("data-username") || "");
+      if (typeof openAdminFacultyEditModal === "function") openAdminFacultyEditModal(username);
+      break;
+    }
+
+    case "switch-faculty-active-subject": {
+      e.preventDefault();
+      const id = actEl.getAttribute("data-subject-id");
+      if (typeof switchFacultyActiveSubject === "function") switchFacultyActiveSubject(id);
+      break;
+    }
+
+    case "switch-timetable-semester": {
+      e.preventDefault();
+      const sem = actEl.getAttribute("data-semester");
+      window.activeTimetableSemester = sem;
+      if (typeof navigate === "function") navigate("timetable");
+      break;
+    }
+
+    case "switch-subject-semester-filter": {
+      e.preventDefault();
+      const sem = actEl.getAttribute("data-semester");
+      window.activeSubjectSemesterFilter = sem;
+      if (typeof navigate === "function") navigate("subjects");
+      break;
+    }
+
+    case "open-add-subject": {
+      e.preventDefault();
+      const sem = actEl.getAttribute("data-semester");
+      if (typeof openAddSubjectModal === "function") openAddSubjectModal(sem);
+      break;
+    }
+
+    case "open-edit-subject": {
+      e.preventDefault();
+      const subId = actEl.getAttribute("data-subject-id");
+      if (typeof openEditSubjectModal === "function") openEditSubjectModal(subId);
+      break;
+    }
+
+    case "delete-subject": {
+      e.preventDefault();
+      const subId = actEl.getAttribute("data-subject-id");
+      if (typeof deleteSubject === "function") deleteSubject(subId);
+      break;
+    }
+
+    case "open-add-division": {
+      e.preventDefault();
+      const yr = actEl.getAttribute("data-year") || "All Years";
+      if (typeof openAddDivisionModal === "function") openAddDivisionModal(yr);
+      break;
+    }
+
+    case "rename-division": {
+      e.preventDefault();
+      const divName = actEl.getAttribute("data-div-name");
+      const yr = actEl.getAttribute("data-year");
+      if (typeof renameDivision === "function") renameDivision(divName, yr);
+      break;
+    }
+
+    case "delete-division": {
+      e.preventDefault();
+      const divName = actEl.getAttribute("data-div-name");
+      const yr = actEl.getAttribute("data-year");
+      if (typeof deleteDivision === "function") deleteDivision(divName, yr);
+      break;
+    }
+
+    case "open-ai-analysis": {
+      e.preventDefault();
+      const username = decodeURIComponent(actEl.getAttribute("data-username") || "");
+      const analysisType = actEl.getAttribute("data-analysis-type") || "attendance";
+      if (typeof openAiAnalysisModal === "function") openAiAnalysisModal(username, analysisType);
+      break;
+    }
+
+    case "retry-syllabus":
+      e.preventDefault();
+      if (typeof loadSyllabusData === "function") loadSyllabusData();
+      break;
+
+    case "open-admin-year-syllabus": {
+      e.preventDefault();
+      const yr = Number(actEl.getAttribute("data-year-level") || 1);
+      if (typeof openAdminYearSyllabusModal === "function") openAdminYearSyllabusModal(yr);
+      break;
+    }
+
+    case "download-syllabus-pdf": {
+      e.preventDefault();
+      const yr = Number(actEl.getAttribute("data-year-level") || 1);
+      const fn = actEl.getAttribute("data-filename") || "";
+      if (typeof downloadSyllabusPdf === "function") downloadSyllabusPdf(yr, fn);
+      break;
+    }
+
+    case "preview-syllabus-pdf": {
+      e.preventDefault();
+      const yr = Number(actEl.getAttribute("data-year-level") || window.currentAdminModalYearLevel || 1);
+      if (typeof previewSyllabusPdf === "function") previewSyllabusPdf(yr);
+      break;
+    }
+
+    case "download-current-syllabus-pdf": {
+      e.preventDefault();
+      const yr = Number(window.currentAdminModalYearLevel || 1);
+      const fn = actEl.getAttribute("data-filename") || "";
+      if (typeof downloadSyllabusPdf === "function") downloadSyllabusPdf(yr, fn);
+      break;
+    }
+
+    case "set-admin-modal-replace-mode": {
+      e.preventDefault();
+      const mode = actEl.getAttribute("data-replace") === "true";
+      if (typeof setAdminModalReplaceMode === "function") setAdminModalReplaceMode(mode);
+      break;
+    }
+
+    case "confirm-delete-syllabus": {
+      e.preventDefault();
+      const yr = Number(window.currentAdminModalYearLevel || 1);
+      const fn = actEl.getAttribute("data-filename") || "";
+      if (typeof confirmDeleteSyllabus === "function") confirmDeleteSyllabus(yr, fn);
+      break;
+    }
+
+    case "close-syllabus-modal":
+      e.preventDefault();
+      if (typeof closeSyllabusUploadModal === "function") closeSyllabusUploadModal();
+      break;
+
+    case "clear-syllabus-file":
+      e.preventDefault();
+      if (typeof clearSyllabusSelectedFile === "function") clearSyllabusSelectedFile();
+      break;
+
+    case "close-delete-syllabus-modal":
+      e.preventDefault();
+      if (typeof closeDeleteSyllabusModal === "function") closeDeleteSyllabusModal();
+      break;
+
+    default:
+      break;
+  }
+});
+
+document.addEventListener("change", (e) => {
+  const selEl = e.target.closest("[data-onchange]");
+  if (!selEl) return;
+  const handler = selEl.getAttribute("data-onchange");
+  const val = selEl.value;
+
+  switch (handler) {
+    case "update-signup-faculty-division": {
+      const id = selEl.getAttribute("data-subject-id");
+      if (typeof updateSignupFacultySubjectDivision === "function") updateSignupFacultySubjectDivision(id, val);
+      break;
+    }
+    case "update-faculty-edit-division": {
+      const id = selEl.getAttribute("data-subject-id");
+      if (typeof updateFacultyEditSubjectDivision === "function") updateFacultyEditSubjectDivision(id, val);
+      break;
+    }
+    case "update-admin-edit-division": {
+      const id = selEl.getAttribute("data-subject-id");
+      if (typeof updateAdminEditFacultySubjectDivision === "function") updateAdminEditFacultySubjectDivision(id, val);
+      break;
+    }
+    case "update-page-faculty-division": {
+      const id = selEl.getAttribute("data-subject-id");
+      if (typeof window.updatePageFacultySubjectDivision === "function") window.updatePageFacultySubjectDivision(id, val);
+      break;
+    }
+    case "switch-faculty-active-subject": {
+      if (typeof switchFacultyActiveSubject === "function") switchFacultyActiveSubject(val);
+      break;
+    }
+    default:
+      break;
+  }
+});
+
+document.addEventListener("submit", (e) => {
+  if (e.target && e.target.id === "syllabusUploadForm") {
+    e.preventDefault();
+    if (typeof handleSyllabusUploadSubmit === "function") handleSyllabusUploadSubmit(e);
+  }
+});

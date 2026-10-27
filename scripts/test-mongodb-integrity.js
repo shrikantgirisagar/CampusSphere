@@ -5,6 +5,7 @@ require("dotenv").config();
 const http = require("http");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3097;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -73,9 +74,8 @@ function hashPassword(pwd) {
 async function main() {
   console.log("=== CampusSphere MongoDB Schema, Index & Data Integrity Test Suite (Prompt 9) ===");
 
-  const mongoUri = process.env.MONGODB_URI || "mongodb://localhost:27017/CampusSphere";
-  await mongoose.connect(mongoUri);
-  console.log("✓ Connected to MongoDB");
+  const mongoUri = await setupTestDb("MongoIntegrity_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
 
   // Load models
   const User = require("../models/User");
@@ -403,9 +403,7 @@ async function main() {
 
 main()
   .then(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
+    await stopTestDb();
     console.log("\n==============================================");
     console.log(`Results: ${passedCount} passed, ${failedCount} failed.`);
     console.log("==============================================");
@@ -413,8 +411,6 @@ main()
   })
   .catch(async (err) => {
     console.error("Test execution error:", err);
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
+    await stopTestDb();
     process.exit(1);
   });

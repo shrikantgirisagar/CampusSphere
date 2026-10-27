@@ -52,12 +52,13 @@ async function runPrompt32Audit() {
   console.log('====================================================================\n');
 
   const rootDir = path.resolve(__dirname, '..');
+const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir, 'public') : rootDir;
   const serverJs = fs.readFileSync(path.join(rootDir, 'server.js'), 'utf-8');
-  const scriptJs = fs.readFileSync(path.join(rootDir, 'script.js'), 'utf-8');
-  const styleCss = fs.readFileSync(path.join(rootDir, 'style.css'), 'utf-8');
-  const indexHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf-8');
-  const swJs = fs.readFileSync(path.join(rootDir, 'service-worker.js'), 'utf-8');
-  const manifestJson = fs.readFileSync(path.join(rootDir, 'manifest.json'), 'utf-8');
+  const scriptJs = fs.readFileSync(path.join(assetDir, 'script.js'), 'utf-8');
+  const styleCss = fs.readFileSync(path.join(assetDir, 'style.css'), 'utf-8');
+  const indexHtml = fs.readFileSync(path.join(assetDir, 'index.html'), 'utf-8');
+  const swJs = fs.readFileSync(path.join(assetDir, 'service-worker.js'), 'utf-8');
+  const manifestJson = fs.readFileSync(path.join(assetDir, 'manifest.json'), 'utf-8');
   const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf-8'));
   const envExample = fs.readFileSync(path.join(rootDir, '.env.example'), 'utf-8');
   const gitignore = fs.readFileSync(path.join(rootDir, '.gitignore'), 'utf-8');
@@ -73,7 +74,7 @@ async function runPrompt32Audit() {
   logTest('Mongoose is installed for MongoDB object modeling', Boolean(packageJson.dependencies?.mongoose));
   logTest('web-push is installed for system-level notifications', Boolean(packageJson.dependencies?.['web-push']));
   logTest('Dedicated services exist for WebPush and FileSync', fs.existsSync(path.join(rootDir, 'services', 'pushNotificationService.js')) && fs.existsSync(path.join(rootDir, 'services', 'fileSyncService.js')));
-  logTest('SPA and portal entrypoints exist (index.html, courses.html, about.html, students.html)', fs.existsSync(path.join(rootDir, 'index.html')) && fs.existsSync(path.join(rootDir, 'courses.html')) && fs.existsSync(path.join(rootDir, 'about.html')));
+  logTest('SPA and portal entrypoints exist (index.html, courses.html, about.html, students.html)', fs.existsSync(path.join(assetDir, 'index.html')) && fs.existsSync(path.join(assetDir, 'courses.html')) && fs.existsSync(path.join(assetDir, 'about.html')));
 
   // -------------------------------------------------------------------------
   // SUITE 2: COMPLETE AUTHENTICATION & CREDENTIAL INVARIANTS
@@ -199,7 +200,7 @@ async function runPrompt32Audit() {
   // SUITE 11: RESPONSIVENESS & SCREEN-FIT INVARIANTS
   // -------------------------------------------------------------------------
   console.log('\n--- SUITE 11: Responsiveness & Screen-Fit Invariants ---');
-  logTest('Viewport meta tag present in index.html, courses.html, and about.html', indexHtml.includes('name="viewport"') && fs.readFileSync(path.join(rootDir, 'courses.html'), 'utf-8').includes('name="viewport"'));
+  logTest('Viewport meta tag present in index.html, courses.html, and about.html', indexHtml.includes('name="viewport"') && fs.readFileSync(path.join(assetDir, 'courses.html'), 'utf-8').includes('name="viewport"'));
   logTest('CSS media queries support mobile viewports (320px, 480px, 768px, 1024px)', styleCss.includes('@media (max-width: 768px)') && styleCss.includes('@media (max-width: 480px)'));
   logTest('Horizontal scrolling prevented on root/body layout', styleCss.includes('overflow-x: hidden') || styleCss.includes('max-width: 100%'));
 

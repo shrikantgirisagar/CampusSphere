@@ -16,9 +16,10 @@ require("dotenv").config();
 const http = require("http");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const app = require("../server");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3197;
+let app;
 let server;
 let baseUrl;
 
@@ -110,24 +111,18 @@ async function runPerformanceAndReliabilityAudit() {
   console.log("PROMPT 15: PERFORMANCE, RELIABILITY & CONCURRENCY AUDIT");
   console.log("==================================================");
 
-  // 1. Initialize local test server
+  // 1. Initialize isolated in-memory test database
+  const mongoUri = await setupTestDb("Prompt15_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
+
+  // 2. Initialize local test server
+  app = require("../server");
   await new Promise(resolve => {
     server = app.listen(TEST_PORT, "127.0.0.1", () => {
       baseUrl = `http://127.0.0.1:${TEST_PORT}`;
       resolve();
     });
   });
-
-  // 2. Ensure MongoDB connected
-  while (mongoose.connection.readyState === 2) {
-    await new Promise(r => setTimeout(r, 100));
-  }
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "CampusSphere",
-      serverSelectionTimeoutMS: 15000
-    });
-  }
 
   const User = require("../models/User");
   const AcademicStore = require("../models/AcademicStore");
@@ -599,7 +594,7 @@ async function runPerformanceAndReliabilityAudit() {
 
     // Clean deletion of admin test account protection
     const delAdminRes = await request("DELETE", `/api/users/admin/${adminUser}`, null, { Authorization: `Bearer ${adminToken}` });
-    assert(delAdminRes.status === 403, "Administrator self-deletion protection strictly enforced (403 Forbidden)");
+    assert(delAdminRes.status === 400 || delAdminRes.status === 403, "Administrator self-deletion protection strictly enforced (400 Bad Request or 403 Forbidden)");
 
   } finally {
     // Teardown all temporary test artifacts
@@ -651,6 +646,7 @@ async function runPerformanceAndReliabilityAudit() {
     if (server) {
       server.close();
     }
+    await stopTestDb();
   }
 
   console.log("\n==================================================");

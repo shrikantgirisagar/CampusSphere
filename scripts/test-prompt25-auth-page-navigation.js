@@ -31,9 +31,10 @@ async function runPrompt25Tests() {
   console.log('====================================================================\n');
 
   const rootDir = path.resolve(__dirname, '..');
-  const indexHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf-8');
-  const styleCss = fs.readFileSync(path.join(rootDir, 'style.css'), 'utf-8');
-  const scriptJs = fs.readFileSync(path.join(rootDir, 'script.js'), 'utf-8');
+const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir, 'public') : rootDir;
+  const indexHtml = fs.readFileSync(path.join(assetDir, 'index.html'), 'utf-8');
+  const styleCss = fs.readFileSync(path.join(assetDir, 'style.css'), 'utf-8');
+  const scriptJs = fs.readFileSync(path.join(assetDir, 'script.js'), 'utf-8');
   const serverJs = fs.readFileSync(path.join(rootDir, 'server.js'), 'utf-8');
 
   // -------------------------------------------------------------------------

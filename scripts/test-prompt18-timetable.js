@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const { setupTestDb, stopTestDb } = require("./lib/test-db");
 
 const TEST_PORT = 3098;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -75,15 +76,8 @@ async function runPrompt18Tests() {
   console.log("==================================================");
 
   // 1. Database Connection
-  const mongoUri = process.env.MONGODB_URI;
-  if (!mongoUri) throw new Error("Missing MONGODB_URI");
-
-  while (mongoose.connection.readyState === 2) {
-    await new Promise(r => setTimeout(r, 100));
-  }
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(mongoUri, { dbName: "CampusSphere" });
-  }
+  const mongoUri = await setupTestDb("Prompt18_test");
+  console.log("✓ Connected to isolated in-memory MongoDB at:", mongoUri);
 
   const User = require("../models/User");
   const Timetable = require("../models/Timetable");
@@ -295,7 +289,7 @@ async function runPrompt18Tests() {
   // =========================================================================
   console.log("\n--- Category 2: Editor Cleanup & Fixed Monday-Saturday ---");
 
-  const scriptContent = fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
+  const scriptContent = fs.existsSync(path.join(__dirname, "../public/script.js")) ? fs.readFileSync(path.join(__dirname, "../public/script.js"), "utf8") : fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
 
   // 11. Left Alignment control absent from script.js toolbar
   assert(!scriptContent.includes('id="tbAlignLeft"'), "13. Left alignment toolbar control absent from script.js");
@@ -526,6 +520,7 @@ async function runPrompt18Tests() {
     console.log("ALL 43+ PROMPT 18 TIMETABLE ASSERTIONS PASSED PERFECTLY!\n");
   }
 
+  await stopTestDb();
   process.exit(failedCount === 0 ? 0 : 1);
 }
 
