@@ -39,8 +39,6 @@ CampusSphere/
 ├── scripts/                        # Database migration, verification, and automated test suites
 │   ├── list-admins.js              # Read-only administrative account inventory utility
 │   ├── migrate-usernamelower.js    # Username normalization migration script
-│   ├── migrate-to-mongodb.js       # Legacy JSON to MongoDB migration tool
-│   ├── clear-demo-accounts.js      # Development demo account cleanup utility
 │   ├── test-production-auth-config.js      # Auth config, startup guards, and secret verification
 │   ├── test-sensitive-data-audit.js        # Sensitive file and credential exposure audit
 │   ├── test-xss-security.js                # DOM sanitization and stored XSS prevention tests
