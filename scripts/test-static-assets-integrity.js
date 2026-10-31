@@ -38,7 +38,6 @@ async function runStaticAssetIntegrityTests() {
     "admin-courses-syllabus.html",
     "script.js",
     "style.css",
-    "animated-background.js",
     "service-worker.js",
     "manifest.json"
   ];

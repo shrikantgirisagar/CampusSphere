@@ -6,11 +6,11 @@
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>About CampusSphere | BHARATESH COLLEGE OF COMPUTER APPLICATIONS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/outfit-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css?v=20260916_24">
-  <script src="animated-background.js?v=20260916_24"></script>
+  <link rel="stylesheet" href="css/home.css?v=20261031_01">
+  <script defer src="/vendor/campus3d.js"></script>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
@@ -19,33 +19,9 @@
 </head>
 
 <body class="about-page-body">
-  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
-  <animated-background class="campus-ambient-bg" aria-hidden="true">
-    <div class="ambient-blob blob-blue"></div>
-    <div class="ambient-blob blob-indigo"></div>
-    <div class="ambient-blob blob-cyan"></div>
-    <div class="ambient-blob blob-emerald"></div>
-    <div class="ambient-blob blob-violet"></div>
-    <div class="ambient-grid-overlay"></div>
-    <div class="ambient-shapes">
-      <span class="ambient-ring ring-1"></span>
-      <span class="ambient-ring ring-2"></span>
-      <span class="ambient-ring ring-3"></span>
-    </div>
-  </animated-background>
-
   <div class="about-page">
     <!-- INSTITUTION HEADER -->
     <header class="institution-header">
-      <!-- Ambient Animated Glassmorphic Backdrop Layers -->
-      <div class="header-ambient-layers" aria-hidden="true">
-        <div class="header-ambient-gradient"></div>
-        <div class="header-blob header-blob-1"></div>
-        <div class="header-blob header-blob-2"></div>
-        <div class="header-blob header-blob-3"></div>
-        <div class="header-shimmer"></div>
-      </div>
-
       <div class="institution-header-inner">
         <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
           <span class="institution-copy">
@@ -87,6 +63,7 @@
 
       <!-- Page Banner -->
       <header class="about-hero-banner">
+        <canvas id="campus3d" class="compact-3d-canvas" data-3d-preset="about" aria-hidden="true"></canvas>
         <span class="section-kicker">ACADEMIC INNOVATION &amp; TECHNOLOGY</span>
         <h1><span class="about-word-black">About</span> <span class="brand-campus">Campus</span><span class="brand-sphere">Sphere</span></h1>
         <p>CampusSphere is the unified academic operating platform designed for Bharatesh College of Computer Applications. Built to empower students, streamline faculty workflows, and modernize collegiate record management with real-time accuracy and security.</p>
@@ -135,54 +112,54 @@
           <!-- Student Module -->
           <article class="about-module-card">
             <div class="about-module-header">
-              <div class="about-module-icon" aria-hidden="true">👨‍💻</div>
+              <div class="about-module-icon" aria-hidden="true"><svg class="icon"><use href="/icons.svg#users"></use></svg></div>
               <h3>Student Module :</h3>
             </div>
             <p class="about-module-desc">Students can use CampusSphere to access and manage their academic information. The student module includes:</p>
             <ul class="about-module-list">
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Creating and managing a personal profile.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Viewing daily attendance records.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Checking internal and semester marks.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Accessing unit-wise assignments.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Reading and downloading notes and previous-year question papers.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Viewing the class timetable.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Receiving important campus notices and announcements.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Creating and managing a personal profile.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Viewing daily attendance records.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Checking internal and semester marks.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Accessing unit-wise assignments.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Reading and downloading notes and previous-year question papers.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Viewing the class timetable.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Receiving important campus notices and announcements.</span></li>
             </ul>
           </article>
 
           <!-- Faculty Module -->
           <article class="about-module-card">
             <div class="about-module-header">
-              <div class="about-module-icon" aria-hidden="true">👩‍🏫</div>
+              <div class="about-module-icon" aria-hidden="true"><svg class="icon"><use href="/icons.svg#graduation-cap"></use></svg></div>
               <h3>Faculty Module :</h3>
             </div>
             <p class="about-module-desc">Faculty members can manage academic activities and share important information with students. The faculty module includes:</p>
             <ul class="about-module-list">
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Creating and managing a faculty profile.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Adding and updating the daily attendance of students.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Sharing unit-wise notes and important previous-year question papers.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Creating and providing unit-wise assignments.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Sending campus notices to students.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Entering and managing students’ internal marks.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Viewing the timetable for their assigned subjects.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Creating and managing a faculty profile.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Adding and updating the daily attendance of students.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Sharing unit-wise notes and important previous-year question papers.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Creating and providing unit-wise assignments.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Sending campus notices to students.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Entering and managing students’ internal marks.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Viewing the timetable for their assigned subjects.</span></li>
             </ul>
           </article>
 
           <!-- Admin Module -->
           <article class="about-module-card">
             <div class="about-module-header">
-              <div class="about-module-icon" aria-hidden="true">🛡️</div>
+              <div class="about-module-icon" aria-hidden="true"><svg class="icon"><use href="/icons.svg#shield-check"></use></svg></div>
               <h3>Admin Module :</h3>
             </div>
             <p class="about-module-desc">The admin module manages the overall academic structure and users of the institution. Administrators can:</p>
             <ul class="about-module-list">
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Create and manage an administrator profile.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Add or remove divisions according to course years.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Add, modify, or remove semester-wise subjects.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Add or remove student accounts.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Add or remove faculty accounts.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>View timetables for all semesters.</span></li>
-              <li><span class="check-icon" aria-hidden="true">✓</span><span>Send campus notices to both students and faculty members.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Create and manage an administrator profile.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Add or remove divisions according to course years.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Add, modify, or remove semester-wise subjects.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Add or remove student accounts.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Add or remove faculty accounts.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>View timetables for all semesters.</span></li>
+              <li><svg class="check-icon icon-sm" aria-hidden="true"><use href="/icons.svg#check"></use></svg><span>Send campus notices to both students and faculty members.</span></li>
             </ul>
           </article>
         </div>
@@ -190,51 +167,51 @@
         <!-- Problem Statement & Main Objective -->
         <div class="about-two-col-grid">
           <div class="about-statement-card problem-card">
-            <h3>⚠️ Problem Statement</h3>
+            <h3>Problem Statement</h3>
             <p>In a traditional college environment, academic information is often shared through separate platforms, notice boards, messaging groups, or manual records. This can make it difficult to maintain accurate records and ensure that students receive important information on time.</p>
             <p>CampusSphere solves this problem by bringing academic management and campus communication together in one centralized system. It reduces manual work, improves information accessibility, and allows each user to access features according to their role.</p>
           </div>
 
           <div class="about-statement-card objective-card">
-            <h3>🎯 Main Objective</h3>
+            <h3>Main Objective</h3>
             <p>The main objective of CampusSphere is to provide a secure and user-friendly academic management platform for students, faculty, and administrators. The website improves communication between users and simplifies the management of attendance, marks, assignments, learning materials, timetables, subjects, divisions, and campus notices.</p>
           </div>
         </div>
 
         <!-- Key Benefits Card -->
         <div class="about-benefits-card">
-          <h3>🌟 Key Benefits</h3>
+          <h3>Key Benefits</h3>
           <div class="about-benefits-grid">
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Centralized management of academic information.</span>
             </div>
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Role-based access for students, faculty, and administrators.</span>
             </div>
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Easier attendance and marks management.</span>
             </div>
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Organized distribution of notes and assignments.</span>
             </div>
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Quick access to timetables and previous-year question papers.</span>
             </div>
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Faster communication through digital campus notices.</span>
             </div>
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Reduced paperwork and manual administrative effort.</span>
             </div>
             <div class="about-benefit-item">
-              <span class="benefit-check-badge" aria-hidden="true">✓</span>
+              <span class="benefit-check-badge" aria-hidden="true"><svg class="icon icon-sm"><use href="/icons.svg#check"></use></svg></span>
               <span>Improved coordination between students, faculty, and administration.</span>
             </div>
           </div>
@@ -246,7 +223,7 @@
       <!-- Developer Spotlight Card -->
       <section class="about-developer-spotlight" aria-label="Developer Information">
         <div class="about-dev-avatar-wrap" aria-hidden="true">
-          👨‍💻
+          <svg class="icon icon-lg"><use href="/icons.svg#user"></use></svg>
         </div>
         <div class="about-dev-copy">
           <div class="about-dev-tagline">
@@ -256,10 +233,10 @@
           <h3>Shrikant Girisagar</h3>
           <p>CampusSphere was designed and developed by <strong>Shrikant Girisagar</strong>, a Bachelor of Computer Applications (BCA) student at <strong>Bharatesh College of Computer Applications, Belagavi</strong>. Built as a comprehensive academic innovation project, the platform demonstrates full-stack software craftsmanship, intuitive user interface design, and deep alignment with collegiate workflow requirements.</p>
           <div class="about-dev-highlights">
-            <span class="about-dev-pill">🚀 BCA Department</span>
-            <span class="about-dev-pill">💻 Full-Stack Web Development</span>
-            <span class="about-dev-pill">🏛️ Bharatesh BCA • Belagavi</span>
-            <span class="about-dev-pill">✨ UI/UX &amp; Architecture</span>
+            <span class="about-dev-pill">BCA Department</span>
+            <span class="about-dev-pill">Full-Stack Web Development</span>
+            <span class="about-dev-pill">Bharatesh BCA • Belagavi</span>
+            <span class="about-dev-pill">UI/UX &amp; Architecture</span>
           </div>
         </div>
       </section>
@@ -270,7 +247,7 @@
         <h3>Experience CampusSphere Today</h3>
         <p>Log in to access your personal academic dashboard, review internal assessments, or explore the complete BCA curriculum.</p>
         <div class="about-cta-actions">
-          <a href="index.html#login" class="about-cta-btn-primary">Student Login <span aria-hidden="true">→</span></a>
+          <a href="index.html#login" class="about-cta-btn-primary">Student Login <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg></a>
           <a href="courses.html" class="about-cta-btn-secondary">Explore BCA Courses &amp; Syllabus</a>
         </div>
       </section>

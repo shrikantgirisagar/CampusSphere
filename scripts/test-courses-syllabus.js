@@ -389,7 +389,7 @@ async function main() {
   assert(coursesHtml.includes("coursesAdminBanner"), "courses.html contains admin banner element");
   assert(!coursesHtml.includes("_Syllabus.txt"), "courses.html dummy text download completely removed");
 
-  const adminHtml = fs.readFileSync(path.join(__dirname, "../admin-courses-syllabus.html"), "utf8");
+  const adminHtml = fs.existsSync(path.join(__dirname, "../public/admin-courses-syllabus.html")) ? fs.readFileSync(path.join(__dirname, "../public/admin-courses-syllabus.html"), "utf8") : fs.readFileSync(path.join(__dirname, "../admin-courses-syllabus.html"), "utf8");
   assert(adminHtml.includes("Courses &amp; Syllabus Management") || adminHtml.includes("COURSES &amp; SYLLABUS MANAGEMENT"), "admin-courses-syllabus.html header title verified");
   assert(adminHtml.includes("openSyllabusUploadModal"), "admin-courses-syllabus.html references openSyllabusUploadModal");
   assert(adminHtml.includes("adminAuthGate"), "admin-courses-syllabus.html contains admin authentication gate");

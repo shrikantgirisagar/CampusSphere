@@ -1,0 +1,177 @@
+/* =========================================================
+   CAMPUSSPHERE DESIGN SYSTEM: TOKENS
+   Strict light-mode only. Premium, restrained Oxford palette.
+   ========================================================= */
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/newsreader-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/newsreader-latin-wght-italic.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hanken Grotesk';
+  src: url('/fonts/hanken-grotesk-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hanken Grotesk';
+  src: url('/fonts/hanken-grotesk-latin-wght-italic.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light !important;
+
+  /* --- Color Palette --- */
+  --ivory-50: #FAF8F3;
+  --ivory-100: #F3EFE6;
+  --paper: #FFFFFF;
+  --stone-200: #E4DFD3;
+  --stone-500: #8A8578;
+  --ink-900: #0B1A2E;
+  --ink-700: #2B3A4F;
+  --oxford-800: #0F2A4F;
+  --oxford-600: #1C4380;
+  --link: #1F5FBF;
+  --brass-500: #B38B4D;
+  --brass-700: #7A5A28;
+  --brass-100: #F1E7D3;
+  --success: #2F6F55;
+  --warning: #A8671A;
+  --danger: #A93A2B;
+
+  /* --- Backward Compatible Mappings --- */
+  --campus-primary: #1459d9;
+  --campus-primary-dark: #0F2A4F;
+  --campus-primary-light: #1C4380;
+  --campus-primary-soft: #F3EFE6;
+  --campus-navy: #0A2540;
+  --campus-ink: #0B1A2E;
+  --campus-background: #f6f8fd;
+  --campus-surface: #ffffff;
+  --campus-text: #2B3A4F;
+  --campus-muted: #8A8578;
+  --campus-border: #E4DFD3;
+  --campus-border-strong: #cbd8f0;
+
+  /* --- Typography --- */
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-body: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --campus-font-heading: var(--font-display);
+  --campus-font-body: var(--font-body);
+
+  /* Modular Scale 1.250 */
+  --text-xs: 0.8rem;
+  --text-sm: 0.88rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --text-2xl: clamp(1.8rem, 3.2vw, 2.25rem);
+  --text-3xl: clamp(2.25rem, 4.5vw, 2.85rem);
+  --text-4xl: clamp(2.8rem, 5.5vw, 3.75rem);
+
+  /* Semantic Text Colors */
+  --color-text-heading: var(--ink-900);
+  --color-text-primary: var(--ink-700);
+  --color-text-secondary: var(--stone-500);
+  --color-text-muted: var(--stone-500);
+  --color-text-brand: var(--oxford-600);
+  --color-text-inverse: var(--paper);
+  --color-text-inverse-muted: #A3B3C8;
+
+  /* Spacing Scale (8px rhythm) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --section-rhythm: clamp(56px, 8vw, 112px);
+
+  /* Elevation (3 Levels Only) */
+  --shadow-sm: 0 1px 3px rgba(11, 26, 46, 0.05), 0 1px 2px rgba(11, 26, 46, 0.03);
+  --shadow-md: 0 4px 14px rgba(11, 26, 46, 0.07), 0 2px 4px rgba(11, 26, 46, 0.04);
+  --shadow-lg: 0 14px 34px rgba(11, 26, 46, 0.10), 0 4px 8px rgba(11, 26, 46, 0.05);
+
+  --campus-shadow-sm: var(--shadow-sm);
+  --campus-shadow-md: var(--shadow-md);
+  --campus-shadow-lg: var(--shadow-lg);
+
+  /* Corner Radii (6 / 10 / 16) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --campus-radius-sm: var(--radius-sm);
+  --campus-radius-md: var(--radius-md);
+  --campus-radius-lg: var(--radius-lg);
+
+  /* Motion Tokens */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-160: 160ms;
+  --duration-280: 280ms;
+  --duration-520: 520ms;
+  --duration-900: 900ms;
+
+  --ease: var(--ease-out);
+  --duration-instant: var(--duration-160);
+  --duration-fast: var(--duration-280);
+  --duration-medium: var(--duration-520);
+  --duration-slow: var(--duration-900);
+}
+
+/* Light Mode Global Enforcement */
+html {
+  color-scheme: light !important;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  color-scheme: light !important;
+  background-color: var(--campus-background, #f6f8fd) !important;
+  background-color: var(--ivory-50) !important;
+  color: var(--ink-700);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input,
+select,
+textarea,
+button,
+dialog,
+canvas {
+  color-scheme: light !important;
+}

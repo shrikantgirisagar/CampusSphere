@@ -125,7 +125,8 @@ async function runTests() {
     const server = http.createServer((req, res) => {
       let reqPath = req.url.split('?')[0];
       if (reqPath === '/' || reqPath === '/index.html') reqPath = '/index.html';
-      const filePath = path.join(rootDir, reqPath.replace(/^\//, ''));
+      const relPath = reqPath.replace(/^\//, '');
+      const filePath = fs.existsSync(path.join(assetDir, relPath)) ? path.join(assetDir, relPath) : path.join(rootDir, relPath);
 
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath);
@@ -173,7 +174,7 @@ async function runTests() {
     } else {
       const listRes = await fetch('http://127.0.0.1:9460/json/list');
       const targets = await listRes.json();
-      const pageTarget = targets.find(t => t.type === 'page');
+      const pageTarget = targets.find(t => t.type === 'page' && t.url && t.url.includes('localhost')) || targets.find(t => t.type === 'page');
       const ws = new WebSocket(pageTarget.webSocketDebuggerUrl);
       await new Promise(resolve => ws.onopen = resolve);
 
@@ -210,7 +211,14 @@ async function runTests() {
         mobile: false
       });
 
-      await new Promise(r => setTimeout(r, 800));
+      // Wait for script.js to finish initializing
+      for (let i = 0; i < 40; i++) {
+        const ready = await send('Runtime.evaluate', {
+          expression: `typeof openPortal === "function" && typeof USERS === "object"`
+        });
+        if (ready?.result?.result?.value) break;
+        await new Promise(r => setTimeout(r, 150));
+      }
 
       // 1. Admin Faculty Management In-Browser Tests
       await send('Runtime.evaluate', {

@@ -1,0 +1,233 @@
+/* =========================================================
+   CAMPUSSPHERE DESIGN SYSTEM: ABOUT PAGE
+   Hero Banner, Purpose, Stats, Modules & Tech Grid
+   ========================================================= */
+
+.about-page-body {
+  background-color: var(--ivory-50);
+  color: var(--ink-700);
+}
+
+.about-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4) var(--space-16) var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .about-container {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+}
+
+/* Breadcrumb */
+.about-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--stone-500);
+  margin-bottom: var(--space-6);
+}
+
+.about-breadcrumb a {
+  color: var(--stone-500);
+  text-decoration: none;
+}
+
+.about-breadcrumb a:hover {
+  color: var(--oxford-600);
+  text-decoration: underline;
+}
+
+.about-breadcrumb span[aria-current="page"] {
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+/* Hero Banner */
+.about-hero-banner {
+  background-color: var(--paper);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  box-shadow: var(--shadow-sm);
+}
+
+.about-hero-banner h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.02em;
+}
+
+.brand-campus {
+  color: var(--ink-900);
+}
+
+.brand-sphere {
+  color: var(--oxford-600);
+  font-style: italic;
+}
+
+/* Overview Card */
+.about-overview-card {
+  background-color: var(--paper);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  box-shadow: var(--shadow-sm);
+}
+
+.about-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .about-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.about-stat-box {
+  background-color: var(--ivory-100);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.about-stat-number {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--oxford-600);
+  margin-bottom: var(--space-1);
+}
+
+.about-stat-label {
+  font-size: var(--text-xs);
+  color: var(--ink-700);
+  font-weight: 600;
+}
+
+/* Modules Grid */
+.about-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+@media (max-width: 960px) {
+  .about-modules-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-module-card {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+}
+
+.about-module-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.about-module-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background-color: var(--ivory-100);
+  border: 1px solid var(--stone-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--oxford-600);
+  flex-shrink: 0;
+}
+
+.about-module-header h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  margin: 0;
+  color: var(--ink-900);
+}
+
+.about-module-desc {
+  font-size: var(--text-sm);
+  color: var(--ink-700);
+  margin-bottom: var(--space-4);
+}
+
+.about-module-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.about-module-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--ink-700);
+  line-height: 1.5;
+}
+
+.about-module-list .check-icon {
+  color: var(--success);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Tech & Features Cards */
+.about-features-grid,
+.about-tech-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+@media (max-width: 960px) {
+  .about-features-grid,
+  .about-tech-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-feature-card,
+.about-tech-card {
+  padding: var(--space-6);
+}
+
+.about-feature-card h3,
+.about-tech-card h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  margin-bottom: var(--space-2);
+  color: var(--ink-900);
+}
+
+.about-feature-card p,
+.about-tech-card p {
+  font-size: var(--text-sm);
+  color: var(--ink-700);
+  margin: 0;
+}

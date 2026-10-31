@@ -63,13 +63,49 @@ CampusSphere/
 
 ---
 
-## 🎨 Design & UI Architecture
+## 🎨 Design System & 3D Scene
 
-CampusSphere features an **enforced light theme design**:
-- **Palette**: Clean slate (`#f8fafc`) and pure white (`#ffffff`) background layers, paired with deep slate text (`#0f172a` / `#334155`) for WCAG AAA contrast compliance.
-- **Accents**: Modern indigo (`#4f46e5`) primary branding, emerald (`#10b981`) success indicators, and amber/rose contextual badges.
-- **Components**: Polished border radiuses, soft elevation shadows, crisp data tables, and responsive cards engineered for stability across all viewport resolutions.
-- **Accessibility**: Explicit hover states, keyboard navigation focus rings, screen-reader accessible ARIA attributes, and zero layout shift on interactive controls.
+CampusSphere features a bespoke, academic Oxford aesthetic—quiet, editorial, restrained, and strictly light-mode:
+
+### 1. Palette & Surface Tokens
+| Token | Hex | Role | Contrast Ratio |
+| :--- | :--- | :--- | :--- |
+| **Navy Ink** | `#0A2540` | Headings, structural chrome, footer | 14.66:1 on Ivory (WCAG AAA) |
+| **Deep Blue** | `#0d2b67` | Subheadings, deep accents | 12.71:1 on Ivory (WCAG AAA) |
+| **Royal Blue** | `#1459d9` | Primary action buttons, links, active states | 5.72:1 on Ivory, 6.07:1 on White (WCAG AA) |
+| **Sky Tint** | `#eaf2ff` | Icon circles, soft highlight pills | Complementary background |
+| **Ivory Background** | `#FBF8F2` | Public page background canvas | Neutral, warm editorial base |
+| **White Card** | `#FFFFFF` | Structured cards and surface elevation | Crisp content contrast |
+| **Warm Hairline** | `#E8E2D6` | 1px borders, subtle section divisions | Clean structural definition |
+| **Brass Accent** | `#B38B3F` | Kicker rule, 3D armillary rings (≤5% of screen) | 4.94:1 on Navy (large text/icon) |
+| **Logo Cyan** | `#00c6ff` | 3D scene rim-light only | Restrained to WebGL lighting |
+
+### 2. Self-Hosted Variable Typography
+- **Headings**: `Outfit` (weights 600–700) self-hosted as variable WOFF2 (`public/fonts/outfit-variable.woff2`).
+- **Body & UI**: `Inter` (weights 400–600) self-hosted as variable WOFF2 (`public/fonts/inter-variable.woff2`).
+- **Preloading & Performance**: Critical font files preloaded in `<head>` with `font-display: swap`. Zero external font requests; Google Fonts links and domains removed from CSP.
+
+### 3. Iconography & Anti-Vibe Standards
+- **Unified SVG Sprite**: Lucide-style 1.5px stroke inline SVG sprite located at `public/icons.svg` referenced via `<use href="/icons.svg#name">`. Zero emojis in UI chrome.
+- **De-blobed Calm UI**: Deleted ambient multi-colored blobs, grid overlays, and floating canvas orbs (`animated-background.js` retired). Replaced with calm Ivory `#FBF8F2` and paper grain texture (`public/textures/grain.svg`).
+- **Elevation**: Consolidated ad-hoc shadows into 3 disciplined elevation tokens (`0 2px 8px`, `0 8px 24px`, `0 16px 40px`).
+
+### 4. Procedural 3D WebGL Scene (Phase 2)
+- **Zero External 3D Models or Textures**: Procedural Three.js scene (`src/3d/`) constructing brand-matched primitives (The Sphere, mortarboard graduation cap, book stack & open book, calendar slab, bar pillars, shield, speech bubble, bell, and blurred contact shadow plane) with MeshPhysicalMaterial (satin finish, subtle clearcoat).
+- **Architecture**: ONE fixed full-viewport canvas `#campus3d` (`aria-hidden="true"`, `pointer-events: none`, behind content) on the home page; secondary public pages (`courses.html`, `about.html`, `students.html`) feature compact single-object hero bands with distinct presets (`courses`, `about`, `students`).
+- **Scroll Choreography & Safe Zones**: Smooth damped lerping across document scroll, 6° maximum pointer parallax, dynamic DOM anchor alignment (`data-3d-anchor`), hover/focus card rotation, and analytical bar pillar rise in sync with statistics. Safe zone bounds calculated from DOM rects prevent any 3D object from overlapping copy or controls.
+- **Performance & Safety Gates**: Lazy-loaded after window load via `requestIdleCallback`. Gated on WebGL2, `!prefersReducedMotion`, `!saveData`, and device capability (`width >= 900px || hardwareConcurrency >= 6`). Static poster fallback (`public/images/hero-poster.webp`, 38.3 KB) displays when gates are not met, accompanied by subtle CSS 3D card tilt. Device pixel ratio capped at 1.75; rendering pauses automatically when offscreen (`IntersectionObserver`) or when the tab is hidden.
+- **Teardown & GPU Memory Disposal**: When user logs in or enters an authenticated portal, `window.CampusSphereDestroy3D()` cleanly cancels animation frames, disposes all geometries and materials, calls `renderer.forceContextLoss()`, and releases GPU resources.
+- **Strict Size Budget & Build Script**: Tree-shaken and bundled via `esbuild` using `npm run build:3d`. Output is `public/vendor/campus3d.js` (448.0 KB raw / 118.5 KB gzip, within budget of ≤ 450 KB minified / ≤ 150 KB gzip).
+
+### 5. Motion & Interaction System (Phase 3)
+- **Vendored Engine**: Powered by `public/vendor/motion.js` (`Motion 14.2.0`) via `public/js/motion-ui.js`.
+- **Motion Rhythm**: Unified editorial easing family (`cubic-bezier(0.22, 1, 0.36, 1)`), durations 200–600ms, hover lifts ≤ 2px. No infinite decorative loops or bouncy easing.
+- **Headline Word Rise**: Hero headline per-word fade-in-blur rise (`blur(12px) -> 0`, `opacity: 0 -> 1`, `translateY(16px) -> 0`) staggered by 0.05s on `<fx-word>`. An unconditional 4s CSS keyframe fallback guarantees headline visibility if JavaScript is slow or unavailable.
+- **Magnetic CTA Wrapper**: Primary action button (`.hero-primary-btn`) features an elastic magnetic pull (intensity 0.6, clamped strictly to 12px bounds, damped return) on `(pointer: fine)` desktop devices only.
+- **Cross-Document & View Transitions**: Seamless page transitions via `@view-transition { navigation: auto; }` and `document.startViewTransition`. Authenticated dashboard tab switches cross-fade panels cleanly (150ms) without full-page re-renders.
+- **Accessibility & Reduced Motion**: Strictly respects `prefers-reduced-motion: reduce` by immediately revealing all content stationary with zero transforms.
+- **Verification Suite**: Full automated test suite in `scripts/test-phase2-phase3.js` executed via `npm run test:3d-motion`.
 
 ---
 

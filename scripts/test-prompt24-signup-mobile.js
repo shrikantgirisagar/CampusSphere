@@ -114,7 +114,7 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
     const server = http.createServer((req, res) => {
       let reqPath = req.url.split('?')[0].split('#')[0];
       if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
-      const filePath = path.join(rootDir, reqPath);
+      const filePath = fs.existsSync(path.join(assetDir, reqPath)) ? path.join(assetDir, reqPath) : path.join(rootDir, reqPath);
       if (!fs.existsSync(filePath)) {
         res.writeHead(404);
         return res.end('Not found');

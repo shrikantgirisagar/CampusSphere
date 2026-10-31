@@ -43,7 +43,7 @@
 
     const labels = (subjectData || []).map(s => s.short || s.name || "Subject");
     const values = (subjectData || []).map(s => Number(s.pct || s.attPct || 0));
-    const colors = values.map(val => val >= 75 ? "#16a34a" : (val >= 60 ? "#d97706" : "#dc2626"));
+    const colors = values.map(val => val >= 75 ? "#2F6F55" : (val >= 60 ? "#A8671A" : "#A93A2B"));
 
     try {
       const chart = new Chart(canvas, {
@@ -103,7 +103,7 @@
           datasets: [{
             label: "Total Marks",
             data: values,
-            backgroundColor: "#2563eb",
+            backgroundColor: "#1459d9",
             borderRadius: 6
           }]
         },

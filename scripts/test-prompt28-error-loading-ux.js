@@ -210,7 +210,8 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
     const server = http.createServer((req, res) => {
       let reqPath = req.url.split('?')[0];
       if (reqPath === '/' || reqPath === '/index.html') reqPath = '/index.html';
-      const filePath = path.join(rootDir, reqPath.replace(/^\//, ''));
+      const relPath = reqPath.replace(/^\//, '');
+      const filePath = fs.existsSync(path.join(assetDir, relPath)) ? path.join(assetDir, relPath) : path.join(rootDir, relPath);
 
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath);
@@ -499,8 +500,8 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
         })()
       `);
 
-      logTest('CDP: Dark Mode device emulation preserves original Light Mode body background (#f6f8fd)',
-        darkEmulationColors.bodyBg === 'rgb(246, 248, 253)'
+      logTest('CDP: Dark Mode device emulation preserves original Light Mode body background (Ivory/Light)',
+        darkEmulationColors.bodyBg === 'rgb(251, 248, 242)' || darkEmulationColors.bodyBg === 'rgb(246, 248, 253)'
       );
       logTest('CDP: Dark Mode device emulation preserves original Light Mode toast background (#ffffff)',
         darkEmulationColors.toastBg === 'rgb(255, 255, 255)'

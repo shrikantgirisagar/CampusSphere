@@ -6,11 +6,11 @@
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>Courses &amp; Syllabus | BHARATESH COLLEGE OF COMPUTER APPLICATIONS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/outfit-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css?v=20260916_24">
-  <script src="animated-background.js?v=20260916_24"></script>
+  <link rel="stylesheet" href="css/home.css?v=20261031_01">
+  <script defer src="/vendor/campus3d.js"></script>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
@@ -19,33 +19,9 @@
 </head>
 
 <body class="courses-page-body">
-  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
-  <animated-background class="campus-ambient-bg" aria-hidden="true">
-    <div class="ambient-blob blob-blue"></div>
-    <div class="ambient-blob blob-indigo"></div>
-    <div class="ambient-blob blob-cyan"></div>
-    <div class="ambient-blob blob-emerald"></div>
-    <div class="ambient-blob blob-violet"></div>
-    <div class="ambient-grid-overlay"></div>
-    <div class="ambient-shapes">
-      <span class="ambient-ring ring-1"></span>
-      <span class="ambient-ring ring-2"></span>
-      <span class="ambient-ring ring-3"></span>
-    </div>
-  </animated-background>
-
   <div class="courses-page">
     <!-- INSTITUTION HEADER -->
     <header class="institution-header">
-      <!-- Ambient Animated Glassmorphic Backdrop Layers -->
-      <div class="header-ambient-layers" aria-hidden="true">
-        <div class="header-ambient-gradient"></div>
-        <div class="header-blob header-blob-1"></div>
-        <div class="header-blob header-blob-2"></div>
-        <div class="header-blob header-blob-3"></div>
-        <div class="header-shimmer"></div>
-      </div>
-
       <div class="institution-header-inner">
         <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
           <span class="institution-copy">
@@ -89,26 +65,27 @@
 
       <!-- Page Banner -->
       <header class="courses-hero-banner">
+        <canvas id="campus3d" class="compact-3d-canvas" data-3d-preset="courses" aria-hidden="true"></canvas>
         <span class="section-kicker">ACADEMIC PROGRAMS</span>
-        <h1 style="color: #0A2540;">Bachelor of Computer Applications (BCA)</h1>
+        <h1>Bachelor of Computer Applications (BCA)</h1>
         <p>Affiliated with Rani Channamma University, Belagavi (RCUB). Access the official semester-wise curriculum structure and download the complete syllabus guidelines below.</p>
         
         <div class="courses-meta-tags">
-          <span class="courses-meta-tag">⏱️ Duration: 3 Years (6 Semesters)</span>
-          <span class="courses-meta-tag">🏛️ Affiliation: RCUB</span>
+          <span class="courses-meta-tag"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#calendar"></use></svg> Duration: 3 Years (6 Semesters)</span>
+          <span class="courses-meta-tag"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#library"></use></svg> Affiliation: RCUB</span>
         </div>
       </header>
 
       <!-- ADMIN QUICK ACCESS BANNER (Visible when admin is logged in) -->
       <div id="coursesAdminBanner" class="courses-admin-banner hidden" style="display:none;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 20px;">⚙️</span>
+          <span class="admin-banner-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#shield-check"></use></svg></span>
           <div>
             <strong>Administrator Access Active</strong>
-            <div style="font-size: 12px; color: #15803d;">You can upload, replace, and delete syllabus PDFs from the management console.</div>
+            <div style="font-size: 12px; color: var(--success, #2F6F55);">You can upload, replace, and delete syllabus PDFs from the management console.</div>
           </div>
         </div>
-        <a href="admin-courses-syllabus.html" class="home-auth-btn home-login-btn" style="padding: 8px 16px; font-size: 12px; text-decoration: none;">Manage Syllabus PDFs &rarr;</a>
+        <a href="admin-courses-syllabus.html" class="home-auth-btn home-login-btn" style="padding: 8px 16px; font-size: 12px; text-decoration: none;">Manage Syllabus PDFs <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg></a>
       </div>
 
       <!-- THREE SYLLABUS DOWNLOAD CARDS (First Year, Second Year, Third Year BCA) -->
@@ -270,7 +247,7 @@
 
   <!-- Toast Notification Container for Downloads -->
   <div id="syllabusToast" class="syllabus-toast" role="status" aria-live="polite">
-    <span>📥</span>
+    <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
     <span id="syllabusToastMsg">Downloading syllabus...</span>
   </div>
 

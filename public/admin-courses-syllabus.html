@@ -6,11 +6,10 @@
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>Admin Courses &amp; Syllabus Management | CampusSphere</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/outfit-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css?v=20260916_24">
-  <script src="animated-background.js?v=20260916_24"></script>
+  <link rel="stylesheet" href="css/home.css?v=20261031_01">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
@@ -19,32 +18,9 @@
 </head>
 
 <body class="courses-page-body">
-  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
-  <animated-background class="campus-ambient-bg" aria-hidden="true">
-    <div class="ambient-blob blob-blue"></div>
-    <div class="ambient-blob blob-indigo"></div>
-    <div class="ambient-blob blob-cyan"></div>
-    <div class="ambient-blob blob-emerald"></div>
-    <div class="ambient-blob blob-violet"></div>
-    <div class="ambient-grid-overlay"></div>
-    <div class="ambient-shapes">
-      <span class="ambient-ring ring-1"></span>
-      <span class="ambient-ring ring-2"></span>
-      <span class="ambient-ring ring-3"></span>
-    </div>
-  </animated-background>
-
   <div class="courses-page">
     <!-- INSTITUTION HEADER -->
     <header class="institution-header">
-      <div class="header-ambient-layers" aria-hidden="true">
-        <div class="header-ambient-gradient"></div>
-        <div class="header-blob header-blob-1"></div>
-        <div class="header-blob header-blob-2"></div>
-        <div class="header-blob header-blob-3"></div>
-        <div class="header-shimmer"></div>
-      </div>
-
       <div class="institution-header-inner">
         <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
           <span class="institution-copy">
@@ -84,12 +60,12 @@
 
       <!-- Auth Protection Notice (Shown if not admin) -->
       <div id="adminAuthGate" class="syllabus-error-card hidden" style="display:none; margin: 40px auto; max-width: 500px;">
-        <div style="font-size: 36px; margin-bottom: 12px;">🔒</div>
+        <div style="margin-bottom: 12px;"><svg class="icon icon-lg" aria-hidden="true"><use href="/icons.svg#lock"></use></svg></div>
         <h2 style="color: #0f172a; margin: 0 0 8px 0; font-size: 20px;">Administrator Login Required</h2>
         <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
           You must be logged in as an Administrator to manage syllabus curriculum PDFs.
         </p>
-        <a href="index.html#login" class="primary-btn" style="text-decoration: none; display: inline-block;">Go to Login &rarr;</a>
+        <a href="index.html#login" class="primary-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">Go to Login <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg></a>
       </div>
 
       <!-- Admin Syllabus Container -->
@@ -99,13 +75,13 @@
           <p style="color: #475569; font-size: 15px; margin: 0 auto 16px; max-width: 600px;">BCA Courses &amp; Syllabus Management — Manage BCA syllabus PDFs for all six semesters.</p>
           
           <div class="courses-meta-tags" style="justify-content: center;">
-            <span class="courses-meta-tag">⏱️ 3 Academic Years (6 Semesters)</span>
-            <span class="courses-meta-tag">🏛️ Affiliation: RCUB</span>
-            <span class="courses-meta-tag">🛡️ Role: Administrator</span>
+            <span class="courses-meta-tag"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#calendar"></use></svg> 3 Academic Years (6 Semesters)</span>
+            <span class="courses-meta-tag"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#library"></use></svg> Affiliation: RCUB</span>
+            <span class="courses-meta-tag"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#shield-check"></use></svg> Role: Administrator</span>
           </div>
         </header>
 
-        <div id="syllabusContentContainer" class="syllabus-content-container">
+        <div id="syllabusContentContainer" class="syllabus-content-container" data-upload-handler="openSyllabusUploadModal">
           <div class="syllabus-loading-state">
             <div class="spinner"></div>
             <p>Loading syllabus curriculum...</p>

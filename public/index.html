@@ -7,11 +7,13 @@
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>CampusSphere</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260916_24">
-  <script src="animated-background.js?v=20260916_24"></script>
+  <link rel="preload" href="/fonts/outfit-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css?v=20261031_clean">
+  <link rel="stylesheet" href="/css/home.css?v=20261031_3d">
+  <script defer src="/vendor/motion.js"></script>
+  <script defer src="/js/motion-ui.js"></script>
+  <script defer src="/vendor/campus3d.js"></script>
   <script src="/vendor/chart.umd.min.js"></script>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
@@ -20,39 +22,18 @@
   <link rel="manifest" href="/manifest.json">
 </head>
 
-<body>
-  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
-  <animated-background class="campus-ambient-bg" aria-hidden="true">
-    <div class="ambient-blob blob-blue"></div>
-    <div class="ambient-blob blob-indigo"></div>
-    <div class="ambient-blob blob-cyan"></div>
-    <div class="ambient-blob blob-emerald"></div>
-    <div class="ambient-blob blob-violet"></div>
-    <div class="ambient-grid-overlay"></div>
-    <div class="ambient-shapes">
-      <span class="ambient-ring ring-1"></span>
-      <span class="ambient-ring ring-2"></span>
-      <span class="ambient-ring ring-3"></span>
-    </div>
-  </animated-background>
+<body class="home-page">
 
 
   <!-- =========================================================
        PUBLIC COLLEGE HOMEPAGE
        ========================================================= -->
   <main id="publicHome" class="public-home">
+    <canvas id="campus3d" class="campus-3d-canvas" aria-hidden="true"></canvas>
     <header class="institution-header">
-      <!-- Ambient Animated Glassmorphic Backdrop Layers -->
-      <div class="header-ambient-layers" aria-hidden="true">
-        <div class="header-ambient-gradient"></div>
-        <div class="header-blob header-blob-1"></div>
-        <div class="header-blob header-blob-2"></div>
-        <div class="header-blob header-blob-3"></div>
-        <div class="header-shimmer"></div>
-      </div>
-
       <div class="institution-header-inner">
         <a class="institution-brand" href="#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
+          <img src="CampusSphere-logo.png?v=20261027_opt" alt="CampusSphere Logo" class="institution-logo-img">
           <span class="institution-copy">
             <strong class="institution-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</strong>
             <span class="institution-portal-identity">CampusSphere — Your Academic Portal</span>
@@ -71,7 +52,7 @@
         <a class="public-nav-link" href="courses.html">Courses</a>
         <a class="public-nav-link" href="#students-faculty-count">Faculty</a>
         <a class="public-nav-link" href="#students-faculty-count">Students</a>
-        <a class="public-nav-link" href="#why-campussphere">Why CampusSphere</a>
+        <a class="public-nav-link" href="#why-campussphere">Features</a>
         <a class="public-nav-link" href="about.html">About</a>
         <a class="public-nav-link" href="#public-footer">Contact</a>
         <button class="public-menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false">
@@ -81,87 +62,85 @@
     </nav>
 
     <section class="home-hero hero" aria-labelledby="homeHeroTitle">
-      <div class="hero-ambient-glow glow-1" aria-hidden="true"></div>
-      <div class="hero-ambient-glow glow-2" aria-hidden="true"></div>
       <div class="home-hero-inner">
         <div class="home-hero-copy reveal-item">
-          <span class="home-eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>WELCOME TO</span>
-          <h1 id="homeHeroTitle">Campus<span>Sphere</span></h1>
-          <p class="home-hero-subtitle">Your Digital Academic Campus</p>
-          <p class="home-hero-description">A unified platform for students, faculty, and administrators to access academic information, attendance, marks, announcements, and campus resources.</p>
+          <span class="hero-kicker-badge"><span class="hero-kicker-rule" aria-hidden="true"></span>ACADEMIC PORTAL</span>
+          <h1 id="homeHeroTitle" class="home-hero-title"><fx-word>Campus</fx-word><fx-word class="brand-sphere">Sphere</fx-word></h1>
+          <p class="home-hero-subtitle">Quiet, reliable academic operations for Bharatesh BCA</p>
+          <p class="home-hero-description">A centralized digital platform connecting students, faculty, and administration with real-time attendance, semester evaluations, notices, and curated academic resources.</p>
           <div class="home-hero-actions">
-            <button type="button" class="hero-primary-btn" data-open-signup>
-              <span>Get Started</span>
-              <span class="arrow" aria-hidden="true">→</span>
-            </button>
+            <div class="btn-magnetic-wrap">
+              <button type="button" class="hero-primary-btn" data-open-signup>
+                <span>Get Started</span>
+                <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg>
+              </button>
+            </div>
             <button type="button" class="hero-secondary-btn" data-open-login>
-              <span>Student Login</span>
-              <span class="arrow" aria-hidden="true">→</span>
+              <span>Sign In to Portal</span>
+              <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg>
             </button>
           </div>
         </div>
 
-        <div class="home-hero-visual reveal-item">
-          <div class="hero-image-frame">
-            <img
-              src="campus-students.jpg?v=20260915_hero_fit"
-              alt="Bharatesh BCA college students collaborating with laptop on campus"
-              loading="eager"
-              fetchpriority="high"
-              decoding="async">
-            <div class="hero-image-overlay" aria-hidden="true"></div>
-          </div>
+        <div class="home-hero-visual reveal-item hero-3d-wrap" id="hero3dWrap">
+          <img
+            id="heroStaticPoster"
+            class="hero-poster"
+            src="/images/hero-poster.webp"
+            alt="CampusSphere 3D Interactive Scene"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async">
         </div>
       </div>
     </section>
 
     <section id="why-campussphere" class="home-section home-features" aria-labelledby="whyTitle">
       <div class="home-section-heading reveal-item">
-        <span class="section-kicker">Experience</span>
-        <h2 id="whyTitle" style="color: #0A2540;">Why Choose CampusSphere?</h2>
-        <p>A smarter, more connected, and modern college experience.</p>
+        <span class="section-kicker">Core System</span>
+        <h2 id="whyTitle">Academic Management Capabilities</h2>
+        <p>Purpose-built modules providing structured oversight for students and faculty.</p>
       </div>
-      <div class="feature-grid">
-        <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">🎓</div>
+      <div class="feature-grid features-card-grid">
+        <article class="feature-card reveal-item" tabindex="0">
+          <div class="feature-icon-box" aria-hidden="true">
+            <svg class="icon"><use href="/icons.svg#book-open"></use></svg>
+          </div>
           <h3>Academic Management</h3>
-          <p>Access your academic records, attendance insights, and semester performance with ease.</p>
+          <p>Access subject attendance records, internal assessment scores, and timetable schedules.</p>
         </article>
-        <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">👤</div>
+        <article class="feature-card reveal-item" tabindex="0">
+          <div class="feature-icon-box" aria-hidden="true">
+            <svg class="icon"><use href="/icons.svg#message-circle"></use></svg>
+          </div>
           <h3>Student Support</h3>
           <p>Direct communication with faculty mentors, academic guidance, and quick query resolution.</p>
         </article>
-        <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">📄</div>
+        <article class="feature-card reveal-item" tabindex="0">
+          <div class="feature-icon-box" aria-hidden="true">
+            <svg class="icon"><use href="/icons.svg#file-text"></use></svg>
+          </div>
           <h3>Digital Resources</h3>
-          <p>Instant access to syllabus outlines, study materials, circulars, and departmental notices.</p>
+          <p>Download university NEP syllabus outlines, unit study materials, and circular notices.</p>
         </article>
-        <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">🛡️</div>
+        <article class="feature-card reveal-item" tabindex="0">
+          <div class="feature-icon-box" aria-hidden="true">
+            <svg class="icon"><use href="/icons.svg#shield-check"></use></svg>
+          </div>
           <h3>Secure Platform</h3>
           <p>Role-based authentication ensuring your student records and academic privacy are fully guarded.</p>
-        </article>
-      </div>
-    </section>
-
     <section id="students-faculty-count" class="home-section stats-count-section" aria-labelledby="statsCountTitle">
       <div class="home-section-heading reveal-item">
         <span class="section-kicker">CAMPUS STRENGTH</span>
-        <h2 id="statsCountTitle" style="color: #0A2540;">Our Students &amp; Faculty Count</h2>
-        <p>Real-time strength of registered students and department faculty members.</p>
+        <h2 id="statsCountTitle">Our Students &amp; Faculty Count</h2>
+        <p id="statsCountSubtitle">Real-time strength of registered students and department faculty members.</p>
       </div>
 
-      <div class="stats-count-grid reveal-item">
+      <div class="stats-count-grid reveal-item" id="statsCountGrid">
         <!-- Student Statistics Card -->
         <article class="student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: 3">
           <div class="student-stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+            <svg class="icon icon-lg" aria-hidden="true"><use href="/icons.svg#users"></use></svg>
           </div>
           <div class="student-stat-number" id="homeStudentCountVal">3</div>
           <h3 class="student-stat-label">Registered Students</h3>
@@ -171,32 +150,66 @@
         <!-- Faculty Statistics Card -->
         <article class="student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Registered Faculty Members: 4">
           <div class="student-stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-            </svg>
+            <svg class="icon icon-lg" aria-hidden="true"><use href="/icons.svg#graduation-cap"></use></svg>
           </div>
           <div class="student-stat-number" id="homeFacultyCountVal">4</div>
           <h3 class="student-stat-label">Registered Faculty Members</h3>
           <p class="student-stat-subtext">Department faculty in CampusSphere</p>
         </article>
       </div>
+
+      <!-- Neutral Three-Role Strip (Shown when counts < STATS_MIN_THRESHOLD) -->
+      <div id="statsNeutralStrip" class="stats-neutral-strip reveal-item" style="display: none;">
+        <article class="role-strip-card">
+          <div class="role-strip-icon-wrap">
+            <svg class="icon icon-lg" aria-hidden="true"><use href="/icons.svg#users"></use></svg>
+          </div>
+          <h3 class="role-strip-label">Students</h3>
+          <p class="role-strip-subtext">Curriculum tracking, daily attendance, marks diagnostics, and course materials.</p>
+        </article>
+        <article class="role-strip-card">
+          <div class="role-strip-icon-wrap">
+            <svg class="icon icon-lg" aria-hidden="true"><use href="/icons.svg#graduation-cap"></use></svg>
+          </div>
+          <h3 class="role-strip-label">Faculty</h3>
+          <p class="role-strip-subtext">Attendance logging, assessment recording, resource distribution, and notices.</p>
+        </article>
+        <article class="role-strip-card">
+          <div class="role-strip-icon-wrap">
+            <svg class="icon icon-lg" aria-hidden="true"><use href="/icons.svg#shield-check"></use></svg>
+          </div>
+          <h3 class="role-strip-label">Administrators</h3>
+          <p class="role-strip-subtext">Institutional management, division assignments, syllabus publication, and user governance.</p>
+        </article>
+      </div>
     </section>
     <script src="/js/home-stats.js"></script>
 
-    <section id="student-community" class="home-section testimonials-section" aria-labelledby="testimonialsTitle">
+    <section id="student-community" class="home-section community-section" aria-labelledby="communityTitle">
       <div class="home-section-heading reveal-item">
-        <span class="section-kicker">CAMPUS VOICES</span>
-        <h2 id="testimonialsTitle" style="color: #0A2540;">What Our Students &amp; Faculty Say</h2>
-        <p>Real experiences from our Bharatesh BCA college community.</p>
+        <span class="section-kicker">CAMPUS COMMUNITY</span>
+        <h2 id="communityTitle">Collaborative Academic Life</h2>
+        <p>Dedicated to fostering technical competence, ethical discipline, and professional leadership.</p>
       </div>
-      <div id="publicTestimonials" class="testimonial-grid" aria-live="polite">
-        <div class="testimonial-card">
-          <p class="testimonial-quote">&ldquo;CampusSphere streamlines our daily attendance, academic notices, and marks tracking with real-time accuracy.&rdquo;</p>
-          <div class="testimonial-author">
-            <strong>BCA Department</strong>
-            <span>Bharatesh College, Belagavi</span>
-          </div>
+
+      <div class="community-grid-layout reveal-item">
+        <div class="community-frame">
+          <picture>
+            <source srcset="/campus-students-480.webp 480w, /campus-students-768.webp 768w, /campus-students-1200.webp 1200w" type="image/webp" sizes="(max-width: 600px) 480px, (max-width: 900px) 768px, 1200px">
+            <img
+              src="campus-students.jpg?v=20260915_hero_fit"
+              alt="Bharatesh BCA college students collaborating with laptop on campus"
+              width="1024"
+              height="571"
+              loading="lazy"
+              decoding="async">
+          </picture>
+        </div>
+        <div class="community-copy">
+          <h3>Empowering Future Tech Leaders</h3>
+          <p>Bharatesh College of Computer Applications provides structured curriculum, faculty mentoring, and a supportive learning environment designed for holistic student growth.</p>
+          <div class="tagline-strip">Education • Equality • Empowerment</div>
+          <p>CampusSphere keeps every student informed with live attendance statistics, internal assessment records, and direct departmental communications.</p>
         </div>
       </div>
     </section>
@@ -270,57 +283,44 @@ Belagavi</small></div>
   </main>
 
   <main id="loginPage" class="login-page" style="display:none;">
-    <div class="login-particles"></div>
-    <div class="login-glow glow-a"></div>
-    <div class="login-glow glow-b"></div>
-
-    <div class="login-shapes">
-      <div class="shape shape-a"></div>
-      <div class="shape shape-b"></div>
-      <div class="shape shape-c"></div>
-      <div class="shape shape-d"></div>
-    </div>
-
-    <div class="login-objects" aria-hidden="true">
-      <div class="obj obj-book">📚</div>
-      <div class="obj obj-pencil">✏️</div>
-      <div class="obj obj-laptop">💻</div>
-      <div class="obj obj-cap">🎓</div>
-      <div class="obj obj-star">⭐</div>
-    </div>
-
     <section class="login-card auth-card-horizontal">
       <div class="auth-showcase-panel">
         <div class="showcase-brand-header">
           <div class="showcase-logo-wrap">
             <img src="CampusSphere-logo.png?v=20261027_opt" alt="CampusSphere Logo">
           </div>
-          <h1>Campus<span>Sphere</span></h1>
+          <h1>Campus<span class="brand-sphere">Sphere</span></h1>
           <div class="showcase-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</div>
           <div class="showcase-college-sub">Belagavi | Karnataka • Academic Portal</div>
           <div class="showcase-motto-pill">
-            <span>✨</span>
+            <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#shield-check"></use></svg>
             <span>Education • Equality • Empowerment</span>
           </div>
         </div>
 
         <div class="showcase-features">
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">🎓</span>
+            <span class="showcase-feature-icon">
+              <svg class="icon"><use href="/icons.svg#graduation-cap"></use></svg>
+            </span>
             <div class="showcase-feature-text">
               <strong>Student Portal</strong>
               <p>Real-time attendance, semester marks, timetable &amp; study notes.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">👨‍🏫</span>
+            <span class="showcase-feature-icon">
+              <svg class="icon"><use href="/icons.svg#users"></use></svg>
+            </span>
             <div class="showcase-feature-text">
               <strong>Faculty Portal</strong>
               <p>Instant attendance entry, IA evaluations &amp; class division management.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">🛡️</span>
+            <span class="showcase-feature-icon">
+              <svg class="icon"><use href="/icons.svg#shield-check"></use></svg>
+            </span>
             <div class="showcase-feature-text">
               <strong>Institutional Security</strong>
               <p>Role-based authentication protecting student and faculty records.</p>
@@ -332,7 +332,8 @@ Belagavi</small></div>
       <div class="auth-form-panel">
         <div class="login-back-bar">
           <a href="#publicHome" class="login-back-btn" id="loginBackHomeLink" data-back-home>
-            <span>←</span> Home
+            <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-left"></use></svg>
+            <span>Home</span>
           </a>
         </div>
 
@@ -343,33 +344,41 @@ Belagavi</small></div>
         </div>
 
         <div class="role-tabs" role="tablist" aria-label="Account Role Selection">
-          <button type="button" class="role-tab active" data-role="student" role="tab" aria-selected="true"><span
-              class="role-icon">🎓</span><span>Student</span></button>
-          <button type="button" class="role-tab" data-role="faculty" role="tab" aria-selected="false"><span class="role-icon">👨‍🏫</span><span>Faculty</span></button>
-          <button type="button" class="role-tab" data-role="admin" role="tab" aria-selected="false"><span class="role-icon">🛡️</span><span>Admin</span></button>
+          <button type="button" class="role-tab active" data-role="student" role="tab" aria-selected="true">
+            <span class="role-icon"><svg class="icon"><use href="/icons.svg#graduation-cap"></use></svg></span>
+            <span>Student</span>
+          </button>
+          <button type="button" class="role-tab" data-role="faculty" role="tab" aria-selected="false">
+            <span class="role-icon"><svg class="icon"><use href="/icons.svg#users"></use></svg></span>
+            <span>Faculty</span>
+          </button>
+          <button type="button" class="role-tab" data-role="admin" role="tab" aria-selected="false">
+            <span class="role-icon"><svg class="icon"><use href="/icons.svg#shield-check"></use></svg></span>
+            <span>Admin</span>
+          </button>
         </div>
 
         <form id="loginForm">
           <label for="username" id="loginUsernameLabel">Username</label>
           <div class="input-wrap">
-            <span class="input-icon">👤</span>
+            <span class="input-icon"><svg class="icon"><use href="/icons.svg#user"></use></svg></span>
             <input id="username" type="text" placeholder="Enter your username" required autocomplete="username">
           </div>
 
           <label for="password">Password</label>
           <div class="password-wrap">
-            <span class="input-icon">🔒</span>
+            <span class="input-icon"><svg class="icon"><use href="/icons.svg#lock"></use></svg></span>
             <input id="password" type="password" placeholder="Enter your password" required
               autocomplete="current-password">
             <button type="button" id="togglePassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
-              <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path>
-                <circle cx="12" cy="12" r="2.7"></circle>
-              </svg>
+              <svg class="icon eye-icon" aria-hidden="true"><use href="/icons.svg#eye"></use></svg>
             </button>
           </div>
 
-          <button class="primary-btn" type="submit"><span>Login</span><span class="arrow">→</span></button>
+          <button class="primary-btn" type="submit">
+            <span>Login</span>
+            <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg>
+          </button>
           <p id="loginMessage" class="message" role="alert" aria-live="polite"></p>
         </form>
 
@@ -387,57 +396,44 @@ Belagavi</small></div>
   </main>
 
   <main id="signupPage" class="login-page signup-page" style="display:none;">
-    <div class="login-particles"></div>
-    <div class="login-glow glow-a"></div>
-    <div class="login-glow glow-b"></div>
-
-    <div class="login-shapes">
-      <div class="shape shape-a"></div>
-      <div class="shape shape-b"></div>
-      <div class="shape shape-c"></div>
-      <div class="shape shape-d"></div>
-    </div>
-
-    <div class="login-objects" aria-hidden="true">
-      <div class="obj obj-book">📚</div>
-      <div class="obj obj-pencil">✏️</div>
-      <div class="obj obj-laptop">💻</div>
-      <div class="obj obj-cap">🎓</div>
-      <div class="obj obj-star">⭐</div>
-    </div>
-
     <section class="login-card signup-card auth-card-horizontal">
       <div class="auth-showcase-panel">
         <div class="showcase-brand-header">
           <div class="showcase-logo-wrap">
             <img src="CampusSphere-logo.png?v=20261027_opt" alt="CampusSphere Logo">
           </div>
-          <h1>Campus<span>Sphere</span></h1>
+          <h1>Campus<span class="brand-sphere">Sphere</span></h1>
           <div class="showcase-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</div>
           <div class="showcase-college-sub">Belagavi | Karnataka • Account Registration</div>
           <div class="showcase-motto-pill">
-            <span>✨</span>
+            <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#shield-check"></use></svg>
             <span>Education • Equality • Empowerment</span>
           </div>
         </div>
 
         <div class="showcase-features">
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">🎓</span>
+            <span class="showcase-feature-icon">
+              <svg class="icon"><use href="/icons.svg#graduation-cap"></use></svg>
+            </span>
             <div class="showcase-feature-text">
               <strong>Student Registration</strong>
               <p>Quick onboarding for BCA 1st, 2nd, and 3rd Year batches with division mapping.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">👨‍🏫</span>
+            <span class="showcase-feature-icon">
+              <svg class="icon"><use href="/icons.svg#users"></use></svg>
+            </span>
             <div class="showcase-feature-text">
               <strong>Faculty Registration</strong>
               <p>Configure department and assign your specialized teaching subjects &amp; classes.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">⚡</span>
+            <span class="showcase-feature-icon">
+              <svg class="icon"><use href="/icons.svg#shield-check"></use></svg>
+            </span>
             <div class="showcase-feature-text">
               <strong>Instant Activation</strong>
               <p>Direct login credentials generated and ready to use immediately upon signup.</p>
@@ -449,7 +445,8 @@ Belagavi</small></div>
       <div class="auth-form-panel">
         <div class="login-back-bar">
           <a href="#publicHome" class="login-back-btn" data-back-home>
-            <span>←</span> Back to College Homepage
+            <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-left"></use></svg>
+            <span>Back to College Homepage</span>
           </a>
         </div>
 
@@ -461,10 +458,10 @@ Belagavi</small></div>
 
         <div class="role-tabs signup-role-tabs" role="tablist" aria-label="Registration Role Selection">
           <button type="button" class="role-tab active" id="tabSignupStudent" data-page-signup-role="student" role="tab" aria-selected="true">
-            <span class="role-icon">🎓</span><span>Student</span>
+            <span class="role-icon"><svg class="icon"><use href="/icons.svg#graduation-cap"></use></svg></span><span>Student</span>
           </button>
           <button type="button" class="role-tab" id="tabSignupFaculty" data-page-signup-role="faculty" role="tab" aria-selected="false">
-            <span class="role-icon">👨‍🏫</span><span>Faculty</span>
+            <span class="role-icon"><svg class="icon"><use href="/icons.svg#users"></use></svg></span><span>Faculty</span>
           </button>
         </div>
 
@@ -476,7 +473,7 @@ Belagavi</small></div>
             <div class="form-group">
               <label for="pageSignupName">Full Name</label>
               <div class="input-wrap">
-                <span class="input-icon">👤</span>
+                <span class="input-icon"><svg class="icon"><use href="/icons.svg#user"></use></svg></span>
                 <input id="pageSignupName" type="text" required placeholder="Enter full name" autocomplete="name">
               </div>
             </div>
@@ -484,7 +481,7 @@ Belagavi</small></div>
             <div class="form-group">
               <label for="pageSignupUsername" id="pageSignupUsernameLabel">Username</label>
               <div class="input-wrap">
-                <span class="input-icon">🪪</span>
+                <span class="input-icon"><svg class="icon"><use href="/icons.svg#user"></use></svg></span>
                 <input id="pageSignupUsername" type="text" required placeholder="Choose a username" autocomplete="username">
               </div>
             </div>
@@ -492,13 +489,10 @@ Belagavi</small></div>
             <div class="form-group">
               <label for="pageSignupPassword">Password</label>
               <div class="password-wrap">
-                <span class="input-icon">🔒</span>
+                <span class="input-icon"><svg class="icon"><use href="/icons.svg#lock"></use></svg></span>
                 <input id="pageSignupPassword" type="password" required minlength="6" placeholder="Create a password" autocomplete="new-password">
                 <button type="button" id="togglePageSignupPassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
-                  <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M2.2 12s3.5-6 9.8-6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path>
-                    <circle cx="12" cy="12" r="2.7"></circle>
-                  </svg>
+                  <svg class="icon eye-icon" aria-hidden="true"><use href="/icons.svg#eye"></use></svg>
                 </button>
               </div>
             </div>
@@ -506,7 +500,7 @@ Belagavi</small></div>
             <div class="form-group">
               <label for="pageSignupEmail">Email Address</label>
               <div class="input-wrap">
-                <span class="input-icon">✉️</span>
+                <span class="input-icon"><svg class="icon"><use href="/icons.svg#mail"></use></svg></span>
                 <input id="pageSignupEmail" type="email" required placeholder="Enter your email address" autocomplete="email">
               </div>
             </div>
@@ -518,7 +512,7 @@ Belagavi</small></div>
               <div class="form-group">
                 <label for="pageSignupCourse">Course</label>
                 <div class="input-wrap">
-                  <span class="input-icon">🎓</span>
+                  <span class="input-icon"><svg class="icon"><use href="/icons.svg#graduation-cap"></use></svg></span>
                   <input id="pageSignupCourse" readonly value="Bachelor of Computer Applications (BCA)" title="Bachelor of Computer Applications (BCA)" style="color: #0A2540; font-weight: 700;">
                 </div>
               </div>
@@ -578,7 +572,7 @@ Belagavi</small></div>
             <div class="form-group">
               <label for="pageSignupDepartment">Faculty Department</label>
               <div class="input-wrap">
-                <span class="input-icon">🏛️</span>
+                <span class="input-icon"><svg class="icon"><use href="/icons.svg#building"></use></svg></span>
                 <input id="pageSignupDepartment" value="Department of Computer Science & Applications" placeholder="Enter department">
               </div>
             </div>
@@ -599,8 +593,23 @@ Belagavi</small></div>
 
           <button class="primary-btn" type="submit" style="margin-top: 10px;">
             <span id="pageSignupSubmitLabel">Create Student Account</span>
-            <span class="arrow">→</span>
+            <svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg>
           </button>
+          <p id="pageSignupMessage" class="message" role="alert" aria-live="polite"></p>
+        </form>
+
+        <div class="auth-switch-bar">
+          <span>Already have an account?</span>
+          <button type="button" class="auth-switch-btn" data-open-login>Login to Account</button>
+        </div>
+
+        <div class="login-creator-credit">
+          <span>Designed &amp; Developed by</span>
+          <strong class="creator-badge login-creator-badge"><span class="creator-name">Shrikant Girisagar</span></strong>
+        </div>
+      </div>
+    </section>
+  </main>
           <p id="pageSignupMessage" class="message" role="alert" aria-live="polite"></p>
         </form>
 
@@ -642,12 +651,12 @@ Belagavi</small></div>
         <div class="topbar-actions">
           <button id="topbarDesktopNotifBtn" class="topbar-notice-btn desktop-notif-btn" title="Enable Desktop Push Notifications"
             aria-label="Enable Desktop Push Notifications">
-            <span class="bell-icon">🖥️</span>
+            <span class="bell-icon"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#laptop"></use></svg></span>
             <span id="desktopNotifDot" class="desktop-notif-dot"></span>
           </button>
           <button id="topbarNoticeBtn" class="topbar-notice-btn" title="View Campus Notices"
             aria-label="View Campus Notices">
-            <span class="bell-icon">🔔</span>
+            <span class="bell-icon"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#bell"></use></svg></span>
             <span id="topbarNoticeBadge" class="notice-count-badge hidden">0</span>
           </button>
           <div class="user-chip"><span id="userAvatar">S</span>
@@ -788,7 +797,7 @@ Belagavi</small></div>
     <div class="ai-modal-container" style="max-width: 480px;">
       <div class="ai-modal-header">
         <div class="ai-modal-title-wrap">
-          <div class="ai-sparkle-icon" style="background: #eedfff; color: #6366f1;">📚</div>
+          <div class="ai-sparkle-icon" style="background: #eedfff; color: #1459d9;"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#book-open"></use></svg></div>
           <div>
             <h3 id="subjectModalTitle">Add Subject</h3>
             <p id="subjectModalSubtitle">Configure semester subject details</p>
@@ -850,7 +859,7 @@ Belagavi</small></div>
     <div class="ai-modal-container" style="max-width: 440px;">
       <div class="ai-modal-header">
         <div class="ai-modal-title-wrap">
-          <div class="ai-sparkle-icon" style="background: #e0f2fe; color: #0284c7;">🏫</div>
+          <div class="ai-sparkle-icon" style="background: #e0f2fe; color: #1459d9;"><svg class="icon icon-sm" aria-hidden="true"><use href="/icons.svg#building"></use></svg></div>
           <div>
             <h3 id="divisionModalTitle">Add New Division</h3>
             <p id="divisionModalSubtitle">Create a class section/division for students</p>

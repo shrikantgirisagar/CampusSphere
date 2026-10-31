@@ -127,7 +127,7 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
     const server = http.createServer((req, res) => {
       let reqPath = req.url.split('?')[0].split('#')[0];
       if (reqPath === '/') reqPath = '/index.html';
-      const filePath = path.join(rootDir, reqPath);
+      const filePath = fs.existsSync(path.join(assetDir, reqPath)) ? path.join(assetDir, reqPath) : path.join(rootDir, reqPath);
 
       if (!fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -295,8 +295,8 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
         await new Promise(r => setTimeout(r, 60));
         const lightStyles = await sampleComputedStyles();
 
-        // Verify Dark Mode did NOT invert to dark colors
-        const darkBodyIsLight = darkStyles.bodyBg === 'rgb(246, 248, 253)' || darkStyles.bodyBg.includes('246');
+        // Verify Dark Mode did NOT invert to dark colors (Ivory #FBF8F2 or Light #f6f8fd)
+        const darkBodyIsLight = darkStyles.bodyBg === 'rgb(251, 248, 242)' || darkStyles.bodyBg === 'rgb(246, 248, 253)' || darkStyles.bodyBg.includes('251') || darkStyles.bodyBg.includes('246');
         const darkCardIsLight = !darkStyles.statCardBg || darkStyles.statCardBg === 'rgb(255, 255, 255)' || darkStyles.statCardBg.includes('255');
         const schemesIdentical = darkStyles.bodyBg === lightStyles.bodyBg && darkStyles.bodyColor === lightStyles.bodyColor;
 
