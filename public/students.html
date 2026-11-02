@@ -6,11 +6,10 @@
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <title>Students &amp; Statistics | BHARATESH COLLEGE OF COMPUTER APPLICATIONS</title>
-  <link rel="preload" href="/fonts/outfit-variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20260916_24">
-  <link rel="stylesheet" href="css/home.css?v=20261031_01">
-  <script defer src="/vendor/campus3d.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261102_cleanup">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
@@ -24,6 +23,7 @@
   <div class="students-page">
     <!-- INSTITUTION HEADER -->
     <header class="institution-header">
+
       <div class="institution-header-inner">
         <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">
           <span class="institution-copy">
@@ -65,7 +65,6 @@
 
       <!-- Page Banner -->
       <header class="students-hero-banner">
-        <canvas id="campus3d" class="compact-3d-canvas" data-3d-preset="students" aria-hidden="true"></canvas>
         <span class="section-kicker">CAMPUS COMMUNITY</span>
         <h1>Student Statistics</h1>
         <p>Official registered student strength and academic community metrics of Bharatesh College of Computer Applications.</p>
@@ -75,7 +74,13 @@
       <section class="students-stats-wrapper" aria-label="Registered Students Statistics">
         <article class="student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: loading...">
           <div class="student-stat-icon-wrap" aria-hidden="true">
-            <svg class="icon icon-lg" aria-hidden="true"><use href="/icons.svg#users"></use></svg>
+            <!-- Blue outline users icon -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
           </div>
           <div class="student-stat-number is-loading" id="studentCountVal">…</div>
           <h2 class="student-stat-label">Registered Students</h2>

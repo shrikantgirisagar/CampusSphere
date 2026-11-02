@@ -1762,8 +1762,8 @@ signupModal.innerHTML = `
         <input id="signupPassword" type="password" required minlength="10" placeholder="At least 10 chars (letters & numbers)" autocomplete="new-password">
         <button type="button" id="toggleSignupPassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
           <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path>
+            <circle cx="12" cy="12" r="2.7"></circle>
           </svg>
         </button>
       </div>
@@ -3002,8 +3002,8 @@ function renderAiCharts(analytics, mode = "marks") {
       const i1Maxes = subjectData.map(s => s.i1Max || 20);
       const maxScale = Math.max(20, ...i1Maxes);
 
-      const barColors = subjectData.map(s => (s.i1Pct || 0) >= 75 ? 'rgba(47, 111, 85, 0.85)' : ((s.i1Pct || 0) >= 50 ? 'rgba(20, 89, 217, 0.85)' : ((s.i1Pct || 0) >= 35 ? 'rgba(179, 139, 63, 0.85)' : 'rgba(169, 58, 43, 0.85)')));
-      const barBorderColors = subjectData.map(s => (s.i1Pct || 0) >= 75 ? '#2F6F55' : ((s.i1Pct || 0) >= 50 ? '#1459d9' : ((s.i1Pct || 0) >= 35 ? '#B38B3F' : '#A93A2B')));
+      const barColors = subjectData.map(s => (s.i1Pct || 0) >= 75 ? 'rgba(34, 197, 94, 0.85)' : ((s.i1Pct || 0) >= 50 ? 'rgba(59, 130, 246, 0.85)' : ((s.i1Pct || 0) >= 35 ? 'rgba(245, 158, 11, 0.85)' : 'rgba(239, 68, 68, 0.85)')));
+      const barBorderColors = subjectData.map(s => (s.i1Pct || 0) >= 75 ? '#16a34a' : ((s.i1Pct || 0) >= 50 ? '#2563eb' : ((s.i1Pct || 0) >= 35 ? '#d97706' : '#dc2626')));
 
       const distinctionCount = subjectData.filter(s => (s.i1Pct || 0) >= 85).length;
       const firstClassCount = subjectData.filter(s => (s.i1Pct || 0) >= 70 && (s.i1Pct || 0) < 85).length;
@@ -3055,13 +3055,13 @@ function renderAiCharts(analytics, mode = "marks") {
             datasets: [{
               data: [distinctionCount, firstClassCount, secondClassCount, thirdClassCount, failCount],
               backgroundColor: [
-                "rgba(47, 111, 85, 0.85)",
-                "rgba(20, 89, 217, 0.85)",
-                "rgba(107, 122, 144, 0.85)",
-                "rgba(179, 139, 63, 0.85)",
-                "rgba(169, 58, 43, 0.85)"
+                "rgba(34, 197, 94, 0.85)",
+                "rgba(59, 130, 246, 0.85)",
+                "rgba(168, 85, 247, 0.85)",
+                "rgba(245, 158, 11, 0.85)",
+                "rgba(239, 68, 68, 0.85)"
               ],
-              borderColor: ["#2F6F55", "#1459d9", "#6B7A90", "#B38B3F", "#A93A2B"],
+              borderColor: ["#16a34a", "#2563eb", "#7e22ce", "#d97706", "#dc2626"],
               borderWidth: 1.5
             }]
           },
@@ -3096,16 +3096,16 @@ function renderAiCharts(analytics, mode = "marks") {
               {
                 label: "1st Internal Marks",
                 data: i1Values,
-                backgroundColor: "rgba(20, 89, 217, 0.85)",
-                borderColor: "#1459d9",
+                backgroundColor: "rgba(59, 130, 246, 0.85)",
+                borderColor: "#2563eb",
                 borderWidth: 1.5,
                 borderRadius: 6
               },
               {
                 label: "2nd Internal Marks",
                 data: i2Values,
-                backgroundColor: "rgba(179, 139, 63, 0.85)",
-                borderColor: "#B38B3F",
+                backgroundColor: "rgba(168, 85, 247, 0.85)",
+                borderColor: "#7e22ce",
                 borderWidth: 1.5,
                 borderRadius: 6
               }
@@ -3143,13 +3143,13 @@ function renderAiCharts(analytics, mode = "marks") {
             datasets: [{
               data: [distinctionCount, firstClassCount, secondClassCount, thirdClassCount, failCount],
               backgroundColor: [
-                "rgba(47, 111, 85, 0.85)",
-                "rgba(20, 89, 217, 0.85)",
-                "rgba(107, 122, 144, 0.85)",
-                "rgba(179, 139, 63, 0.85)",
-                "rgba(169, 58, 43, 0.85)"
+                "rgba(34, 197, 94, 0.85)",
+                "rgba(59, 130, 246, 0.85)",
+                "rgba(168, 85, 247, 0.85)",
+                "rgba(245, 158, 11, 0.85)",
+                "rgba(239, 68, 68, 0.85)"
               ],
-              borderColor: ["#2F6F55", "#1459d9", "#6B7A90", "#B38B3F", "#A93A2B"],
+              borderColor: ["#16a34a", "#2563eb", "#7e22ce", "#d97706", "#dc2626"],
               borderWidth: 1.5
             }]
           },
@@ -3221,13 +3221,13 @@ function renderAiCharts(analytics, mode = "marks") {
             datasets: [{
               data: [distinctionCount, firstClassCount, secondClassCount, thirdClassCount, failCount],
               backgroundColor: [
-                "rgba(47, 111, 85, 0.85)",
-                "rgba(20, 89, 217, 0.85)",
-                "rgba(107, 122, 144, 0.85)",
-                "rgba(179, 139, 63, 0.85)",
-                "rgba(169, 58, 43, 0.85)"
+                "rgba(34, 197, 94, 0.85)",
+                "rgba(59, 130, 246, 0.85)",
+                "rgba(168, 85, 247, 0.85)",
+                "rgba(245, 158, 11, 0.85)",
+                "rgba(239, 68, 68, 0.85)"
               ],
-              borderColor: ["#2F6F55", "#1459d9", "#6B7A90", "#B38B3F", "#A93A2B"],
+              borderColor: ["#16a34a", "#2563eb", "#7e22ce", "#d97706", "#dc2626"],
               borderWidth: 1.5
             }]
           },
@@ -3244,8 +3244,8 @@ function renderAiCharts(analytics, mode = "marks") {
     }
   } else {
     // Attendance mode
-    const barColors = attValues.map(v => v >= 85 ? 'rgba(47, 111, 85, 0.85)' : (v >= 75 ? 'rgba(20, 89, 217, 0.85)' : 'rgba(169, 58, 43, 0.85)'));
-    const barBorderColors = attValues.map(v => v >= 85 ? '#2F6F55' : (v >= 75 ? '#1459d9' : '#A93A2B'));
+    const barColors = attValues.map(v => v >= 85 ? 'rgba(16, 185, 129, 0.85)' : (v >= 75 ? 'rgba(59, 130, 246, 0.85)' : 'rgba(239, 68, 68, 0.85)'));
+    const barBorderColors = attValues.map(v => v >= 85 ? '#059669' : (v >= 75 ? '#2563eb' : '#dc2626'));
 
     const highCount = attValues.filter(v => v >= 85).length;
     const goodCount = attValues.filter(v => v >= 75 && v < 85).length;
@@ -3284,8 +3284,8 @@ function renderAiCharts(analytics, mode = "marks") {
           labels: ["Excellent (≥85%)", "Good (75-84%)", "At Risk (<75%)"],
           datasets: [{
             data: [highCount, goodCount, riskCount],
-            backgroundColor: ["rgba(47, 111, 85, 0.85)", "rgba(20, 89, 217, 0.85)", "rgba(169, 58, 43, 0.85)"],
-            borderColor: ["#2F6F55", "#1459d9", "#A93A2B"],
+            backgroundColor: ["rgba(16, 185, 129, 0.85)", "rgba(59, 130, 246, 0.85)", "rgba(239, 68, 68, 0.85)"],
+            borderColor: ["#059669", "#2563eb", "#dc2626"],
             borderWidth: 1.5
           }]
         },
@@ -3581,8 +3581,8 @@ function openPortal() {
     $("publicHome").style.setProperty("display", "none", "important");
   }
   if ($("app")) $("app").classList.remove("hidden");
-  if (typeof window.CampusSphereDestroy3D === "function") {
-    try { window.CampusSphereDestroy3D(); } catch (e) { console.warn("CampusSphereDestroy3D error:", e); }
+  if (window.AnimatedBackground) {
+    try { window.AnimatedBackground.ensure(); } catch (e) { console.warn("AnimatedBackground.ensure error:", e); }
   }
   if ($("userName")) $("userName").textContent = currentUser ? currentUser.name : "";
   if ($("userRole")) $("userRole").textContent = roleLabel(currentUser ? currentUser.role : "", currentUser ? currentUser.subject : "");
@@ -10688,39 +10688,6 @@ function logout() {
 
 
 
-// Login background effects: dynamic particles and object timing
-(function initLoginEffects() {
-  const containers = document.querySelectorAll('.login-particles');
-  if (!containers.length) return;
-  const rand = (min, max) => Math.random() * (max - min) + min;
-
-  // generate small sprinkle particles for each auth container
-  containers.forEach(container => {
-    const count = 30;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const size = Math.floor(rand(6, 18));
-      p.style.width = size + 'px';
-      p.style.height = size + 'px';
-      p.style.left = Math.floor(rand(2, 96)) + '%';
-      p.style.bottom = Math.floor(rand(6, 70)) + '%';
-      p.style.opacity = (rand(.35, 1)).toFixed(2);
-      p.style.animationDuration = (rand(3.5, 9)).toFixed(2) + 's';
-      p.style.animationDelay = (-rand(0, 9)).toFixed(2) + 's';
-      p.style.filter = 'blur(' + (rand(0, 3)).toFixed(1) + 'px)';
-      container.appendChild(p);
-    }
-  });
-
-  // randomize object animation timing for a more organic look
-  document.querySelectorAll('.login-objects .obj').forEach(el => {
-    el.style.animationDuration = (rand(5.5, 9.5)).toFixed(2) + 's';
-    el.style.animationDelay = (-rand(0, 5)).toFixed(2) + 's';
-    // tiny x-offset variation
-    el.style.transform = `translateX(${Math.floor(rand(-6, 6))}px)`;
-  });
-})();
 
 
 

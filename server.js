@@ -222,7 +222,7 @@ app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self';"
+    "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self';"
   );
 
   if (req.secure || req.headers["x-forwarded-proto"] === "https") {
@@ -468,11 +468,6 @@ app.get("/script.js", (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(PUBLIC_DIR, "script.js"));
 });
-app.get("/animated-background.js", (req, res) => {
-  res.set("Cache-Control", "no-cache, no-store, must-revalidate");
-  res.sendFile(path.join(PUBLIC_DIR, "animated-background.js"));
-});
-
 // Service Worker & PWA Manifest explicit handlers
 app.get("/service-worker.js", (req, res) => {
   res.set({
