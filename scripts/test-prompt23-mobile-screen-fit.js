@@ -48,6 +48,10 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
   const authCardFluid = /\.auth-card-horizontal\s*\{[^}]*width:\s*100%\s*!important;[^}]*max-width:\s*560px\s*!important/s.test(styleCss);
   logTest('Login card uses fluid width: 100% !important with max-width: 560px !important (no 94vw overflow)', authCardFluid);
 
+  // Background floating objects must be hidden on mobile to avoid horizontal scrollbar protrusion
+  const loginObjectsHidden = /\.login-objects\s*\{[^}]*display:\s*none\s*!important;/s.test(styleCss);
+  logTest('Login floating background emojis (.login-objects) are hidden on mobile to prevent overflow', loginObjectsHidden);
+
   // Compact screen optimization (<= 380px)
   const compactScreenRules = styleCss.includes('@media (max-width: 380px)') &&
     styleCss.includes('.role-tab') &&

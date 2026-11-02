@@ -4,7 +4,7 @@
    - Versioned Safe Static Asset Caching (Never caches /api)
    ============================================================================ */
 
-const CACHE_NAME = "campussphere-static-v3";
+const CACHE_NAME = "campussphere-static-v2";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   "/about.html",
   "/style.css",
   "/script.js",
+  "/animated-background.js",
   "/manifest.json",
   "/favicon.ico",
   "/icon-192x192.png",

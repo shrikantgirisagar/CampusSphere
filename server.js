@@ -468,6 +468,11 @@ app.get("/script.js", (req, res) => {
   res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendFile(path.join(PUBLIC_DIR, "script.js"));
 });
+app.get("/animated-background.js", (req, res) => {
+  res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.sendFile(path.join(PUBLIC_DIR, "animated-background.js"));
+});
+
 // Service Worker & PWA Manifest explicit handlers
 app.get("/service-worker.js", (req, res) => {
   res.set({

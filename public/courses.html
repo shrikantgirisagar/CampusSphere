@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261102_cleanup">
+  <link rel="stylesheet" href="style.css?v=20260916_24">
+  <script src="animated-background.js?v=20260916_24"></script>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
   <link rel="shortcut icon" type="image/png" href="CampusSphere-logo.png?v=20261027_opt">
@@ -18,9 +19,32 @@
 </head>
 
 <body class="courses-page-body">
+  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
+  <animated-background class="campus-ambient-bg" aria-hidden="true">
+    <div class="ambient-blob blob-blue"></div>
+    <div class="ambient-blob blob-indigo"></div>
+    <div class="ambient-blob blob-cyan"></div>
+    <div class="ambient-blob blob-emerald"></div>
+    <div class="ambient-blob blob-violet"></div>
+    <div class="ambient-grid-overlay"></div>
+    <div class="ambient-shapes">
+      <span class="ambient-ring ring-1"></span>
+      <span class="ambient-ring ring-2"></span>
+      <span class="ambient-ring ring-3"></span>
+    </div>
+  </animated-background>
+
   <div class="courses-page">
     <!-- INSTITUTION HEADER -->
     <header class="institution-header">
+      <!-- Ambient Animated Glassmorphic Backdrop Layers -->
+      <div class="header-ambient-layers" aria-hidden="true">
+        <div class="header-ambient-gradient"></div>
+        <div class="header-blob header-blob-1"></div>
+        <div class="header-blob header-blob-2"></div>
+        <div class="header-blob header-blob-3"></div>
+        <div class="header-shimmer"></div>
+      </div>
 
       <div class="institution-header-inner">
         <a class="institution-brand" href="index.html#publicHome" aria-label="BHARATESH COLLEGE OF COMPUTER APPLICATIONS - CampusSphere home">

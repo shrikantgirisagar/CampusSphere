@@ -10688,6 +10688,39 @@ function logout() {
 
 
 
+// Login background effects: dynamic particles and object timing
+(function initLoginEffects() {
+  const containers = document.querySelectorAll('.login-particles');
+  if (!containers.length) return;
+  const rand = (min, max) => Math.random() * (max - min) + min;
+
+  // generate small sprinkle particles for each auth container
+  containers.forEach(container => {
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.floor(rand(6, 18));
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.floor(rand(2, 96)) + '%';
+      p.style.bottom = Math.floor(rand(6, 70)) + '%';
+      p.style.opacity = (rand(.35, 1)).toFixed(2);
+      p.style.animationDuration = (rand(3.5, 9)).toFixed(2) + 's';
+      p.style.animationDelay = (-rand(0, 9)).toFixed(2) + 's';
+      p.style.filter = 'blur(' + (rand(0, 3)).toFixed(1) + 'px)';
+      container.appendChild(p);
+    }
+  });
+
+  // randomize object animation timing for a more organic look
+  document.querySelectorAll('.login-objects .obj').forEach(el => {
+    el.style.animationDuration = (rand(5.5, 9.5)).toFixed(2) + 's';
+    el.style.animationDelay = (-rand(0, 5)).toFixed(2) + 's';
+    // tiny x-offset variation
+    el.style.transform = `translateX(${Math.floor(rand(-6, 6))}px)`;
+  });
+})();
 
 
 

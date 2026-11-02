@@ -17,7 +17,7 @@ CampusSphere/
 │   ├── about.html                  # About CampusSphere interface
 │   ├── script.js                   # Client frontend SPA controller & state management
 │   ├── style.css                   # Clean, high-contrast light theme design stylesheet
-│   ├── animated-background.js      # (Removed) Previously interactive background canvas rendering
+│   ├── animated-background.js      # Interactive background canvas rendering
 │   ├── service-worker.js           # Progressive Web App service worker (safe static asset caching)
 │   ├── manifest.json               # Web App Manifest with 192x192 & 512x512 icons
 │   ├── icon-192x192.png            # Standard PWA application icon (192x192)
