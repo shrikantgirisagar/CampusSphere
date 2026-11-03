@@ -1485,9 +1485,15 @@ function resetLoginForm() {
     }
   }
   if ($("loginMessage")) {
-    $("loginMessage").textContent = "";
-    $("loginMessage").className = "message";
+    $("loginMessage").innerHTML = "";
+    $("loginMessage").className = "message auth-error-summary";
   }
+  const loginUserErr = $("loginUsernameError");
+  if (loginUserErr) { loginUserErr.textContent = ""; loginUserErr.classList.remove("visible"); }
+  const loginPassErr = $("loginPasswordError");
+  if (loginPassErr) { loginPassErr.textContent = ""; loginPassErr.classList.remove("visible"); }
+  if ($("username")) $("username").classList.remove("input-error");
+  if ($("password")) $("password").classList.remove("input-error");
   const submitButton = $("loginForm") ? $("loginForm").querySelector('button[type="submit"]') : null;
   if (submitButton) {
     submitButton.disabled = false;
@@ -2556,11 +2562,35 @@ $("loginForm").addEventListener("submit", async e => {
   const password = passwordInput ? passwordInput.value : "";
   const submitButton = $("loginForm").querySelector('button[type="submit"]');
 
-  if (!username || !password) {
+  const loginUserErr = $("loginUsernameError");
+  const loginPassErr = $("loginPasswordError");
+  let hasClientError = false;
+
+  if (!username) {
+    if (loginUserErr) { loginUserErr.textContent = "Username is required."; loginUserErr.classList.add("visible"); }
+    if (usernameInput) usernameInput.classList.add("input-error");
+    hasClientError = true;
+  } else {
+    if (loginUserErr) { loginUserErr.textContent = ""; loginUserErr.classList.remove("visible"); }
+    if (usernameInput) usernameInput.classList.remove("input-error");
+  }
+
+  if (!password) {
+    if (loginPassErr) { loginPassErr.textContent = "Password is required."; loginPassErr.classList.add("visible"); }
+    if (passwordInput) passwordInput.classList.add("input-error");
+    hasClientError = true;
+  } else {
+    if (loginPassErr) { loginPassErr.textContent = ""; loginPassErr.classList.remove("visible"); }
+    if (passwordInput) passwordInput.classList.remove("input-error");
+  }
+
+  if (hasClientError) {
     if ($("loginMessage")) {
       $("loginMessage").textContent = "Please enter both username and password.";
-      $("loginMessage").className = "message error";
+      $("loginMessage").className = "message error auth-error-summary";
     }
+    if (!username && usernameInput) usernameInput.focus();
+    else if (!password && passwordInput) passwordInput.focus();
     return;
   }
 
@@ -2590,8 +2620,9 @@ $("loginForm").addEventListener("submit", async e => {
         openPortal();
       } catch (error) {
         if ($("loginMessage")) {
-          $("loginMessage").textContent = error.message || "Unable to log in.";
-          $("loginMessage").className = "message error";
+          const errMsg = error.message || "Unable to log in.";
+          $("loginMessage").textContent = errMsg;
+          $("loginMessage").className = "message error auth-error-summary";
         }
       }
     }, { loadingText: "Logging in..." });
@@ -14111,3 +14142,130 @@ document.addEventListener("submit", (e) => {
     if (typeof handleSyllabusUploadSubmit === "function") handleSyllabusUploadSubmit(e);
   }
 });
+
+
+// =========================================================
+// INLINE VALIDATION LISTENERS (AUTH)
+// =========================================================
+(function initAuthInlineValidation() {
+  const uInput = $("username");
+  const pInput = $("password");
+  const uErr = $("loginUsernameError");
+  const pErr = $("loginPasswordError");
+
+  if (uInput) {
+    uInput.addEventListener("blur", () => {
+      if (!uInput.value.trim()) {
+        if (uErr) { uErr.textContent = "Username is required."; uErr.classList.add("visible"); }
+        uInput.classList.add("input-error");
+      }
+    });
+    uInput.addEventListener("input", () => {
+      if (uInput.value.trim()) {
+        if (uErr) { uErr.textContent = ""; uErr.classList.remove("visible"); }
+        uInput.classList.remove("input-error");
+      }
+    });
+  }
+
+  if (pInput) {
+    pInput.addEventListener("blur", () => {
+      if (!pInput.value) {
+        if (pErr) { pErr.textContent = "Password is required."; pErr.classList.add("visible"); }
+        pInput.classList.add("input-error");
+      }
+    });
+    pInput.addEventListener("input", () => {
+      if (pInput.value) {
+        if (pErr) { pErr.textContent = ""; pErr.classList.remove("visible"); }
+        pInput.classList.remove("input-error");
+      }
+    });
+  }
+
+  const sName = $("pageSignupName");
+  const sUser = $("pageSignupUsername");
+  const sPass = $("pageSignupPassword");
+  const sEmail = $("pageSignupEmail");
+
+  const sNameErr = $("pageSignupNameError");
+  const sUserErr = $("pageSignupUsernameError");
+  const sPassErr = $("pageSignupPasswordError");
+  const sEmailErr = $("pageSignupEmailError");
+
+  if (sName) {
+    sName.addEventListener("blur", () => {
+      if (!sName.value.trim()) {
+        if (sNameErr) { sNameErr.textContent = "Full name is required."; sNameErr.classList.add("visible"); }
+        sName.classList.add("input-error");
+      }
+    });
+    sName.addEventListener("input", () => {
+      if (sName.value.trim()) {
+        if (sNameErr) { sNameErr.textContent = ""; sNameErr.classList.remove("visible"); }
+        sName.classList.remove("input-error");
+      }
+    });
+  }
+
+  if (sUser) {
+    sUser.addEventListener("blur", () => {
+      const v = sUser.value.trim();
+      if (!v) {
+        if (sUserErr) { sUserErr.textContent = "Username is required."; sUserErr.classList.add("visible"); }
+        sUser.classList.add("input-error");
+      } else if (v.length < 3) {
+        if (sUserErr) { sUserErr.textContent = "Username must be at least 3 characters."; sUserErr.classList.add("visible"); }
+        sUser.classList.add("input-error");
+      }
+    });
+    sUser.addEventListener("input", () => {
+      const v = sUser.value.trim();
+      if (v.length >= 3) {
+        if (sUserErr) { sUserErr.textContent = ""; sUserErr.classList.remove("visible"); }
+        sUser.classList.remove("input-error");
+      }
+    });
+  }
+
+  if (sPass) {
+    sPass.addEventListener("blur", () => {
+      const v = sPass.value;
+      if (!v) {
+        if (sPassErr) { sPassErr.textContent = "Password is required."; sPassErr.classList.add("visible"); }
+        sPass.classList.add("input-error");
+      } else if (v.length < 6) {
+        if (sPassErr) { sPassErr.textContent = "Password must be at least 6 characters."; sPassErr.classList.add("visible"); }
+        sPass.classList.add("input-error");
+      }
+    });
+    sPass.addEventListener("input", () => {
+      if (sPass.value.length >= 6) {
+        if (sPassErr) { sPassErr.textContent = ""; sPassErr.classList.remove("visible"); }
+        sPass.classList.remove("input-error");
+      }
+    });
+  }
+
+  if (sEmail) {
+    sEmail.addEventListener("blur", () => {
+      const v = sEmail.value.trim();
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!v) {
+        if (sEmailErr) { sEmailErr.textContent = "Email address is required."; sEmailErr.classList.add("visible"); }
+        sEmail.classList.add("input-error");
+      } else if (!re.test(v)) {
+        if (sEmailErr) { sEmailErr.textContent = "Please enter a valid email address."; sEmailErr.classList.add("visible"); }
+        sEmail.classList.add("input-error");
+      }
+    });
+    sEmail.addEventListener("input", () => {
+      const v = sEmail.value.trim();
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (re.test(v)) {
+        if (sEmailErr) { sEmailErr.textContent = ""; sEmailErr.classList.remove("visible"); }
+        sEmail.classList.remove("input-error");
+      }
+    });
+  }
+})();

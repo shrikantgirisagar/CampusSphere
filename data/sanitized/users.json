@@ -117,9 +117,18 @@
     "subjectDivisions": {}
   },
   {
+    "id": "id-test_syl_admin_1793628638292",
+    "role": "admin",
+    "name": "Demo Administrator 14",
+    "username": "test_syl_admin_1793628638292",
+    "email": "test_syl_admin_1793628638292@demo.campussphere.local",
+    "subjects": [],
+    "subjectDivisions": {}
+  },
+  {
     "id": "faculty-31c983d05386c9db",
     "role": "faculty",
-    "name": "Demo Faculty 14",
+    "name": "Demo Faculty 15",
     "username": "00001",
     "email": "00001@demo.campussphere.local",
     "department": "Department of Computer Science & Applications",
@@ -134,7 +143,7 @@
   {
     "id": "faculty-5384d93a6ad4d4d9",
     "role": "faculty",
-    "name": "Demo Faculty 15",
+    "name": "Demo Faculty 16",
     "username": "0001",
     "email": "0001@demo.campussphere.local",
     "department": "Department of Computer Science & Applications",
@@ -149,7 +158,7 @@
   {
     "id": "faculty-98d7d0ce8e614e84",
     "role": "faculty",
-    "name": "Demo Faculty 16",
+    "name": "Demo Faculty 17",
     "username": "0002",
     "email": "0002@demo.campussphere.local",
     "department": "Department of Computer Science & Applications",
@@ -163,7 +172,7 @@
   {
     "id": "faculty-592dd811f69fd509",
     "role": "faculty",
-    "name": "Demo Faculty 17",
+    "name": "Demo Faculty 18",
     "username": "0003",
     "email": "0003@demo.campussphere.local",
     "department": "Department of Computer Science & Applications",
@@ -178,7 +187,7 @@
   {
     "id": "id-fac_sync_1791095311815",
     "role": "faculty",
-    "name": "Demo Faculty 18",
+    "name": "Demo Faculty 19",
     "username": "fac_sync_1791095311815",
     "email": "fac_sync_1791095311815@demo.campussphere.local",
     "division": "Both Divisions",
@@ -191,7 +200,7 @@
   {
     "id": "id-fac_sync_1791095416981",
     "role": "faculty",
-    "name": "Demo Faculty 19",
+    "name": "Demo Faculty 20",
     "username": "fac_sync_1791095416981",
     "email": "fac_sync_1791095416981@demo.campussphere.local",
     "division": "Both Divisions",
@@ -204,7 +213,7 @@
   {
     "id": "id-fac_sync_1791095555074",
     "role": "faculty",
-    "name": "Demo Faculty 20",
+    "name": "Demo Faculty 21",
     "username": "fac_sync_1791095555074",
     "email": "fac_sync_1791095555074@demo.campussphere.local",
     "division": "Both Divisions",
@@ -217,7 +226,7 @@
   {
     "id": "id-fac_sync_1791097367637",
     "role": "faculty",
-    "name": "Demo Faculty 21",
+    "name": "Demo Faculty 22",
     "username": "fac_sync_1791097367637",
     "email": "fac_sync_1791097367637@demo.campussphere.local",
     "division": "Both Divisions",
@@ -230,7 +239,7 @@
   {
     "id": "id-fac_sync_1791097787451",
     "role": "faculty",
-    "name": "Demo Faculty 22",
+    "name": "Demo Faculty 23",
     "username": "fac_sync_1791097787451",
     "email": "fac_sync_1791097787451@demo.campussphere.local",
     "division": "Both Divisions",
@@ -243,7 +252,7 @@
   {
     "id": "faculty-mu9i2pty",
     "role": "faculty",
-    "name": "Demo Faculty 23",
+    "name": "Demo Faculty 24",
     "username": "p11_fac_mu9i2pty",
     "email": "p11_fac_mu9i2pty@demo.campussphere.local",
     "department": "Computer Applications",
@@ -257,7 +266,7 @@
   {
     "id": "faculty-1789672613422",
     "role": "faculty",
-    "name": "Demo Faculty 24",
+    "name": "Demo Faculty 25",
     "username": "t_fac_1789672613422",
     "email": "t_fac_1789672613422@demo.campussphere.local",
     "department": "Computer Science",
@@ -270,7 +279,7 @@
   {
     "id": "faculty-1789673409411",
     "role": "faculty",
-    "name": "Demo Faculty 25",
+    "name": "Demo Faculty 26",
     "username": "t_fac_1789673409411",
     "email": "t_fac_1789673409411@demo.campussphere.local",
     "department": "Computer Science",
@@ -283,7 +292,7 @@
   {
     "id": "id-test_fac_1790017881152",
     "role": "faculty",
-    "name": "Demo Faculty 26",
+    "name": "Demo Faculty 27",
     "username": "test_fac_1790017881152",
     "email": "test_fac_1790017881152@demo.campussphere.local",
     "department": "Department of Computer Science & Applications",
@@ -297,7 +306,7 @@
   {
     "id": "id-test_syl_faculty_1790686346922",
     "role": "faculty",
-    "name": "Demo Faculty 27",
+    "name": "Demo Faculty 28",
     "username": "test_syl_faculty_1790686346922",
     "email": "test_syl_faculty_1790686346922@demo.campussphere.local",
     "division": "Both Divisions",
@@ -308,7 +317,7 @@
   {
     "id": "id-test_syl_faculty_1793205349143",
     "role": "faculty",
-    "name": "Demo Faculty 28",
+    "name": "Demo Faculty 29",
     "username": "test_syl_faculty_1793205349143",
     "email": "test_syl_faculty_1793205349143@demo.campussphere.local",
     "division": "Both Divisions",
@@ -319,7 +328,7 @@
   {
     "id": "id-test_syl_faculty_1793426151834",
     "role": "faculty",
-    "name": "Demo Faculty 29",
+    "name": "Demo Faculty 30",
     "username": "test_syl_faculty_1793426151834",
     "email": "test_syl_faculty_1793426151834@demo.campussphere.local",
     "division": "Both Divisions",
@@ -328,9 +337,20 @@
     "subjectDivisions": {}
   },
   {
+    "id": "id-test_syl_faculty_1793628638292",
+    "role": "faculty",
+    "name": "Demo Faculty 31",
+    "username": "test_syl_faculty_1793628638292",
+    "email": "test_syl_faculty_1793628638292@demo.campussphere.local",
+    "division": "Both Divisions",
+    "subject": "Data Structures",
+    "subjects": [],
+    "subjectDivisions": {}
+  },
+  {
     "id": "student-b138a4ff072a98b1",
     "role": "student",
-    "name": "Demo Student 30",
+    "name": "Demo Student 32",
     "username": "00006",
     "email": "00006@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -344,7 +364,7 @@
   {
     "id": "student-9e3b84a3516dc1fa",
     "role": "student",
-    "name": "Demo Student 31",
+    "name": "Demo Student 33",
     "username": "0005",
     "email": "0005@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -359,7 +379,7 @@
   {
     "id": "student-f1a7c8bb63ac4c6f",
     "role": "student",
-    "name": "Demo Student 32",
+    "name": "Demo Student 34",
     "username": "U15BO25S0052",
     "email": "u15bo25s0052@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -374,7 +394,7 @@
   {
     "id": "student-41e9d442dd095bf3",
     "role": "student",
-    "name": "Demo Student 33",
+    "name": "Demo Student 35",
     "username": "clean_user_1789755370799",
     "email": "clean_user_1789755370799@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -389,7 +409,7 @@
   {
     "id": "student-4ae7a26c2761e9ce",
     "role": "student",
-    "name": "Demo Student 34",
+    "name": "Demo Student 36",
     "username": "clean_user_1789893059956",
     "email": "clean_user_1789893059956@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -404,7 +424,7 @@
   {
     "id": "student-5180a6e8b51748da",
     "role": "student",
-    "name": "Demo Student 35",
+    "name": "Demo Student 37",
     "username": "direct_stu_44048",
     "email": "direct_stu_44048@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -419,7 +439,7 @@
   {
     "id": "student-e50def071ab97f3f",
     "role": "student",
-    "name": "Demo Student 36",
+    "name": "Demo Student 38",
     "username": "direct_stu_62826",
     "email": "direct_stu_62826@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -434,7 +454,7 @@
   {
     "id": "student-7e537d9abc70802e",
     "role": "student",
-    "name": "Demo Student 37",
+    "name": "Demo Student 39",
     "username": "direct_stu_74333",
     "email": "direct_stu_74333@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -449,7 +469,7 @@
   {
     "id": "student-6927323c2d3114d6",
     "role": "student",
-    "name": "Demo Student 38",
+    "name": "Demo Student 40",
     "username": "direct_stu_75294",
     "email": "direct_stu_75294@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -464,7 +484,7 @@
   {
     "id": "student-378631165f953f71",
     "role": "student",
-    "name": "Demo Student 39",
+    "name": "Demo Student 41",
     "username": "direct_stu_97653",
     "email": "direct_stu_97653@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -479,7 +499,7 @@
   {
     "id": "student-d73f028f45c03e06",
     "role": "student",
-    "name": "Demo Student 40",
+    "name": "Demo Student 42",
     "username": "integ_stu_1789673343160",
     "email": "integ_stu_1789673343160@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -494,7 +514,7 @@
   {
     "id": "student-6dd69288e64a4021",
     "role": "student",
-    "name": "Demo Student 41",
+    "name": "Demo Student 43",
     "username": "integ_stu_1789673377533",
     "email": "integ_stu_1789673377533@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -509,7 +529,7 @@
   {
     "id": "student-31c222615f97243a",
     "role": "student",
-    "name": "Demo Student 42",
+    "name": "Demo Student 44",
     "username": "p11_stu2_mu9i2pty",
     "email": "p11_stu2_mu9i2pty@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -524,7 +544,7 @@
   {
     "id": "student-b29af95fcbb5844c",
     "role": "student",
-    "name": "Demo Student 43",
+    "name": "Demo Student 45",
     "username": "p11_stu_mu9i2pty",
     "email": "p11_stu_mu9i2pty@demo.campussphere.local",
     "course": "BCA",
@@ -539,7 +559,7 @@
   {
     "id": "student-b276bab0dbedeabb",
     "role": "student",
-    "name": "Demo Student 44",
+    "name": "Demo Student 46",
     "username": "rogue_1789892533217",
     "email": "rogue_1789892533217@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -554,7 +574,7 @@
   {
     "id": "student-9785600ea65d486f",
     "role": "student",
-    "name": "Demo Student 45",
+    "name": "Demo Student 47",
     "username": "stu_integ_1789673340930",
     "email": "stu_integ_1789673340930@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -569,7 +589,7 @@
   {
     "id": "student-dd30b421b7402d97",
     "role": "student",
-    "name": "Demo Student 46",
+    "name": "Demo Student 48",
     "username": "stu_integ_1789673375350",
     "email": "stu_integ_1789673375350@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -584,7 +604,7 @@
   {
     "id": "student-6597e4b0ca5b1349",
     "role": "student",
-    "name": "Demo Student 47",
+    "name": "Demo Student 49",
     "username": "stu_integ_1789673396977",
     "email": "stu_integ_1789673396977@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -599,7 +619,7 @@
   {
     "id": "student-c85cf64af7265061",
     "role": "student",
-    "name": "Demo Student 48",
+    "name": "Demo Student 50",
     "username": "stu_term_75753",
     "email": "stu_term_75753@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -614,7 +634,7 @@
   {
     "id": "student-5143ce538c9497d8",
     "role": "student",
-    "name": "Demo Student 49",
+    "name": "Demo Student 51",
     "username": "stud_sync_1791097787451",
     "email": "stud_sync_1791097787451@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -629,7 +649,7 @@
   {
     "id": "student-1789672613422",
     "role": "student",
-    "name": "Demo Student 50",
+    "name": "Demo Student 52",
     "username": "t_stu_1789672613422",
     "email": "t_stu_1789672613422@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -642,7 +662,7 @@
   {
     "id": "student-1789673409411",
     "role": "student",
-    "name": "Demo Student 51",
+    "name": "Demo Student 53",
     "username": "t_stu_1789673409411",
     "email": "t_stu_1789673409411@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -655,7 +675,7 @@
   {
     "id": "victim-1789672613422",
     "role": "student",
-    "name": "Demo Student 52",
+    "name": "Demo Student 54",
     "username": "t_vic_1789672613422",
     "email": "t_vic_1789672613422@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -668,7 +688,7 @@
   {
     "id": "victim-1789673409411",
     "role": "student",
-    "name": "Demo Student 53",
+    "name": "Demo Student 55",
     "username": "t_vic_1789673409411",
     "email": "t_vic_1789673409411@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -681,7 +701,7 @@
   {
     "id": "student-29d93052fa9beb9a",
     "role": "student",
-    "name": "Demo Student 54",
+    "name": "Demo Student 56",
     "username": "test_direct_37161",
     "email": "test_direct_37161@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -696,7 +716,7 @@
   {
     "id": "student-b644c5606d449cbf",
     "role": "student",
-    "name": "Demo Student 55",
+    "name": "Demo Student 57",
     "username": "test_direct_75903",
     "email": "test_direct_75903@demo.campussphere.local",
     "course": "Bachelor of Computer Applications (BCA)",
@@ -711,7 +731,7 @@
   {
     "id": "id-test_syl_student_1790686346922",
     "role": "student",
-    "name": "Demo Student 56",
+    "name": "Demo Student 58",
     "username": "test_syl_student_1790686346922",
     "email": "test_syl_student_1790686346922@demo.campussphere.local",
     "courseYear": "1st Year",
@@ -723,7 +743,7 @@
   {
     "id": "id-test_syl_student_1793205349143",
     "role": "student",
-    "name": "Demo Student 57",
+    "name": "Demo Student 59",
     "username": "test_syl_student_1793205349143",
     "email": "test_syl_student_1793205349143@demo.campussphere.local",
     "courseYear": "1st Year",
@@ -735,9 +755,21 @@
   {
     "id": "id-test_syl_student_1793426151834",
     "role": "student",
-    "name": "Demo Student 58",
+    "name": "Demo Student 60",
     "username": "test_syl_student_1793426151834",
     "email": "test_syl_student_1793426151834@demo.campussphere.local",
+    "courseYear": "1st Year",
+    "semester": "1st Semester",
+    "division": "Div A",
+    "subjects": [],
+    "subjectDivisions": {}
+  },
+  {
+    "id": "id-test_syl_student_1793628638292",
+    "role": "student",
+    "name": "Demo Student 61",
+    "username": "test_syl_student_1793628638292",
+    "email": "test_syl_student_1793628638292@demo.campussphere.local",
     "courseYear": "1st Year",
     "semester": "1st Semester",
     "division": "Div A",
