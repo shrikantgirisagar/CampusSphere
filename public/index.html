@@ -83,12 +83,13 @@
     <section class="home-hero" aria-labelledby="homeHeroTitle">
       <div class="hero-ambient-glow glow-1" aria-hidden="true"></div>
       <div class="hero-ambient-glow glow-2" aria-hidden="true"></div>
+      <div class="hero-3d-ambient-grid" aria-hidden="true"></div>
       <div class="home-hero-inner">
         <div class="home-hero-copy reveal-item">
-          <span class="home-eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>WELCOME TO</span>
+          <span class="home-eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>BHARATESH BCA • NEXT-GEN ACADEMIC SUITE</span>
           <h1 id="homeHeroTitle">Campus<span>Sphere</span></h1>
           <p class="home-hero-subtitle">Your Digital Academic Campus</p>
-          <p class="home-hero-description">A unified platform for students, faculty, and administrators to access academic information, attendance, marks, announcements, and campus resources.</p>
+          <p class="home-hero-description">A unified, high-performance platform for students, faculty, and administrators to access verified academic records, real-time attendance, semester marks, notices, and institutional resources.</p>
           <div class="home-hero-actions">
             <button type="button" class="hero-primary-btn" data-open-signup>
               <span>Get Started</span>
@@ -99,17 +100,33 @@
               <span class="arrow" aria-hidden="true">→</span>
             </button>
           </div>
+          <div class="hero-trust-indicators" aria-label="Campus trust metrics">
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🏛️</span><span>NAAC Accredited</span></div>
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">⚡</span><span>Real-Time Sync</span></div>
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🔒</span><span>Role-Secured</span></div>
+          </div>
         </div>
 
         <div class="home-hero-visual reveal-item">
-          <div class="hero-image-frame">
-            <img
-              src="campus-students.jpg?v=20260915_hero_fit"
-              alt="Bharatesh BCA college students collaborating with laptop on campus"
-              loading="eager"
-              fetchpriority="high"
-              decoding="async">
-            <div class="hero-image-overlay" aria-hidden="true"></div>
+          <div class="hero-3d-stage" id="hero3dStage" data-3d-stage>
+            <div class="hero-3d-halo" aria-hidden="true"></div>
+            <div class="hero-3d-grid-plane" aria-hidden="true"></div>
+
+            <!-- 3D Glass Image Frame -->
+            <div class="hero-image-frame">
+              <div class="hero-glass-glint" aria-hidden="true"></div>
+              <img
+                src="campus-students.jpg?v=20260915_hero_fit"
+                alt="Bharatesh BCA college students collaborating with laptop on campus"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async">
+              <div class="hero-image-overlay" aria-hidden="true"></div>
+              <div class="hero-frame-footer">
+                <span class="footer-tag">BHARATESH BCA</span>
+                <span class="footer-meta">Belagavi Campus • Academic Excellence</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -117,30 +134,41 @@
 
     <section id="why-campussphere" class="home-section home-features" aria-labelledby="whyTitle">
       <div class="home-section-heading reveal-item">
-        <span class="section-kicker">Experience</span>
+        <span class="section-kicker">EXPERIENCE EXCELLENCE</span>
         <h2 id="whyTitle" style="color: #0A2540;">Why Choose CampusSphere?</h2>
-        <p>A smarter, more connected, and modern college experience.</p>
+        <p>A smarter, more connected, and modern university SaaS platform engineered for academic success.</p>
       </div>
       <div class="feature-grid">
         <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">🎓</div>
+          <div class="feature-icon" aria-hidden="true">
+            <div class="icon-3d-pod pod-blue">🎓</div>
+          </div>
           <h3>Academic Management</h3>
-          <p>Access your academic records, attendance insights, and semester performance with ease.</p>
+          <p>Access verified academic records, dynamic semester attendance insights, internal assessment scores, and university syllabus outlines with real-time accuracy.</p>
         </article>
+
         <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">👤</div>
+          <div class="feature-icon" aria-hidden="true">
+            <div class="icon-3d-pod pod-cyan">👤</div>
+          </div>
           <h3>Student Support</h3>
-          <p>Direct communication with faculty mentors, academic guidance, and quick query resolution.</p>
+          <p>Direct communication with faculty mentors, academic guidance, class division coordination, and quick classroom advisory resolution.</p>
         </article>
+
         <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">📄</div>
+          <div class="feature-icon" aria-hidden="true">
+            <div class="icon-3d-pod pod-indigo">📄</div>
+          </div>
           <h3>Digital Resources</h3>
-          <p>Instant access to syllabus outlines, study materials, circulars, and departmental notices.</p>
+          <p>Instant access to syllabus outlines, departmental study materials, laboratory manuals, circulars, and institutional timetables.</p>
         </article>
+
         <article class="feature-card reveal-item">
-          <div class="feature-icon" aria-hidden="true">🛡️</div>
+          <div class="feature-icon" aria-hidden="true">
+            <div class="icon-3d-pod pod-emerald">🛡️</div>
+          </div>
           <h3>Secure Platform</h3>
-          <p>Role-based authentication ensuring your student records and academic privacy are fully guarded.</p>
+          <p>Role-based authentication with native crypto hashing, session revocation, and data isolation ensuring student privacy is fully guarded.</p>
         </article>
       </div>
     </section>
@@ -149,7 +177,7 @@
       <div class="home-section-heading reveal-item">
         <span class="section-kicker">CAMPUS STRENGTH</span>
         <h2 id="statsCountTitle" style="color: #0A2540;">Our Students &amp; Faculty Count</h2>
-        <p>Real-time strength of registered students and department faculty members.</p>
+        <p>Real-time institutional strength of registered students and department faculty members.</p>
       </div>
 
       <div class="stats-count-grid reveal-item">
@@ -192,10 +220,38 @@
       </div>
       <div id="publicTestimonials" class="testimonial-grid" aria-live="polite">
         <div class="testimonial-card">
-          <p class="testimonial-quote">&ldquo;CampusSphere streamlines our daily attendance, academic notices, and marks tracking with real-time accuracy.&rdquo;</p>
+          <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+          <p class="testimonial-quote">&ldquo;CampusSphere streamlines our daily attendance, academic notices, and marks tracking with real-time accuracy. Having everything accessible in one light-speed portal makes campus life effortless.&rdquo;</p>
           <div class="testimonial-author">
-            <strong>BCA Department</strong>
-            <span>Bharatesh College, Belagavi</span>
+            <div class="author-avatar" aria-hidden="true">🎓</div>
+            <div>
+              <strong>BCA Department Scholar</strong>
+              <small>Bharatesh College of Computer Applications</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+          <p class="testimonial-quote">&ldquo;Marking attendance, managing division assignments, and publishing examination evaluations is completely instantaneous. The platform gives our teaching faculty maximum focus on students.&rdquo;</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" aria-hidden="true">👨‍🏫</div>
+            <div>
+              <strong>Faculty Professor</strong>
+              <small>Dept. of Computer Science &amp; Applications</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+          <p class="testimonial-quote">&ldquo;Institutional announcements, syllabus outlines, and student division sync work flawlessly across the campus. It sets a new benchmark for modern collegiate infrastructure.&rdquo;</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" aria-hidden="true">🏛️</div>
+            <div>
+              <strong>Academic Coordinator</strong>
+              <small>Bharatesh BCA, Belagavi</small>
+            </div>
           </div>
         </div>
       </div>
