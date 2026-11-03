@@ -12865,8 +12865,8 @@ executeUniversalAutoSync();
 
   const sections = [
     { id: "publicHome", links: ["Home"] },
-    { id: "why-campussphere", links: ["Why CampusSphere", "Features"] },
     { id: "students-faculty-count", links: ["Students", "Faculty"] },
+    { id: "why-campussphere", links: ["Why CampusSphere", "Features"] },
     { id: "student-community", links: ["Community"] }
   ];
   const navLinks = Array.from(home.querySelectorAll(".public-nav-link"));

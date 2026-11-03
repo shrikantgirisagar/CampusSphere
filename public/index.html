@@ -84,19 +84,20 @@
     <section class="home-hero" aria-labelledby="homeHeroTitle">
       <div class="hero-ambient-glow glow-1" aria-hidden="true"></div>
       <div class="hero-ambient-glow glow-2" aria-hidden="true"></div>
+      <div class="hero-ambient-glow glow-3" aria-hidden="true"></div>
       <div class="hero-3d-ambient-grid" aria-hidden="true"></div>
       <div class="home-hero-inner">
         <div class="home-hero-copy reveal-item">
           <span class="home-eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>BHARATESH BCA • NEXT-GEN ACADEMIC SUITE</span>
-          <h1 id="homeHeroTitle">Campus<span>Sphere</span></h1>
+          <h1 id="homeHeroTitle" class="hero-title">Campus<span>Sphere</span></h1>
           <p class="home-hero-subtitle">Your Digital Academic Campus</p>
           <p class="home-hero-description">A unified, high-performance platform for students, faculty, and administrators to access verified academic records, real-time attendance, semester marks, notices, and institutional resources.</p>
           <div class="home-hero-actions">
-            <button type="button" class="hero-primary-btn" data-open-signup>
+            <button type="button" class="hero-primary-btn" data-open-signup aria-label="Get Started with CampusSphere">
               <span>Get Started</span>
               <span class="arrow" aria-hidden="true">→</span>
             </button>
-            <button type="button" class="hero-secondary-btn" data-open-login>
+            <button type="button" class="hero-secondary-btn" data-open-login aria-label="Student and Faculty Portal Login">
               <span>Student Login</span>
               <span class="arrow" aria-hidden="true">→</span>
             </button>
@@ -105,32 +106,123 @@
             <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🏛️</span><span>NAAC Accredited</span></div>
             <div class="trust-pill"><span class="trust-icon" aria-hidden="true">⚡</span><span>Real-Time Sync</span></div>
             <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🔒</span><span>Role-Secured</span></div>
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🌐</span><span>Digital Campus</span></div>
           </div>
         </div>
 
         <div class="home-hero-visual reveal-item">
           <div class="hero-3d-stage" id="hero3dStage" data-3d-stage>
             <div class="hero-3d-halo" aria-hidden="true"></div>
+            <div class="hero-3d-halo halo-cyan" aria-hidden="true"></div>
             <div class="hero-3d-grid-plane" aria-hidden="true"></div>
 
-            <!-- 3D Glass Image Frame -->
-            <div class="hero-image-frame">
-              <div class="hero-glass-glint" aria-hidden="true"></div>
+            <!-- Floating 3D Academic Accent Badges positioned without overlapping subjects -->
+            <div class="hero-3d-float-card float-card-top-left" aria-hidden="true">
+              <div class="float-card-icon">🎓</div>
+              <div class="float-card-content">
+                <span class="float-card-title">Next-Gen BCA</span>
+                <span class="float-card-sub">Academic Excellence</span>
+              </div>
+            </div>
+
+            <div class="hero-3d-float-card float-card-bottom-right" aria-hidden="true">
+              <div class="float-card-icon">⚡</div>
+              <div class="float-card-content">
+                <span class="float-card-title">Live Portal</span>
+                <span class="float-card-sub">Instant Sync &amp; Attendance</span>
+              </div>
+            </div>
+
+            <!-- Immersive 3D Visual Artwork blending naturally into page -->
+            <div class="hero-image-frame hero-3d-visual-wrap">
               <img
-                src="campus-students.jpg?v=20260915_hero_fit"
-                alt="Bharatesh BCA college students collaborating with laptop on campus"
+                src="campussphere-hero-original.png?v=20261104_orig_png"
+                alt="CampusSphere 3D hero visualization showing Bharatesh BCA college students, campus architecture, and academic elements"
                 loading="eager"
                 fetchpriority="high"
-                decoding="async">
-              <div class="hero-image-overlay" aria-hidden="true"></div>
-              <div class="hero-frame-footer">
-                <span class="footer-tag">BHARATESH BCA</span>
-                <span class="footer-meta">Belagavi Campus • Academic Excellence</span>
-              </div>
+                decoding="async"
+                class="hero-3d-visual-img"
+                width="1024"
+                height="576">
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Translucent Statistics Panel below Hero -->
+      <section id="students-faculty-count" class="hero-stats-panel-wrap reveal-item" aria-labelledby="statsCountTitle">
+        <h2 id="statsCountTitle" class="hero-stats-heading-sr">Our Students &amp; Faculty Count</h2>
+        <div class="hero-stats-panel">
+          <!-- Student Statistics Card (Live Verified Database Count) -->
+          <article class="hero-stat-card student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: 3">
+            <div class="student-stat-icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="student-stat-number" id="homeStudentCountVal">3</div>
+              <h3 class="student-stat-label">Registered Students</h3>
+              <p class="student-stat-subtext">Active student accounts in CampusSphere</p>
+            </div>
+          </article>
+
+          <div class="hero-stat-divider" aria-hidden="true"></div>
+
+          <!-- Faculty Statistics Card (Live Verified Database Count) -->
+          <article class="hero-stat-card student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Registered Faculty Members: 4">
+            <div class="student-stat-icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="student-stat-number" id="homeFacultyCountVal">4</div>
+              <h3 class="student-stat-label">Registered Faculty</h3>
+              <p class="student-stat-subtext">Department mentors &amp; professors</p>
+            </div>
+          </article>
+
+          <div class="hero-stat-divider" aria-hidden="true"></div>
+
+          <!-- Academic Curriculum Card (Verified Non-Numeric Feature) -->
+          <article class="hero-stat-card" tabindex="0" role="region" aria-label="BCA Department Academic Curriculum">
+            <div class="student-stat-icon-wrap icon-cyan" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="student-stat-tag">ACADEMIC PROGRAM</span>
+              <h3 class="student-stat-label">BCA Department</h3>
+              <p class="student-stat-subtext">Semester syllabus, labs &amp; materials</p>
+            </div>
+          </article>
+
+          <div class="hero-stat-divider" aria-hidden="true"></div>
+
+          <!-- Institutional Security Card (Verified Non-Numeric Feature) -->
+          <article class="hero-stat-card" tabindex="0" role="region" aria-label="Institutional Role-Based Access Portals">
+            <div class="student-stat-icon-wrap icon-emerald" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <polyline points="9 12 11 14 15 10"></polyline>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <span class="student-stat-tag tag-emerald">INSTITUTIONAL ACCESS</span>
+              <h3 class="student-stat-label">Role-Based Portals</h3>
+              <p class="student-stat-subtext">Secure student &amp; faculty workspaces</p>
+            </div>
+          </article>
+        </div>
+      </section>
+      <script src="/js/home-stats.js"></script>
     </section>
 
     <section id="why-campussphere" class="home-section home-features" aria-labelledby="whyTitle">
@@ -173,45 +265,6 @@
         </article>
       </div>
     </section>
-
-    <section id="students-faculty-count" class="home-section stats-count-section" aria-labelledby="statsCountTitle">
-      <div class="home-section-heading reveal-item">
-        <span class="section-kicker">CAMPUS STRENGTH</span>
-        <h2 id="statsCountTitle" style="color: #0A2540;">Our Students &amp; Faculty Count</h2>
-        <p>Real-time institutional strength of registered students and department faculty members.</p>
-      </div>
-
-      <div class="stats-count-grid reveal-item">
-        <!-- Student Statistics Card -->
-        <article class="student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: 3">
-          <div class="student-stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-          </div>
-          <div class="student-stat-number" id="homeStudentCountVal">3</div>
-          <h3 class="student-stat-label">Registered Students</h3>
-          <p class="student-stat-subtext">Active student accounts in CampusSphere</p>
-        </article>
-
-        <!-- Faculty Statistics Card -->
-        <article class="student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Registered Faculty Members: 4">
-          <div class="student-stat-icon-wrap" aria-hidden="true">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-            </svg>
-          </div>
-          <div class="student-stat-number" id="homeFacultyCountVal">4</div>
-          <h3 class="student-stat-label">Registered Faculty Members</h3>
-          <p class="student-stat-subtext">Department faculty in CampusSphere</p>
-        </article>
-      </div>
-    </section>
-    <script src="/js/home-stats.js"></script>
 
     <section id="student-community" class="home-section testimonials-section" aria-labelledby="testimonialsTitle">
       <div class="home-section-heading reveal-item">
