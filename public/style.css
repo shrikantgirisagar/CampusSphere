@@ -7198,15 +7198,12 @@ body.courses-page-body {
 .institution-header {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  border-top: none;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-  box-shadow: 0 10px 30px rgba(23, 105, 232, 0.10);
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 4px 20px rgba(10, 37, 64, 0.04);
+  font-family: Outfit, Inter, "Segoe UI", Arial, sans-serif;
   z-index: 25;
 }
 
@@ -7348,35 +7345,57 @@ body.courses-page-body {
   }
 }
 
-/* Header Content Container - Centered flow with relative positioning */
+/* Header Content Container - Modern Flex Alignment */
 .institution-header-inner {
   position: relative;
   z-index: 2;
   width: min(1240px, calc(100% - 48px));
-  min-height: 94px;
+  min-height: 84px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 10px 0;
+  justify-content: space-between;
+  padding: 14px 0;
+  gap: 20px;
 }
 
-/* Brand Link - Centered independently of action buttons */
+/* Brand Link - Elevated Logo & Crisp Academic Typography */
 .institution-brand {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin: 0 auto;
-  max-width: calc(100% - 360px);
-  color: inherit;
+  gap: 14px;
   text-decoration: none;
+  color: inherit;
   min-width: 0;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  z-index: 2;
+  transition: opacity 0.2s ease;
 }
 
-/* Logo Styling - Hidden (College logo removed per brand update) */
+.institution-brand:hover {
+  opacity: 0.95;
+}
+
+.institution-brand:focus-visible {
+  outline: 2px solid var(--campus-primary, #1459d9);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.institution-brand-logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(20, 89, 217, 0.16);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  transition: transform 0.25s ease;
+}
+
+.institution-brand:hover .institution-brand-logo {
+  transform: scale(1.05);
+}
+
+/* Logo Styling - Hidden legacy wrap */
 .institution-logo-wrap {
   display: none !important;
 }
@@ -7385,68 +7404,39 @@ body.courses-page-body {
 .institution-copy {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .institution-college-name,
 .institution-copy strong {
   display: block;
-  width: 100%;
-  text-align: center;
-  
-  font-family: var(--campus-font-heading);
-  font-size: clamp(25px, 1.25vw, 32px);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  word-spacing: normal;
+  font-family: Outfit, 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(15px, 1.35vw, 21px);
+  font-weight: 850;
+  letter-spacing: -0.015em;
   color: var(--color-text-heading, #0A2540) !important;
   text-transform: uppercase;
-  line-height: 1.2;
+  line-height: 1.22;
 }
 
 .institution-portal-identity {
   display: block;
-  font-family: var(--campus-font-heading);
-  font-size: var(--text-xs, 12px);
-  font-weight: 600;
-  color: var(--color-text-brand, #1459d9);
+  font-family: Outfit, 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--campus-primary, #1459d9);
   letter-spacing: 0.03em;
   margin-top: 2px;
-  text-align: center;
 }
 
-.institution-copy small {
-  font-family: var(--campus-font-body);
-  color: var(--color-text-muted, #64748b);
-  font-size: var(--text-xs, 12px);
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  margin-top: 3px;
-  text-align: center;
-}
-
+.institution-copy small,
 .institution-copy em {
-  font-family: var(--campus-font-body);
-  font-style: normal;
-  color: var(--color-text-brand, #1459d9);
-  font-size: var(--text-xs, 12px);
-  font-weight: 600;
-  letter-spacing: 0.25px;
-  margin-top: 2px;
-  text-align: center;
+  display: none;
 }
 
-/* Actions Wrapper - Positioned absolutely on the right without shifting centered brand */
+/* Actions Wrapper */
 .institution-actions {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -7460,47 +7450,63 @@ body.courses-page-body {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  min-height: 44px;
+  font-family: Outfit, Inter, "Segoe UI", Arial, sans-serif;
+  min-height: 42px;
   padding: 0 20px;
-  border-radius: var(--radius-md, 12px);
-  font-size: var(--text-sm, 14px);
+  border-radius: 9999px;
+  font-size: 13.5px;
   font-weight: 750;
   cursor: pointer;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.01em;
   border: 0;
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Clean White Login Button with Blue Border */
+.home-auth-btn:focus-visible {
+  outline: 2px solid var(--campus-primary, #1459d9);
+  outline-offset: 3px;
+}
+
+/* Premium Blue Gradient Login Button */
 .home-login-btn {
-  background: #ffffff;
-  border: 1.5px solid var(--campus-border-strong);
-  color: var(--campus-primary);
-  box-shadow: var(--campus-shadow-xs);
+  background: linear-gradient(135deg, #1459d9 0%, #1e40af 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 14px rgba(20, 89, 217, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .home-login-btn:hover {
   transform: translateY(-2px);
-  background: var(--campus-primary-soft);
-  border-color: var(--campus-primary);
-  box-shadow: var(--campus-shadow-sm);
-  color: var(--campus-primary-dark);
+  background: linear-gradient(135deg, #1d4ed8 0%, #172554 100%);
+  box-shadow: 0 8px 22px rgba(20, 89, 217, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  color: #ffffff;
 }
 
-/* Clean Secondary Outline Sign Up Button */
+.home-login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(20, 89, 217, 0.25);
+}
+
+/* Clean Frosted Sign Up Button */
 .home-signup-btn {
-  background: rgba(20, 89, 217, 0.05);
-  color: var(--campus-primary);
-  border: 1.5px solid var(--campus-primary);
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--campus-navy, #0A2540);
+  border: 1.5px solid rgba(203, 213, 225, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px rgba(10, 37, 64, 0.04);
 }
 
 .home-signup-btn:hover {
   transform: translateY(-2px);
-  background: var(--campus-primary);
-  box-shadow: 0 4px 14px rgba(20, 89, 217, 0.25);
-  color: #ffffff;
+  background: #ffffff;
+  border-color: rgba(20, 89, 217, 0.35);
+  color: var(--campus-primary, #1459d9);
+  box-shadow: 0 6px 18px rgba(10, 37, 64, 0.08);
+}
+
+.home-signup-btn:active {
+  transform: translateY(0);
 }
 
 /* Common button hover definitions preserved for other page buttons */
@@ -7529,89 +7535,122 @@ body.courses-page-body {
   }
 }
 
+/* Premium Floating Navigation Bar */
 .public-nav {
-  position: relative;
-  z-index: 20;
-  background: #ffffff;
-  border-bottom: 1px solid var(--campus-border);
-  box-shadow: 0 2px 8px rgba(12, 35, 64, 0.02);
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  position: sticky;
+  top: 14px;
+  z-index: 100;
+  width: 100%;
+  pointer-events: none;
+  font-family: Outfit, Inter, "Segoe UI", Arial, sans-serif;
+  margin: 12px 0 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .public-nav-inner {
-  width: min(1240px, calc(100% - 48px));
+  pointer-events: auto;
+  width: min(1040px, calc(100% - 32px));
   min-height: 52px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: 6px;
+  padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  border-radius: 9999px;
+  box-shadow: 0 10px 32px rgba(10, 37, 64, 0.07), 0 2px 6px rgba(20, 89, 217, 0.03);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.public-nav.is-scrolled .public-nav-inner {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(20, 89, 217, 0.22);
+  box-shadow: 0 16px 42px rgba(10, 37, 64, 0.12), 0 4px 12px rgba(20, 89, 217, 0.06);
 }
 
 .public-nav-link {
   position: relative;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  padding: 16px 6px;
-  color: var(--campus-navy);
+  font-family: Outfit, Inter, "Segoe UI", Arial, sans-serif;
+  padding: 8px 16px;
+  color: #475569;
   text-decoration: none;
   font-size: 13.5px;
   font-weight: 700;
-  transition: color 0.2s ease;
-  border-radius: 4px;
+  letter-spacing: -0.01em;
+  border-radius: 9999px;
+  transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
 }
 
 .public-nav-link:focus-visible {
-  outline: 2px solid var(--campus-primary);
-  outline-offset: 3px;
+  outline: 2px solid var(--campus-primary, #1459d9);
+  outline-offset: 2px;
 }
 
 .public-nav-link::after {
   content: "";
   position: absolute;
-  left: 6px;
-  right: 6px;
-  bottom: 8px;
-  height: 2.5px;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 14px;
+  height: 2px;
   border-radius: 999px;
-  background: var(--campus-primary);
-  transform: scaleX(0);
-  transition: transform 0.2s ease;
+  background: linear-gradient(90deg, #1459d9, #38bdf8);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.public-nav-link:hover,
+.public-nav-link:hover {
+  color: #0A2540;
+  background-color: rgba(20, 89, 217, 0.06);
+}
+
 .public-nav-link.active {
-  color: var(--campus-primary);
+  color: #1459d9;
+  background: rgba(20, 89, 217, 0.10);
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1px rgba(20, 89, 217, 0.18);
 }
 
 .public-nav-link:hover::after,
 .public-nav-link.active::after {
-  transform: scaleX(1);
+  transform: translateX(-50%) scaleX(1);
 }
 
 .public-menu-toggle {
   display: none;
   width: 42px;
   height: 40px;
-  border: 1px solid var(--campus-border-strong);
-  border-radius: 10px;
+  border: 1.5px solid rgba(226, 232, 240, 0.95);
+  border-radius: 12px;
   background: #ffffff;
   padding: 8px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(10, 37, 64, 0.04);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .public-menu-toggle:hover {
-  background: var(--campus-primary-soft);
-  border-color: var(--campus-primary);
+  background: var(--campus-primary-soft, #eff6ff);
+  border-color: var(--campus-primary, #1459d9);
+}
+
+.public-menu-toggle:focus-visible {
+  outline: 2px solid var(--campus-primary, #1459d9);
+  outline-offset: 2px;
 }
 
 .public-menu-toggle span {
   display: block;
-  height: 2.5px;
-  margin: 4px 0;
+  height: 2px;
+  margin: 4.5px 0;
   border-radius: 2px;
-  background: var(--campus-navy);
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  background: var(--campus-navy, #0A2540);
+  transition: transform 0.22s ease, opacity 0.22s ease;
 }
 
 /* Keyframe Animations for Modern Animated Aesthetic */
@@ -9017,22 +9056,30 @@ body.courses-page-body {
 
 @media (max-width: 768px) {
   .institution-header-inner {
-    width: min(100% - 28px, 1240px);
-    min-height: 78px;
+    width: min(100% - 24px, 1240px);
+    min-height: 74px;
+    padding: 10px 0;
   }
 
   .institution-brand {
-    max-width: calc(100% - 290px);
+    gap: 10px;
+    max-width: calc(100% - 210px);
   }
 
+  .institution-brand-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .institution-college-name,
   .institution-copy strong {
-    font-size: clamp(17px, 3.2vw, 22px);
-    word-spacing: 3.5px !important;
+    font-size: clamp(13px, 2.7vw, 16.5px);
+    word-spacing: normal;
   }
 
-  .institution-copy small,
-  .institution-copy em {
-    font-size: 10px;
+  .institution-portal-identity {
+    font-size: 11px;
   }
 
   .institution-actions {
@@ -9040,18 +9087,30 @@ body.courses-page-body {
   }
 
   .home-auth-btn {
-    min-height: 38px;
-    padding: 0 12px;
-    font-size: 11px;
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .public-nav {
+    top: 10px;
+    margin: 8px 0 0;
   }
 
   .public-nav-inner {
-    width: calc(100% - 28px);
-    min-height: 52px;
+    width: calc(100% - 24px);
+    min-height: 48px;
+    padding: 5px 8px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 0;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1.5px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 24px rgba(10, 37, 64, 0.08), 0 2px 6px rgba(20, 89, 217, 0.04);
   }
 
   .public-menu-toggle {
@@ -9060,8 +9119,8 @@ body.courses-page-body {
     justify-content: center;
     flex-direction: column;
     width: 44px;
-    height: 42px;
-    padding: 9px;
+    height: 40px;
+    padding: 8px;
   }
 
   .public-nav-link {
@@ -9070,7 +9129,13 @@ body.courses-page-body {
 
   .public-nav.is-open .public-nav-inner {
     min-height: 0;
-    padding: 10px 0 16px;
+    padding: 14px 16px 18px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: 0 20px 50px rgba(10, 37, 64, 0.16), 0 4px 14px rgba(20, 89, 217, 0.10);
+    border: 1.5px solid rgba(20, 89, 217, 0.20);
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -9100,10 +9165,10 @@ body.courses-page-body {
     align-items: center;
     min-height: 44px;
     padding: 11px 16px;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 14.5px;
     font-weight: 700;
-    color: var(--campus-navy);
+    color: var(--campus-navy, #0A2540);
     background: #f8fafc;
     border: 1px solid rgba(226, 232, 240, 0.9);
     transition: all 0.2s ease;
@@ -9111,16 +9176,16 @@ body.courses-page-body {
 
   .public-nav.is-open .public-nav-link:hover,
   .public-nav.is-open .public-nav-link:focus-visible {
-    background: var(--campus-primary-soft);
-    color: var(--campus-primary);
-    border-color: rgba(20, 89, 217, 0.2);
+    background: var(--campus-primary-soft, #eff6ff);
+    color: var(--campus-primary, #1459d9);
+    border-color: rgba(20, 89, 217, 0.25);
     transform: translateX(3px);
   }
 
   .public-nav.is-open .public-nav-link.active {
-    background: var(--campus-primary-soft);
-    color: var(--campus-primary);
-    border-color: rgba(20, 89, 217, 0.3);
+    background: var(--campus-primary-soft, #eff6ff);
+    color: var(--campus-primary, #1459d9);
+    border-color: rgba(20, 89, 217, 0.35);
     box-shadow: 0 2px 8px rgba(20, 89, 217, 0.08);
   }
 

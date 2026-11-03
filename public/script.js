@@ -12782,6 +12782,19 @@ executeUniversalAutoSync();
         toggle.setAttribute("aria-expanded", "false");
       });
     });
+
+    const handleNavScroll = () => {
+      nav.classList.toggle("is-scrolled", window.scrollY > 24);
+    };
+    window.addEventListener("scroll", handleNavScroll, { passive: true });
+    handleNavScroll();
+
+    document.addEventListener("click", (e) => {
+      if (nav.classList.contains("is-open") && !nav.contains(e.target)) {
+        nav.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+    });
   }
 
   const year = document.getElementById("homeCurrentYear");
