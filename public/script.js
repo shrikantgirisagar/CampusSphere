@@ -12800,52 +12800,6 @@ executeUniversalAutoSync();
   const year = document.getElementById("homeCurrentYear");
   if (year) year.textContent = String(new Date().getFullYear());
 
-  // Controlled 3D Hero Perspective Parallax Controller
-  const heroStage = document.getElementById("hero3dStage");
-  if (heroStage && window.matchMedia && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let isMouseOver = false;
-    let rafId = null;
-
-    const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
-
-    const updateTilt = () => {
-      currentX = lerp(currentX, targetX, 0.08);
-      currentY = lerp(currentY, targetY, 0.08);
-
-      const frame = heroStage.querySelector(".hero-image-frame");
-      if (frame) {
-        frame.style.transform = `perspective(1200px) rotateX(${currentY.toFixed(2)}deg) rotateY(${currentX.toFixed(2)}deg)`;
-      }
-
-      if (Math.abs(targetX - currentX) > 0.02 || Math.abs(targetY - currentY) > 0.02 || isMouseOver) {
-        rafId = requestAnimationFrame(updateTilt);
-      } else {
-        rafId = null;
-      }
-    };
-
-    heroStage.addEventListener("pointermove", (e) => {
-      const rect = heroStage.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      targetX = x * 10;
-      targetY = -y * 10;
-      isMouseOver = true;
-      if (!rafId) rafId = requestAnimationFrame(updateTilt);
-    }, { passive: true });
-
-    heroStage.addEventListener("pointerleave", () => {
-      targetX = 0;
-      targetY = 0;
-      isMouseOver = false;
-      if (!rafId) rafId = requestAnimationFrame(updateTilt);
-    }, { passive: true });
-  }
-
   // Aesthetic scroll-triggered reveal animations
   const revealElements = home.querySelectorAll(".reveal-item");
   if ("IntersectionObserver" in window) {
@@ -12867,7 +12821,11 @@ executeUniversalAutoSync();
     { id: "publicHome", links: ["Home"] },
     { id: "students-faculty-count", links: ["Students", "Faculty"] },
     { id: "why-campussphere", links: ["Why CampusSphere", "Features"] },
-    { id: "student-community", links: ["Community"] }
+    { id: "campus-announcements", links: ["Announcements"] },
+    { id: "academic-resources", links: ["Resources"] },
+    { id: "about-campussphere", links: ["About"] },
+    { id: "student-community", links: ["Community"] },
+    { id: "campus-contact", links: ["Contact"] }
   ];
   const navLinks = Array.from(home.querySelectorAll(".public-nav-link"));
   const updateActiveNav = () => {
@@ -12897,7 +12855,7 @@ executeUniversalAutoSync();
     } else if (h === "#students" || h === "#student-statistics" || h === "#students-faculty-count") {
       showHome();
       loadHomeStatsCount();
-    } else if (h === "#publichome" || h === "" || h.startsWith("#why") || h.startsWith("#courses") || h.startsWith("#student")) {
+    } else if (h === "#publichome" || h === "" || h.startsWith("#why") || h.startsWith("#courses") || h.startsWith("#student") || h.startsWith("#campus") || h.startsWith("#academic") || h.startsWith("#about")) {
       showHome();
     }
   });
