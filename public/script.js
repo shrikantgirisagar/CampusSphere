@@ -1519,7 +1519,6 @@ document.querySelectorAll("#loginPage .role-tab").forEach(btn => {
     currentRole = btn.dataset.role;
     resetLoginForm();
     updateLoginUsernameLabel(currentRole);
-    if ($("username")) $("username").focus();
   });
 });
 updateLoginUsernameLabel(currentRole);

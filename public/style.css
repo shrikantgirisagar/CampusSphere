@@ -94,6 +94,7 @@ html {
   color-scheme: light !important;
   scroll-behavior: smooth;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -398,6 +399,7 @@ animated-background,
   padding: 25px 18px;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
   background: transparent;
 }
 
@@ -1414,14 +1416,14 @@ animated-background,
 .signup-card.auth-card-horizontal {
   width: min(970px, 95vw) !important;
   max-width: 970px !important;
-  min-height: 580px !important;
+  min-height: 480px !important;
   grid-template-columns: 350px 1fr !important;
   border-radius: 24px !important;
 }
 
 /* Left Showcase Panel - Slightly Compact */
 .signup-card .auth-showcase-panel {
-  padding: 30px 24px !important;
+  padding: 19px 24px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
@@ -1526,7 +1528,7 @@ animated-background,
 
 /* Right Form Panel - Slightly Compact Padding */
 .signup-card .auth-form-panel {
-  padding: 30px 34px !important;
+  padding: 16px 32px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
@@ -1546,7 +1548,7 @@ animated-background,
 
 /* Header Elements */
 .signup-card .login-back-bar {
-  margin-bottom: 10px !important;
+  margin-bottom: 4px !important;
 }
 
 .signup-card .login-back-btn {
@@ -1555,18 +1557,18 @@ animated-background,
 }
 
 .signup-card .login-heading {
-  margin-bottom: 12px !important;
+  margin-bottom: 6px !important;
 }
 
 .signup-card .login-heading > span {
   font-size: 10.5px !important;
   letter-spacing: 0.9px !important;
-  margin-bottom: 3px !important;
+  margin-bottom: 1px !important;
 }
 
 .signup-card .login-heading h2 {
-  font-size: 21px !important;
-  margin: 0 0 3px 0 !important;
+  font-size: 20px !important;
+  margin: 0 0 1px 0 !important;
 }
 
 .signup-card .login-heading p {
@@ -1580,12 +1582,12 @@ animated-background,
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
   gap: 8px !important;
-  margin-bottom: 14px !important;
+  margin-bottom: 8px !important;
 }
 
 .signup-card .signup-role-tabs .role-tab {
-  min-height: 44px !important;
-  padding: 6px 14px !important;
+  min-height: 41px !important;
+  padding: 4px 12px !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
@@ -1604,21 +1606,21 @@ animated-background,
 .signup-card .auth-input-grid {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
-  gap: 9px 13px !important;
+  gap: 6px 13px !important;
 }
 
 .signup-card .form-group label {
   display: block !important;
   font-size: 11.5px !important;
   font-weight: 700 !important;
-  margin: 0 0 3px !important;
+  margin: 0 0 2px !important;
   color: #334155 !important;
 }
 
 .signup-card .input-wrap input,
 .signup-card .password-wrap input {
   width: 100% !important;
-  height: 40px !important;
+  height: 38px !important;
   padding: 0 12px 0 36px !important;
   font-size: 13px !important;
   border-radius: 10px !important;
@@ -1631,7 +1633,7 @@ animated-background,
 .signup-card .input-wrap select,
 .signup-card select {
   width: 100% !important;
-  height: 40px !important;
+  height: 38px !important;
   padding: 0 11px !important;
   font-size: 13px !important;
   border-radius: 10px !important;
@@ -1897,8 +1899,8 @@ animated-background,
 /* Primary Submit Button */
 .signup-card .primary-btn {
   width: 100% !important;
-  height: 42px !important;
-  margin-top: 14px !important;
+  height: 40px !important;
+  margin-top: 8px !important;
   font-size: 13.5px !important;
   border-radius: 11px !important;
 }
@@ -1912,8 +1914,8 @@ animated-background,
 
 /* Switch Bar */
 .signup-card .auth-switch-bar {
-  margin-top: 14px !important;
-  padding-top: 12px !important;
+  margin-top: 7px !important;
+  padding-top: 7px !important;
   font-size: 12.5px !important;
   gap: 7px !important;
 }
@@ -1925,7 +1927,8 @@ animated-background,
 
 /* Creator Credit */
 .signup-card .login-creator-credit {
-  margin-top: 10px !important;
+  margin-top: 4px !important;
+  padding-top: 8px !important;
   font-size: 11.5px !important;
 }
 
@@ -13119,7 +13122,7 @@ button:not(.primary-btn):not(.danger-btn) .btn-spinner {
 .signup-card.auth-card-horizontal {
   width: min(970px, 95vw) !important;
   max-width: 970px !important;
-  min-height: 550px !important;
+  min-height: 480px !important;
   grid-template-columns: 350px 1fr !important;
   border-radius: 24px !important;
 }
@@ -13144,7 +13147,7 @@ button:not(.primary-btn):not(.danger-btn) .btn-spinner {
 }
 
 .signup-card .auth-form-panel {
-  padding: 26px 32px !important;
+  padding: 16px 32px !important;
 }
 
 @media (max-width: 900px) {
@@ -13337,12 +13340,19 @@ button:not(.primary-btn):not(.danger-btn) .btn-spinner {
 
 .role-tab:hover {
   color: #0f172a;
+  transform: none !important;
 }
 
 .role-tab.active {
   background: #ffffff;
   color: var(--campus-primary, #1459d9);
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  transform: none !important;
+}
+
+.role-tab:focus,
+.role-tab:focus-visible {
+  transform: none !important;
 }
 
 /* Visible Labels (not placeholder-only) */
