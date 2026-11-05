@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (user.role === "admin") {
       if (manageLink) {
-        manageLink.textContent = "⚙️ Open Syllabus Management Studio";
+        manageLink.innerHTML = (window.renderIcon ? renderIcon("settings", { size: 16, className: "cs-icon-inline" }) : "") + " Open Syllabus Management Studio";
         manageLink.href = "admin-courses-syllabus.html";
         manageLink.style.display = "inline-flex";
       }
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
               statusEl.className = "courses-sem-status";
               btn.disabled = false;
             } else {
-              statusEl.textContent = "⏳ Pending Upload";
+              statusEl.innerHTML = (window.renderIcon ? renderIcon("hourglass", { size: 16, className: "cs-icon-inline" }) : "") + " Pending Upload";
               statusEl.className = "courses-sem-status pending";
               btn.disabled = true;
               btn.title = "Syllabus not yet published by department";

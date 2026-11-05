@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <script src="/js/icons.js"></script>
   <link rel="stylesheet" href="style.css?v=20260916_24">
   <script src="animated-background.js?v=20260916_24"></script>
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -84,7 +85,7 @@
 
       <!-- Auth Protection Notice (Shown if not admin) -->
       <div id="adminAuthGate" class="syllabus-error-card hidden" style="display:none; margin: 40px auto; max-width: 500px;">
-        <div style="font-size: 36px; margin-bottom: 12px;">🔒</div>
+        <div style="margin-bottom: 12px;"><cs-icon name="lock" size="38"></cs-icon></div>
         <h2 style="color: #0f172a; margin: 0 0 8px 0; font-size: 20px;">Administrator Login Required</h2>
         <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
           You must be logged in as an Administrator to manage syllabus curriculum PDFs.
@@ -99,9 +100,9 @@
           <p style="color: #475569; font-size: 15px; margin: 0 auto 16px; max-width: 600px;">BCA Courses &amp; Syllabus Management — Manage BCA syllabus PDFs for all six semesters.</p>
           
           <div class="courses-meta-tags" style="justify-content: center;">
-            <span class="courses-meta-tag">⏱️ 3 Academic Years (6 Semesters)</span>
-            <span class="courses-meta-tag">🏛️ Affiliation: RCUB</span>
-            <span class="courses-meta-tag">🛡️ Role: Administrator</span>
+            <span class="courses-meta-tag"><cs-icon name="clock" size="15"></cs-icon> 3 Academic Years (6 Semesters)</span>
+            <span class="courses-meta-tag"><cs-icon name="landmark" size="15"></cs-icon> Affiliation: RCUB</span>
+            <span class="courses-meta-tag"><cs-icon name="shield" size="15"></cs-icon> Role: Administrator</span>
           </div>
         </header>
 

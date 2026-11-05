@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <script src="/js/icons.js"></script>
   <link rel="stylesheet" href="style.css?v=20260916_24">
   <script src="animated-background.js?v=20260916_24"></script>
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -94,15 +95,15 @@
         <p>Affiliated with Rani Channamma University, Belagavi (RCUB). Access the official semester-wise curriculum structure and download the complete syllabus guidelines below.</p>
         
         <div class="courses-meta-tags">
-          <span class="courses-meta-tag">⏱️ Duration: 3 Years (6 Semesters)</span>
-          <span class="courses-meta-tag">🏛️ Affiliation: RCUB</span>
+          <span class="courses-meta-tag"><cs-icon name="clock" size="15"></cs-icon> Duration: 3 Years (6 Semesters)</span>
+          <span class="courses-meta-tag"><cs-icon name="landmark" size="15"></cs-icon> Affiliation: RCUB</span>
         </div>
       </header>
 
       <!-- ADMIN QUICK ACCESS BANNER (Visible when admin is logged in) -->
       <div id="coursesAdminBanner" class="courses-admin-banner hidden" style="display:none;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 20px;">⚙️</span>
+          <cs-icon name="settings" size="18"></cs-icon>
           <div>
             <strong>Administrator Access Active</strong>
             <div style="font-size: 12px; color: #15803d;">You can upload, replace, and delete syllabus PDFs from the management console.</div>
@@ -120,9 +121,9 @@
             <div>
               <span class="semester-tag">Semester I &amp; II • Academic Year: 2025–26</span>
               <div class="syllabus-card-header">
-                <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
-                  <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
+                <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
                 </svg>
                 <div>
                   <h2 class="syllabus-card-title">First Year BCA</h2>
@@ -147,9 +148,9 @@
             <div>
               <span class="semester-tag">Semester III &amp; IV • Academic Year: 2026–27</span>
               <div class="syllabus-card-header">
-                <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
-                  <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
+                <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
                 </svg>
                 <div>
                   <h2 class="syllabus-card-title">Second Year BCA</h2>
@@ -174,9 +175,9 @@
             <div>
               <span class="semester-tag">Semester V &amp; VI • Academic Year: 2027–28</span>
               <div class="syllabus-card-header">
-                <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 2L1 8l11 6 9-4.91V16.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7.5L12 2z"/>
-                  <path d="M5 12.5v4.2c0 2.2 3.13 4.3 7 4.3s7-2.1 7-4.3v-4.2l-7 3.8-7-3.8z"/>
+                <svg class="syllabus-cap-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
                 </svg>
                 <div>
                   <h2 class="syllabus-card-title">Third Year BCA</h2>
@@ -270,7 +271,7 @@
 
   <!-- Toast Notification Container for Downloads -->
   <div id="syllabusToast" class="syllabus-toast" role="status" aria-live="polite">
-    <span>📥</span>
+    <cs-icon name="download" size="18"></cs-icon>
     <span id="syllabusToastMsg">Downloading syllabus...</span>
   </div>
 

@@ -151,8 +151,9 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
 
   // Verify timetable preserves cells and edit mode on save error
   const timetableRecovery = scriptJs.includes('isTimetableEditMode = false') &&
-    scriptJs.includes('saveBtn.disabled = false;\n        saveBtn.innerHTML = `<span>💾 Save</span>`;') ||
-    scriptJs.includes('saveBtn.disabled = false;\r\n        saveBtn.innerHTML = `<span>💾 Save</span>`;');
+    (scriptJs.includes('saveBtn.disabled = false;\n        saveBtn.innerHTML = `<span>💾 Save</span>`;') ||
+     scriptJs.includes('saveBtn.disabled = false;\r\n        saveBtn.innerHTML = `<span>💾 Save</span>`;') ||
+     (scriptJs.includes('saveBtn.disabled = false') && (scriptJs.includes('saveBtn.innerHTML = `<span>${renderIcon("save", 18)} Save</span>`;') || scriptJs.includes('saveBtn.innerHTML = `<span>${renderIcon("save", 16)} Save</span>`;') || scriptJs.includes('saveBtn.innerHTML = `<span>${renderIcon("save", 20)} Save</span>`;'))));
   logTest('Timetable save preserves cells and re-enables save button on failure', timetableRecovery);
 
   // -------------------------------------------------------------------------

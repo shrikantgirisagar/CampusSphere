@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <script src="/js/icons.js"></script>
   <link rel="stylesheet" href="style.css?v=20260916_24">
   <script src="animated-background.js?v=20260916_24"></script>
   <script src="/vendor/chart.umd.min.js"></script>
@@ -102,10 +103,10 @@
             </button>
           </div>
           <div class="hero-trust-indicators" aria-label="Campus trust metrics">
-            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🏛️</span><span>NAAC Accredited</span></div>
-            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">⚡</span><span>Real-Time Sync</span></div>
-            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🔒</span><span>Role-Secured</span></div>
-            <div class="trust-pill"><span class="trust-icon" aria-hidden="true">🌐</span><span>Digital Campus</span></div>
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true"><cs-icon name="landmark" size="15"></cs-icon></span><span>NAAC Accredited</span></div>
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true"><cs-icon name="zap" size="15"></cs-icon></span><span>Real-Time Sync</span></div>
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true"><cs-icon name="lock" size="15"></cs-icon></span><span>Role-Secured</span></div>
+            <div class="trust-pill"><span class="trust-icon" aria-hidden="true"><cs-icon name="globe" size="15"></cs-icon></span><span>Digital Campus</span></div>
           </div>
         </div>
       </div>
@@ -117,10 +118,10 @@
           <!-- Student Statistics Card (Live Verified Database Count) -->
           <article class="hero-stat-card student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: 3">
             <div class="student-stat-icon-wrap" aria-hidden="true">
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
             </div>
@@ -137,9 +138,13 @@
           <!-- Faculty Statistics Card (Live Verified Database Count) -->
           <article class="hero-stat-card student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Registered Faculty Members: 4">
             <div class="student-stat-icon-wrap icon-indigo" aria-hidden="true">
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 2h15a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9"></path>
+                <path d="M10 6.5h6"></path>
+                <circle cx="4" cy="6.5" r="2"></circle>
+                <path d="M2 22v-9a2 2 0 0 1 2-2h8"></path>
+                <path d="M6 11v11"></path>
+                <path d="M2 17h4"></path>
               </svg>
             </div>
             <div class="stat-info">
@@ -155,9 +160,9 @@
           <!-- Academic Programme Information Card -->
           <article class="hero-stat-card" tabindex="0" role="region" aria-label="BCA Academic Programme Information">
             <div class="student-stat-icon-wrap icon-cyan" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
               </svg>
             </div>
             <div class="stat-info">
@@ -173,10 +178,10 @@
           <!-- Six BCA Semesters Card -->
           <article class="hero-stat-card" tabindex="0" role="region" aria-label="Six BCA Semesters Academic Curriculum">
             <div class="student-stat-icon-wrap icon-emerald" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
               </svg>
             </div>
             <div class="stat-info">
@@ -204,7 +209,7 @@
         <a href="courses.html" class="quick-access-card card-resources reveal-item" aria-label="Access Resources: Course materials, syllabus and laboratory guides">
           <div class="quick-access-top">
             <div class="quick-3d-pod pod-blue" aria-hidden="true">
-              <span>📚</span>
+              <cs-icon name="book-open" size="24"></cs-icon>
             </div>
             <span class="quick-access-pill pill-blue">SYLLABUS &amp; LABS</span>
           </div>
@@ -222,7 +227,7 @@
         <a href="#login" data-open-login class="quick-access-card card-updates reveal-item" aria-label="Stay Updated: Log in to view live circulars, announcements, and notices">
           <div class="quick-access-top">
             <div class="quick-3d-pod pod-indigo" aria-hidden="true">
-              <span>⚡</span>
+              <cs-icon name="bell" size="24"></cs-icon>
             </div>
             <span class="quick-access-pill pill-indigo">REAL-TIME PORTAL</span>
           </div>
@@ -240,7 +245,7 @@
         <a href="#student-community" class="quick-access-card card-community reveal-item" aria-label="Be Connected: Department faculty mentors, student community, and college helpline">
           <div class="quick-access-top">
             <div class="quick-3d-pod pod-cyan" aria-hidden="true">
-              <span>🌐</span>
+              <cs-icon name="users" size="24"></cs-icon>
             </div>
             <span class="quick-access-pill pill-cyan">CAMPUS COMMUNITY</span>
           </div>
@@ -258,7 +263,7 @@
         <a href="courses.html" class="quick-access-card card-courses reveal-item" aria-label="Explore Courses: Complete BCA degree structure across 6 semesters">
           <div class="quick-access-top">
             <div class="quick-3d-pod pod-emerald" aria-hidden="true">
-              <span>🎓</span>
+              <cs-icon name="graduation-cap" size="24"></cs-icon>
             </div>
             <span class="quick-access-pill pill-emerald">BCA PROGRAMME</span>
           </div>
@@ -286,7 +291,7 @@
         <article class="feature-card reveal-item">
           <div class="feature-top-meta">
             <div class="feature-icon" aria-hidden="true">
-              <div class="icon-3d-pod pod-blue">🎓</div>
+              <div class="icon-3d-pod pod-blue"><cs-icon name="graduation-cap" size="26"></cs-icon></div>
             </div>
             <span class="feature-badge-pill pill-blue">RECORDS &amp; MARKS</span>
           </div>
@@ -305,7 +310,7 @@
         <article class="feature-card reveal-item">
           <div class="feature-top-meta">
             <div class="feature-icon" aria-hidden="true">
-              <div class="icon-3d-pod pod-cyan">👥</div>
+              <div class="icon-3d-pod pod-cyan"><cs-icon name="users" size="26"></cs-icon></div>
             </div>
             <span class="feature-badge-pill pill-cyan">MENTOR ADVISORY</span>
           </div>
@@ -324,7 +329,7 @@
         <article class="feature-card reveal-item">
           <div class="feature-top-meta">
             <div class="feature-icon" aria-hidden="true">
-              <div class="icon-3d-pod pod-indigo">📚</div>
+              <div class="icon-3d-pod pod-indigo"><cs-icon name="book-open" size="26"></cs-icon></div>
             </div>
             <span class="feature-badge-pill pill-indigo">CURRICULUM SYNC</span>
           </div>
@@ -343,7 +348,7 @@
         <article class="feature-card reveal-item">
           <div class="feature-top-meta">
             <div class="feature-icon" aria-hidden="true">
-              <div class="icon-3d-pod pod-emerald">🛡️</div>
+              <div class="icon-3d-pod pod-emerald"><cs-icon name="shield" size="26"></cs-icon></div>
             </div>
             <span class="feature-badge-pill pill-emerald">ROLE SECURITY</span>
           </div>
@@ -380,7 +385,7 @@
             <p class="announcement-text">Regular theory lectures, laboratory practicals, and division allocations for all 6 BCA semesters are active according to institutional schedules. Students and faculty can view designated slots in real time.</p>
           </div>
           <div class="announcement-card-footer">
-            <span class="announcement-source">🏛️ BCA Academic Cell</span>
+            <span class="announcement-source"><cs-icon name="landmark" size="15"></cs-icon> BCA Academic Cell</span>
             <a href="#login" data-open-login class="announcement-action-link" aria-label="View Academic Session Schedules in Portal">
               <span>View in Portal</span>
               <span class="announcement-arrow" aria-hidden="true">&rarr;</span>
@@ -399,7 +404,7 @@
             <p class="announcement-text">Complete Rani Channamma University NEP course structure, credit distribution, and practical lab outlines across all BCA semesters are available for download and review.</p>
           </div>
           <div class="announcement-card-footer">
-            <span class="announcement-source">📜 University Board of Studies</span>
+            <span class="announcement-source"><cs-icon name="scroll" size="15"></cs-icon> University Board of Studies</span>
             <a href="courses.html" class="announcement-action-link" aria-label="Download RCU NEP Syllabus Guidelines">
               <span>Download Syllabus</span>
               <span class="announcement-arrow" aria-hidden="true">&rarr;</span>
@@ -418,7 +423,7 @@
             <p class="announcement-text">Daily attendance percentages, unit assignment submissions, and internal test marks are synchronized dynamically. Students can inspect their performance records through their personal portal account.</p>
           </div>
           <div class="announcement-card-footer">
-            <span class="announcement-source">📊 Examination Committee</span>
+            <span class="announcement-source"><cs-icon name="bar-chart-3" size="15"></cs-icon> Examination Committee</span>
             <a href="#login" data-open-login class="announcement-action-link" aria-label="Log in to verify evaluation marks and attendance">
               <span>Verify Marks</span>
               <span class="announcement-arrow" aria-hidden="true">&rarr;</span>
@@ -430,7 +435,7 @@
       <!-- Real-time Dispatches Bar -->
       <div class="announcements-bar reveal-item">
         <div class="announcements-bar-left">
-          <div class="announcements-bar-icon" aria-hidden="true">🔔</div>
+          <div class="announcements-bar-icon" aria-hidden="true"><cs-icon name="bell" size="22"></cs-icon></div>
           <div class="announcements-bar-text">
             <strong>Need instant division notices or faculty updates?</strong>
             <p>Sign in to your authorized student or faculty account to view real-time department circulars and notification alerts.</p>
@@ -454,7 +459,7 @@
         <!-- Resource Card 1 -->
         <article class="resource-card reveal-item">
           <div class="resource-card-top">
-            <div class="resource-pod pod-blue" aria-hidden="true">📘</div>
+            <div class="resource-pod pod-blue" aria-hidden="true"><cs-icon name="book" size="26"></cs-icon></div>
             <span class="resource-pill pill-blue">SEMESTER I &amp; II</span>
           </div>
           <div class="resource-card-body">
@@ -473,7 +478,7 @@
         <!-- Resource Card 2 -->
         <article class="resource-card reveal-item">
           <div class="resource-card-top">
-            <div class="resource-pod pod-cyan" aria-hidden="true">💻</div>
+            <div class="resource-pod pod-cyan" aria-hidden="true"><cs-icon name="laptop" size="26"></cs-icon></div>
             <span class="resource-pill pill-cyan">SEMESTER III &amp; IV</span>
           </div>
           <div class="resource-card-body">
@@ -492,7 +497,7 @@
         <!-- Resource Card 3 -->
         <article class="resource-card reveal-item">
           <div class="resource-card-top">
-            <div class="resource-pod pod-indigo" aria-hidden="true">🚀</div>
+            <div class="resource-pod pod-indigo" aria-hidden="true"><cs-icon name="rocket" size="26"></cs-icon></div>
             <span class="resource-pill pill-indigo">SEMESTER V &amp; VI</span>
           </div>
           <div class="resource-card-body">
@@ -511,7 +516,7 @@
         <!-- Resource Card 4 -->
         <article class="resource-card reveal-item">
           <div class="resource-card-top">
-            <div class="resource-pod pod-emerald" aria-hidden="true">🔬</div>
+            <div class="resource-pod pod-emerald" aria-hidden="true"><cs-icon name="flask-conical" size="26"></cs-icon></div>
             <span class="resource-pill pill-emerald">LABS &amp; REPOSITORIES</span>
           </div>
           <div class="resource-card-body">
@@ -557,7 +562,7 @@
         <!-- Student Module -->
         <article class="about-role-card reveal-item">
           <div class="about-role-header">
-            <div class="about-role-pod pod-blue" aria-hidden="true">👨‍💻</div>
+            <div class="about-role-pod pod-blue" aria-hidden="true"><cs-icon name="graduation-cap" size="26"></cs-icon></div>
             <div class="about-role-title-wrap">
               <h3 class="about-role-title">Student Module</h3>
               <span class="about-role-tag">Academic Self-Service</span>
@@ -574,7 +579,7 @@
         <!-- Faculty Module -->
         <article class="about-role-card reveal-item">
           <div class="about-role-header">
-            <div class="about-role-pod pod-cyan" aria-hidden="true">👩‍🏫</div>
+            <div class="about-role-pod pod-cyan" aria-hidden="true"><cs-icon name="presentation" size="26"></cs-icon></div>
             <div class="about-role-title-wrap">
               <h3 class="about-role-title">Faculty Module</h3>
               <span class="about-role-tag">Instructional Suite</span>
@@ -591,7 +596,7 @@
         <!-- Admin Module -->
         <article class="about-role-card reveal-item">
           <div class="about-role-header">
-            <div class="about-role-pod pod-emerald" aria-hidden="true">🛡️</div>
+            <div class="about-role-pod pod-emerald" aria-hidden="true"><cs-icon name="shield" size="26"></cs-icon></div>
             <div class="about-role-title-wrap">
               <h3 class="about-role-title">Admin Module</h3>
               <span class="about-role-tag">Academic Governance</span>
@@ -619,7 +624,7 @@
           <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
           <p class="testimonial-quote">&ldquo;CampusSphere streamlines our daily attendance, academic notices, and marks tracking with real-time accuracy. Having everything accessible in one light-speed portal makes campus life effortless.&rdquo;</p>
           <div class="testimonial-author">
-            <div class="author-avatar" aria-hidden="true">🎓</div>
+            <div class="author-avatar" aria-hidden="true"><cs-icon name="graduation-cap" size="21"></cs-icon></div>
             <div>
               <strong>BCA Department Scholar</strong>
               <small>Bharatesh College of Computer Applications</small>
@@ -631,7 +636,7 @@
           <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
           <p class="testimonial-quote">&ldquo;Marking attendance, managing division assignments, and publishing examination evaluations is completely instantaneous. The platform gives our teaching faculty maximum focus on students.&rdquo;</p>
           <div class="testimonial-author">
-            <div class="author-avatar" aria-hidden="true">👨‍🏫</div>
+            <div class="author-avatar" aria-hidden="true"><cs-icon name="graduation-cap" size="21"></cs-icon></div>
             <div>
               <strong>Faculty Professor</strong>
               <small>Dept. of Computer Science &amp; Applications</small>
@@ -643,7 +648,7 @@
           <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
           <p class="testimonial-quote">&ldquo;Institutional announcements, syllabus outlines, and student division sync work flawlessly across the campus. It sets a new benchmark for modern collegiate infrastructure.&rdquo;</p>
           <div class="testimonial-author">
-            <div class="author-avatar" aria-hidden="true">🏛️</div>
+            <div class="author-avatar" aria-hidden="true"><cs-icon name="landmark" size="21"></cs-icon></div>
             <div>
               <strong>Academic Coordinator</strong>
               <small>Bharatesh BCA, Belagavi</small>
@@ -665,7 +670,7 @@
         <!-- Card 1: Location -->
         <article class="contact-card reveal-item">
           <div class="contact-card-top">
-            <div class="contact-pod pod-blue" aria-hidden="true">📍</div>
+            <div class="contact-pod pod-blue" aria-hidden="true"><cs-icon name="map-pin" size="26"></cs-icon></div>
             <span class="contact-card-pill pill-blue">CAMPUS LOCATION</span>
           </div>
           <div class="contact-card-body">
@@ -683,7 +688,7 @@
         <!-- Card 2: Telephones -->
         <article class="contact-card reveal-item">
           <div class="contact-card-top">
-            <div class="contact-pod pod-cyan" aria-hidden="true">📞</div>
+            <div class="contact-pod pod-cyan" aria-hidden="true"><cs-icon name="phone" size="26"></cs-icon></div>
             <span class="contact-card-pill pill-cyan">DIRECT TELEPHONES</span>
           </div>
           <div class="contact-card-body">
@@ -708,7 +713,7 @@
         <!-- Card 3: Office Hours -->
         <article class="contact-card reveal-item">
           <div class="contact-card-top">
-            <div class="contact-pod pod-indigo" aria-hidden="true">⏰</div>
+            <div class="contact-pod pod-indigo" aria-hidden="true"><cs-icon name="clock" size="26"></cs-icon></div>
             <span class="contact-card-pill pill-indigo">OFFICE HOURS</span>
           </div>
           <div class="contact-card-body">
@@ -729,14 +734,14 @@
             </div>
           </div>
           <div class="contact-card-footer">
-            <span class="contact-badge-verified">🏛️ BCA Academic Office</span>
+            <span class="contact-badge-verified"><cs-icon name="landmark" size="15"></cs-icon> BCA Academic Office</span>
           </div>
         </article>
 
         <!-- Card 4: Official Community & Social Media -->
         <article class="contact-card reveal-item">
           <div class="contact-card-top">
-            <div class="contact-pod pod-emerald" aria-hidden="true">🌐</div>
+            <div class="contact-pod pod-emerald" aria-hidden="true"><cs-icon name="globe" size="26"></cs-icon></div>
             <span class="contact-card-pill pill-emerald">CAMPUS CHANNELS</span>
           </div>
           <div class="contact-card-body">
@@ -858,11 +863,11 @@
     </div>
 
     <div class="login-objects" aria-hidden="true">
-      <div class="obj obj-book">📚</div>
-      <div class="obj obj-pencil">✏️</div>
-      <div class="obj obj-laptop">💻</div>
-      <div class="obj obj-cap">🎓</div>
-      <div class="obj obj-star">⭐</div>
+      <div class="obj obj-book"><cs-icon name="book-open" size="26"></cs-icon></div>
+      <div class="obj obj-pencil"><cs-icon name="pen-square" size="26"></cs-icon></div>
+      <div class="obj obj-laptop"><cs-icon name="laptop" size="26"></cs-icon></div>
+      <div class="obj obj-cap"><cs-icon name="graduation-cap" size="26"></cs-icon></div>
+      <div class="obj obj-star"><cs-icon name="star" size="26"></cs-icon></div>
     </div>
 
 
@@ -876,28 +881,28 @@
           <div class="showcase-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</div>
           <div class="showcase-college-sub">Belagavi | Karnataka • Academic Portal</div>
           <div class="showcase-motto-pill">
-            <span>✨</span>
+            <cs-icon name="sparkles" size="15"></cs-icon>
             <span>Education • Equality • Empowerment</span>
           </div>
         </div>
 
         <div class="showcase-features">
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">🎓</span>
+            <span class="showcase-feature-icon"><cs-icon name="graduation-cap" size="18"></cs-icon></span>
             <div class="showcase-feature-text">
               <strong>Student Portal</strong>
               <p>Real-time attendance, semester marks, timetable &amp; study notes.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">👨‍🏫</span>
+            <span class="showcase-feature-icon"><cs-icon name="presentation" size="18"></cs-icon></span>
             <div class="showcase-feature-text">
               <strong>Faculty Portal</strong>
               <p>Instant attendance entry, IA evaluations &amp; class division management.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">🛡️</span>
+            <span class="showcase-feature-icon"><cs-icon name="shield" size="18"></cs-icon></span>
             <div class="showcase-feature-text">
               <strong>Institutional Security</strong>
               <p>Role-based authentication protecting student and faculty records.</p>
@@ -928,9 +933,9 @@
         </div>
 
         <div class="role-tabs" role="tablist" aria-label="Account Role Selection">
-          <button type="button" class="role-tab active" data-role="student" role="tab" aria-selected="true"><span class="role-icon">🎓</span><span>Student</span></button>
-          <button type="button" class="role-tab" data-role="faculty" role="tab" aria-selected="false"><span class="role-icon">👨‍🏫</span><span>Faculty</span></button>
-          <button type="button" class="role-tab" data-role="admin" role="tab" aria-selected="false"><span class="role-icon">🛡️</span><span>Admin</span></button>
+          <button type="button" class="role-tab active" data-role="student" role="tab" aria-selected="true"><span class="role-icon"><cs-icon name="graduation-cap" size="18"></cs-icon></span><span>Student</span></button>
+          <button type="button" class="role-tab" data-role="faculty" role="tab" aria-selected="false"><span class="role-icon"><cs-icon name="presentation" size="18"></cs-icon></span><span>Faculty</span></button>
+          <button type="button" class="role-tab" data-role="admin" role="tab" aria-selected="false"><span class="role-icon"><cs-icon name="shield" size="18"></cs-icon></span><span>Admin</span></button>
         </div>
 
         <div id="loginMessage" class="message auth-error-summary" role="alert" aria-live="polite"></div>
@@ -939,7 +944,7 @@
           <div class="form-group">
             <label for="username" id="loginUsernameLabel">Username</label>
             <div class="input-wrap">
-              <span class="input-icon">👤</span>
+              <span class="input-icon"><cs-icon name="user" size="17"></cs-icon></span>
               <input id="username" type="text" placeholder="Enter your username" required autocomplete="username" aria-describedby="loginUsernameError">
             </div>
             <div class="field-error" id="loginUsernameError" role="alert" aria-live="polite"></div>
@@ -948,10 +953,10 @@
           <div class="form-group">
             <label for="password">Password</label>
             <div class="password-wrap">
-              <span class="input-icon">🔒</span>
+              <span class="input-icon"><cs-icon name="lock" size="17"></cs-icon></span>
               <input id="password" type="password" placeholder="Enter your password" required autocomplete="current-password" aria-describedby="loginPasswordError">
               <button type="button" id="togglePassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
-                <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg>
+                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </button>
             </div>
             <div class="field-error" id="loginPasswordError" role="alert" aria-live="polite"></div>
@@ -989,11 +994,11 @@
     </div>
 
     <div class="login-objects" aria-hidden="true">
-      <div class="obj obj-book">📚</div>
-      <div class="obj obj-pencil">✏️</div>
-      <div class="obj obj-laptop">💻</div>
-      <div class="obj obj-cap">🎓</div>
-      <div class="obj obj-star">⭐</div>
+      <div class="obj obj-book"><cs-icon name="book-open" size="26"></cs-icon></div>
+      <div class="obj obj-pencil"><cs-icon name="pen-square" size="26"></cs-icon></div>
+      <div class="obj obj-laptop"><cs-icon name="laptop" size="26"></cs-icon></div>
+      <div class="obj obj-cap"><cs-icon name="graduation-cap" size="26"></cs-icon></div>
+      <div class="obj obj-star"><cs-icon name="star" size="26"></cs-icon></div>
     </div>
 
 
@@ -1007,28 +1012,28 @@
           <div class="showcase-college-name">BHARATESH COLLEGE OF COMPUTER APPLICATIONS</div>
           <div class="showcase-college-sub">Belagavi | Karnataka • Account Registration</div>
           <div class="showcase-motto-pill">
-            <span>✨</span>
+            <cs-icon name="sparkles" size="15"></cs-icon>
             <span>Education • Equality • Empowerment</span>
           </div>
         </div>
 
         <div class="showcase-features">
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">🎓</span>
+            <span class="showcase-feature-icon"><cs-icon name="graduation-cap" size="18"></cs-icon></span>
             <div class="showcase-feature-text">
               <strong>Student Registration</strong>
               <p>Quick onboarding for BCA 1st, 2nd, and 3rd Year batches with division mapping.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">👨‍🏫</span>
+            <span class="showcase-feature-icon"><cs-icon name="presentation" size="18"></cs-icon></span>
             <div class="showcase-feature-text">
               <strong>Faculty Registration</strong>
               <p>Configure department and assign your specialized teaching subjects &amp; classes.</p>
             </div>
           </div>
           <div class="showcase-feature-item">
-            <span class="showcase-feature-icon">⚡</span>
+            <span class="showcase-feature-icon"><cs-icon name="zap" size="18"></cs-icon></span>
             <div class="showcase-feature-text">
               <strong>Instant Activation</strong>
               <p>Direct login credentials generated and ready to use immediately upon signup.</p>
@@ -1060,10 +1065,10 @@
 
         <div class="role-tabs signup-role-tabs" role="tablist" aria-label="Registration Role Selection">
           <button type="button" class="role-tab active" id="tabSignupStudent" data-page-signup-role="student" role="tab" aria-selected="true">
-            <span class="role-icon">🎓</span><span>Student</span>
+            <span class="role-icon"><cs-icon name="graduation-cap" size="18"></cs-icon></span><span>Student</span>
           </button>
           <button type="button" class="role-tab" id="tabSignupFaculty" data-page-signup-role="faculty" role="tab" aria-selected="false">
-            <span class="role-icon">👨‍🏫</span><span>Faculty</span>
+            <span class="role-icon"><cs-icon name="presentation" size="18"></cs-icon></span><span>Faculty</span>
           </button>
         </div>
 
@@ -1076,7 +1081,7 @@
             <div class="form-group">
               <label for="pageSignupName">Full Name</label>
               <div class="input-wrap">
-                <span class="input-icon">👤</span>
+                <span class="input-icon"><cs-icon name="user" size="17"></cs-icon></span>
                 <input id="pageSignupName" type="text" required placeholder="Enter full name" autocomplete="name" aria-describedby="pageSignupNameError">
               </div>
               <div class="field-error" id="pageSignupNameError" role="alert" aria-live="polite"></div>
@@ -1085,7 +1090,7 @@
             <div class="form-group">
               <label for="pageSignupUsername" id="pageSignupUsernameLabel">Username</label>
               <div class="input-wrap">
-                <span class="input-icon">🪪</span>
+                <span class="input-icon"><cs-icon name="badge-check" size="17"></cs-icon></span>
                 <input id="pageSignupUsername" type="text" required placeholder="Choose a username" autocomplete="username" aria-describedby="pageSignupUsernameError">
               </div>
               <div class="field-error" id="pageSignupUsernameError" role="alert" aria-live="polite"></div>
@@ -1094,10 +1099,10 @@
             <div class="form-group">
               <label for="pageSignupPassword">Password</label>
               <div class="password-wrap">
-                <span class="input-icon">🔒</span>
+                <span class="input-icon"><cs-icon name="lock" size="17"></cs-icon></span>
                 <input id="pageSignupPassword" type="password" required minlength="6" placeholder="Create a password" autocomplete="new-password" aria-describedby="pageSignupPasswordError">
                 <button type="button" id="togglePageSignupPassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
-                  <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg>
+                  <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </button>
               </div>
               <div class="field-error" id="pageSignupPasswordError" role="alert" aria-live="polite"></div>
@@ -1106,7 +1111,7 @@
             <div class="form-group">
               <label for="pageSignupEmail">Email Address</label>
               <div class="input-wrap">
-                <span class="input-icon">✉️</span>
+                <span class="input-icon"><cs-icon name="mail" size="17"></cs-icon></span>
                 <input id="pageSignupEmail" type="email" required placeholder="Enter your email address" autocomplete="email" aria-describedby="pageSignupEmailError">
               </div>
               <div class="field-error" id="pageSignupEmailError" role="alert" aria-live="polite"></div>
@@ -1119,7 +1124,7 @@
               <div class="form-group">
                 <label for="pageSignupCourse">Course</label>
                 <div class="input-wrap">
-                  <span class="input-icon">🎓</span>
+                  <span class="input-icon"><cs-icon name="graduation-cap" size="17"></cs-icon></span>
                   <input id="pageSignupCourse" readonly value="Bachelor of Computer Applications (BCA)" title="Bachelor of Computer Applications (BCA)" style="color: #0A2540; font-weight: 700;">
                 </div>
               </div>
@@ -1179,7 +1184,7 @@
             <div class="form-group">
               <label for="pageSignupDepartment">Faculty Department</label>
               <div class="input-wrap">
-                <span class="input-icon">🏛️</span>
+                <span class="input-icon"><cs-icon name="landmark" size="17"></cs-icon></span>
                 <input id="pageSignupDepartment" value="Department of Computer Science & Applications" placeholder="Enter department">
               </div>
             </div>
@@ -1242,12 +1247,12 @@
         <div class="topbar-actions">
           <button id="topbarDesktopNotifBtn" class="topbar-notice-btn desktop-notif-btn" title="Enable Desktop Push Notifications"
             aria-label="Enable Desktop Push Notifications">
-            <span class="bell-icon">🖥️</span>
+            <span class="bell-icon"><cs-icon name="monitor" size="18"></cs-icon></span>
             <span id="desktopNotifDot" class="desktop-notif-dot"></span>
           </button>
           <button id="topbarNoticeBtn" class="topbar-notice-btn" title="View Campus Notices"
             aria-label="View Campus Notices">
-            <span class="bell-icon">🔔</span>
+            <span class="bell-icon"><cs-icon name="bell" size="18"></cs-icon></span>
             <span id="topbarNoticeBadge" class="notice-count-badge hidden">0</span>
           </button>
           <div class="user-chip"><span id="userAvatar">S</span>
@@ -1266,7 +1271,7 @@
     <div class="ai-modal-container">
       <div class="ai-modal-header">
         <div class="ai-modal-title-wrap">
-          <div class="ai-sparkle-icon" id="aiModalHeaderIcon">📊</div>
+          <div class="ai-sparkle-icon" id="aiModalHeaderIcon"><cs-icon name="bar-chart-3" size="24"></cs-icon></div>
           <div>
             <h3 id="aiModalTitle">Academic Performance Diagnostics</h3>
             <p id="aiModalSubtitle">Personalized Academic Performance Diagnostic &amp; Visual Breakdown</p>
@@ -1280,7 +1285,7 @@
         <!-- Dynamic Metrics Cards Grid (Supports 5 or 6 cards) -->
         <div class="ai-metrics-grid" id="aiMetricsGrid">
           <div class="ai-metric-card" id="aiMetricCard1">
-            <span class="metric-icon" id="aiMetricIcon1">🏆</span>
+            <span class="metric-icon" id="aiMetricIcon1"><cs-icon name="trophy" size="21"></cs-icon></span>
             <div class="metric-info">
               <small id="aiMetricLabel1">Top Subject</small>
               <h4 id="aiMetricVal1">--</h4>
@@ -1289,7 +1294,7 @@
           </div>
 
           <div class="ai-metric-card" id="aiMetricCard2">
-            <span class="metric-icon" id="aiMetricIcon2">🎯</span>
+            <span class="metric-icon" id="aiMetricIcon2"><cs-icon name="target" size="21"></cs-icon></span>
             <div class="metric-info">
               <small id="aiMetricLabel2">Low Subject</small>
               <h4 id="aiMetricVal2">--</h4>
@@ -1298,7 +1303,7 @@
           </div>
 
           <div class="ai-metric-card" id="aiMetricCard3">
-            <span class="metric-icon" id="aiMetricIcon3">🧪</span>
+            <span class="metric-icon" id="aiMetricIcon3"><cs-icon name="test-tube-2" size="21"></cs-icon></span>
             <div class="metric-info">
               <small id="aiMetricLabel3">Top Lab</small>
               <h4 id="aiMetricVal3">--</h4>
@@ -1307,7 +1312,7 @@
           </div>
 
           <div class="ai-metric-card" id="aiMetricCard4">
-            <span class="metric-icon" id="aiMetricIcon4">🔬</span>
+            <span class="metric-icon" id="aiMetricIcon4"><cs-icon name="flask-conical" size="21"></cs-icon></span>
             <div class="metric-info">
               <small id="aiMetricLabel4">Low Lab</small>
               <h4 id="aiMetricVal4">--</h4>
@@ -1316,7 +1321,7 @@
           </div>
 
           <div class="ai-metric-card" id="aiMetricCard5">
-            <span class="metric-icon" id="aiMetricIcon5">📈</span>
+            <span class="metric-icon" id="aiMetricIcon5"><cs-icon name="trending-up" size="21"></cs-icon></span>
             <div class="metric-info">
               <small id="aiMetricLabel5">Grade Status</small>
               <h4 id="aiMetricVal5">--</h4>
@@ -1325,7 +1330,7 @@
           </div>
 
           <div class="ai-metric-card" id="aiMetricCard6">
-            <span class="metric-icon" id="aiMetricIcon6">🚨</span>
+            <span class="metric-icon" id="aiMetricIcon6"><cs-icon name="alert-octagon" size="21"></cs-icon></span>
             <div class="metric-info">
               <small id="aiMetricLabel6">Subjects < 75%</small>
                   <h4 id="aiMetricVal6">--</h4>
@@ -1338,7 +1343,7 @@
         <div class="ai-charts-grid">
           <div class="ai-chart-panel">
             <div class="chart-panel-head">
-              <h5 id="aiBarChartTitle">📊 Subject Marks Comparison (Bar Graph)</h5>
+              <h5 id="aiBarChartTitle"><cs-icon name="bar-chart-3" size="17"></cs-icon> Subject Marks Comparison (Bar Graph)</h5>
               <span class="chip-sm" id="aiBarChartChip">Bar Graph</span>
             </div>
             <div class="chart-wrapper">
@@ -1348,7 +1353,7 @@
 
           <div class="ai-chart-panel">
             <div class="chart-panel-head">
-              <h5 id="aiPieChartTitle">🥧 Distribution Ratio (Pie Chart)</h5>
+              <h5 id="aiPieChartTitle"><cs-icon name="pie-chart" size="17"></cs-icon> Distribution Ratio (Pie Chart)</h5>
               <span class="chip-sm" id="aiPieChartChip">Pie Chart</span>
             </div>
             <div class="chart-wrapper">
@@ -1362,10 +1367,10 @@
           <div class="insights-head">
             <div class="head-left">
               <span class="ai-pulse-dot"></span>
-              <h4>✨ AI Intelligence Diagnosis & Recommendations</h4>
+              <h4><cs-icon name="sparkles" size="18"></cs-icon> AI Intelligence Diagnosis & Recommendations</h4>
             </div>
             <button type="button" id="refreshAiInsightsBtn" class="refresh-ai-btn">
-              <span>🔄 Refresh Insights</span>
+              <span><cs-icon name="rotate-cw" size="15"></cs-icon> Refresh Insights</span>
             </button>
           </div>
 
@@ -1388,7 +1393,7 @@
     <div class="ai-modal-container" style="max-width: 480px;">
       <div class="ai-modal-header">
         <div class="ai-modal-title-wrap">
-          <div class="ai-sparkle-icon" style="background: #eedfff; color: #6366f1;">📚</div>
+          <div class="ai-sparkle-icon" style="background: #eedfff; color: #6366f1;"><cs-icon name="book-open" size="24"></cs-icon></div>
           <div>
             <h3 id="subjectModalTitle">Add Subject</h3>
             <p id="subjectModalSubtitle">Configure semester subject details</p>
@@ -1450,7 +1455,7 @@
     <div class="ai-modal-container" style="max-width: 440px;">
       <div class="ai-modal-header">
         <div class="ai-modal-title-wrap">
-          <div class="ai-sparkle-icon" style="background: #e0f2fe; color: #0284c7;">🏫</div>
+          <div class="ai-sparkle-icon" style="background: #e0f2fe; color: #0284c7;"><cs-icon name="school" size="24"></cs-icon></div>
           <div>
             <h3 id="divisionModalTitle">Add New Division</h3>
             <p id="divisionModalSubtitle">Create a class section/division for students</p>

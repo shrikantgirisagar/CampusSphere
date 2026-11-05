@@ -703,9 +703,9 @@ function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.className = `notif-toast notif-toast-floating notif-toast-${type}`;
   toast.setAttribute("role", type === "error" ? "alert" : "status");
-  const icon = type === "success" ? "✅" : type === "error" ? "⚠️" : type === "warning" ? "⚡" : "ℹ️";
+  const icon = type === "success" ? "check-circle-2" : type === "error" ? "alert-triangle" : type === "warning" ? "zap" : "info";
   toast.innerHTML = `
-    <span style="font-size:18px; flex-shrink:0;" aria-hidden="true">${icon}</span>
+    <span style="flex-shrink:0; display:inline-flex; align-items:center;" aria-hidden="true">${renderIcon(icon, { size: 20 })}</span>
     <div class="notif-toast-body" style="flex:1;">
       <div class="notif-toast-text" style="font-weight:600; color:#0f172a; margin:0; font-size:13px;">${escapeHtml(String(message || ""))}</div>
     </div>
@@ -1459,8 +1459,9 @@ function updateLoginUsernameLabel(role) {
   }
 }
 
-const eyeOpenSVG = `<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg>`;
-const eyeClosedSVG = `<svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 6.2A10.9 10.9 0 0 1 12 6c6.3 0 9.8 6 9.8 6a18.4 18.4 0 0 1-3.3 4.1"></path><path d="M6.2 6.2A18.5 18.5 0 0 0 2.2 12s3.5 6 9.8 6c.5 0 1 0 1.5-.1"></path><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg>`;
+const eyeOpenSVG = `<svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+const eyeClosedSVG = `<svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>`;
+const eyeCloseSVG = eyeClosedSVG;
 
 let isLoginSubmitting = false;
 
@@ -1749,7 +1750,7 @@ signupModal.className = "modal-backdrop hidden";
 signupModal.innerHTML = `
   <div class="signup-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <button type="button" id="closeSignup" class="close-modal" aria-label="Close Signup Modal">×</button>
-    <div class="modal-icon" id="modalIcon">🎓</div>
+    <div class="modal-icon" id="modalIcon">${renderIcon("graduation-cap", 25)}</div>
     <div class="modal-title">
       <span id="modalRoleLabel">STUDENT ACCOUNT</span>
       <h2 id="modalTitle">Student Signup</h2>
@@ -1759,12 +1760,12 @@ signupModal.innerHTML = `
       <input type="hidden" id="signupRole">
       <input type="hidden" id="signupCurrentUsername">
       <label for="signupName">Full Name</label>
-      <div class="input-wrap"><span class="input-icon">👤</span><input id="signupName" required placeholder="Enter full name"></div>
+      <div class="input-wrap"><span class="input-icon">${renderIcon("user", 17)}</span><input id="signupName" required placeholder="Enter full name"></div>
       <label for="signupUsername" id="signupUsernameLabel">Username</label>
-      <div class="input-wrap"><span class="input-icon">🪪</span><input id="signupUsername" required placeholder="Choose a username"></div>
+      <div class="input-wrap"><span class="input-icon">${renderIcon("badge-check", 17)}</span><input id="signupUsername" required placeholder="Choose a username"></div>
       <label for="signupPassword">Password</label>
       <div class="password-wrap">
-        <span class="input-icon">🔒</span>
+        <span class="input-icon">${renderIcon("lock", 17)}</span>
         <input id="signupPassword" type="password" required minlength="10" placeholder="At least 10 chars (letters & numbers)" autocomplete="new-password">
         <button type="button" id="toggleSignupPassword" class="eye-btn" aria-label="Show password" title="Show password" aria-pressed="false">
           <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -1774,11 +1775,11 @@ signupModal.innerHTML = `
         </button>
       </div>
       <label for="signupEmail">Email Address</label>
-      <div class="input-wrap"><span class="input-icon">✉️</span><input id="signupEmail" type="email" required placeholder="Enter your email address" autocomplete="email"></div>
+      <div class="input-wrap"><span class="input-icon">${renderIcon("mail", 17)}</span><input id="signupEmail" type="email" required placeholder="Enter your email address" autocomplete="email"></div>
       
       <div id="studentDetailsFields">
         <label for="signupCourse">Course</label>
-        <div class="input-wrap"><span class="input-icon">🎓</span><input id="signupCourse" readonly value="Bachelor of Computer Applications (BCA)" style="color: #0A2540; font-weight: 700;"></div>
+        <div class="input-wrap"><span class="input-icon">${renderIcon("graduation-cap", 18)}</span><input id="signupCourse" readonly value="Bachelor of Computer Applications (BCA)" style="color: #0A2540; font-weight: 700;"></div>
         <label for="signupCourseYear">Course Year</label>
         <div class="input-wrap">
           <select id="signupCourseYear" required>
@@ -1825,7 +1826,7 @@ signupModal.innerHTML = `
 
       <div id="facultyDeptField" class="hidden">
         <label for="signupDepartment">Faculty Department</label>
-        <div class="input-wrap"><span class="input-icon">🏛️</span><input id="signupDepartment" value="Department of Computer Science & Applications" placeholder="Enter department"></div>
+        <div class="input-wrap"><span class="input-icon">${renderIcon("landmark", 18)}</span><input id="signupDepartment" value="Department of Computer Science & Applications" placeholder="Enter department"></div>
       </div>
 
       <div id="facultySubjectField" class="hidden">
@@ -1895,7 +1896,7 @@ editProfileModal.className = "modal-backdrop hidden";
 editProfileModal.innerHTML = `
   <div class="signup-modal edit-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
     <button type="button" id="closeEditProfile" class="close-modal" aria-label="Close Academic Setup Modal">×</button>
-    <div class="modal-icon">⚙️</div>
+    <div class="modal-icon">${renderIcon("settings", 25)}</div>
     <div class="modal-title">
       <span>ACADEMIC SETUP</span>
       <h2 id="editProfileTitle">Edit Academic Setup</h2>
@@ -1934,7 +1935,7 @@ editProfileModal.innerHTML = `
       </div>
 
       <label for="editProfileCourse">4. Course / Degree Program</label>
-      <div class="input-wrap"><span class="input-icon">🎓</span><input id="editProfileCourse" disabled readonly placeholder="Bachelor of Computer Applications (BCA)"></div>
+      <div class="input-wrap"><span class="input-icon">${renderIcon("graduation-cap", 18)}</span><input id="editProfileCourse" disabled readonly placeholder="Bachelor of Computer Applications (BCA)"></div>
 
       <label for="editProfileLanguage">5. Language Subject Choice</label>
       <div class="input-wrap">
@@ -1968,7 +1969,7 @@ cropImageModal.className = "modal-backdrop hidden";
 cropImageModal.innerHTML = `
   <div class="signup-modal crop-modal-card" role="dialog" aria-modal="true" aria-labelledby="cropModalTitle">
     <button type="button" id="closeCropModal" class="close-modal" aria-label="Close Photo Crop Modal">×</button>
-    <div class="modal-icon">✂️</div>
+    <div class="modal-icon">${renderIcon("scissors", 25)}</div>
     <div class="modal-title">
       <span>PROFILE PICTURE</span>
       <h2 id="cropModalTitle">Crop & Adjust Photo</h2>
@@ -1977,18 +1978,18 @@ cropImageModal.innerHTML = `
 
     <div class="crop-canvas-container" id="cropCanvasContainer">
       <canvas id="cropCanvas" width="320" height="320"></canvas>
-      <div class="crop-hud-hint">🖐️ Drag to reposition • 🔍 Scroll to zoom</div>
+      <div class="crop-hud-hint">${renderIcon("grip-vertical", 18)} Drag to reposition • ${renderIcon("search", 16)} Scroll to zoom</div>
     </div>
 
     <div class="crop-controls-wrap">
       <div class="crop-zoom-bar">
-        <button type="button" id="cropZoomOutBtn" class="crop-zoom-step-btn" title="Zoom Out" aria-label="Zoom Out">➖</button>
+        <button type="button" id="cropZoomOutBtn" class="crop-zoom-step-btn" title="Zoom Out" aria-label="Zoom Out">${renderIcon("minus", 18)}</button>
         <input type="range" id="cropZoomRange" class="crop-zoom-slider" min="0.5" max="3" step="0.02" value="1" aria-label="Zoom photo">
-        <button type="button" id="cropZoomInBtn" class="crop-zoom-step-btn" title="Zoom In" aria-label="Zoom In">➕</button>
+        <button type="button" id="cropZoomInBtn" class="crop-zoom-step-btn" title="Zoom In" aria-label="Zoom In">${renderIcon("plus", 18)}</button>
         <span id="cropZoomVal" class="crop-zoom-val">100%</span>
       </div>
       <div class="crop-btn-row">
-        <button type="button" id="cropRotateBtn" class="crop-action-btn">🔄 Rotate 90°</button>
+        <button type="button" id="cropRotateBtn" class="crop-action-btn">${renderIcon("rotate-cw", 18)} Rotate 90°</button>
         <button type="button" id="cropResetBtn" class="crop-action-btn">↺ Reset View</button>
       </div>
     </div>
@@ -1996,7 +1997,7 @@ cropImageModal.innerHTML = `
     <div style="display:flex; gap:12px; justify-content:flex-end;">
       <button type="button" id="cancelCropBtn" class="secondary-btn" style="padding:10px 18px; font-size:13px;">Cancel</button>
       <button type="button" id="applyCropBtn" class="primary-btn" style="padding:10px 22px; font-size:13px;">
-        <span>✨ Apply & Save Photo</span>
+        <span>${renderIcon("sparkles", 18)} Apply & Save Photo</span>
       </button>
     </div>
   </div>`;
@@ -2251,7 +2252,7 @@ facultyEditProfileModal.className = "modal-backdrop hidden";
 facultyEditProfileModal.innerHTML = `
   <div class="signup-modal edit-profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="facultyEditProfileTitle">
     <button type="button" id="closeFacultyEditProfile" class="close-modal" aria-label="Close Faculty Profile Modal">×</button>
-    <div class="modal-icon">🧑‍🏫</div>
+    <div class="modal-icon">${renderIcon("graduation-cap", 25)}</div>
     <div class="modal-title">
       <span>FACULTY PROFILE</span>
       <h2 id="facultyEditProfileTitle">Edit Profile Details</h2>
@@ -2259,13 +2260,13 @@ facultyEditProfileModal.innerHTML = `
     </div>
     <form id="facultyEditProfileForm">
       <label for="facultyEditName">1. Full Name</label>
-      <div class="input-wrap"><span class="input-icon">👤</span><input id="facultyEditName" type="text" required placeholder="Full Name"></div>
+      <div class="input-wrap"><span class="input-icon">${renderIcon("user", 17)}</span><input id="facultyEditName" type="text" required placeholder="Full Name"></div>
 
       <label for="facultyEditUsername">2. Username</label>
-      <div class="input-wrap"><span class="input-icon">🪪</span><input id="facultyEditUsername" disabled readonly placeholder="Username"></div>
+      <div class="input-wrap"><span class="input-icon">${renderIcon("badge-check", 17)}</span><input id="facultyEditUsername" disabled readonly placeholder="Username"></div>
 
       <label for="facultyEditEmail">3. Email Address</label>
-      <div class="input-wrap"><span class="input-icon">✉️</span><input id="facultyEditEmail" type="email" required placeholder="Email address"></div>
+      <div class="input-wrap"><span class="input-icon">${renderIcon("mail", 17)}</span><input id="facultyEditEmail" type="email" required placeholder="Email address"></div>
 
       <label for="facultyEditDivision">4. Assigned Division</label>
       <div class="input-wrap">
@@ -2348,7 +2349,7 @@ function openSignup(role, user = null) {
   renderSignupDirectSubjectsList("");
   $("signupRole").value = role;
   $("signupCurrentUsername").value = user ? user.username : "";
-  $("modalIcon").textContent = role === "student" ? "🎓" : "👨‍🏫";
+  $("modalIcon").innerHTML = role === "student" ? renderIcon("graduation-cap", 25) : renderIcon("presentation", 25);
   $("modalRoleLabel").textContent = role === "student" ? "STUDENT ACCOUNT" : "FACULTY ACCOUNT";
   $("modalTitle").textContent = user ? (role === "student" ? "Edit Student" : "Edit Faculty") : (role === "student" ? "Student Signup" : "Faculty Signup");
 
@@ -2742,7 +2743,7 @@ function calculateStudentAnalytics(username) {
       id: s.id,
       name: s.name,
       short: s.short || s.name,
-      icon: s.icon || (isLab ? "🧪" : "📖"),
+      icon: s.icon || (isLab ? "flask-conical" : "book-open"),
       isLab: isLab,
       markObtained: markObtained,
       markMax: markMax,
@@ -2851,12 +2852,12 @@ function generateAiInsights(analytics, mode = "marks") {
     let html = `
       <div style="background: rgba(255,255,255,0.75); border:1px solid #c7d2fe; padding:14px 18px; border-radius:14px; margin-bottom:14px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
         <p style="margin:0; font-size:14px; font-weight:600; color:#1e1b4b; line-height:1.5;">
-          🤖 <strong>AI Marks Diagnosis for ${studentName} ${evalTarget}:</strong>
+          ${renderIcon("bot", 18)} <strong>AI Marks Diagnosis for ${studentName} ${evalTarget}:</strong>
           Based on internal test & assignment evaluation across theory & practical lab courses, ${studentName} has scored total real marks of <strong>${totalScoreText}</strong>.
         </p>
       </div>
 
-      <div class="insights-section-title">📌 Marks Performance Breakdown & Strategy</div>
+      <div class="insights-section-title">${renderIcon("pin", 18)} Marks Performance Breakdown & Strategy</div>
       <ul class="ai-recommendation-list">
     `;
 
@@ -2864,7 +2865,7 @@ function generateAiInsights(analytics, mode = "marks") {
       const topScoreStr = isI1Only ? `${topTheoryMarks.i1Val} / ${topTheoryMarks.i1Max} Marks` : `${topTheoryMarks.markObtained} / ${topTheoryMarks.markMax} Marks`;
       html += `
         <li class="ai-recommendation-item good-item">
-          <span style="font-size:18px;">🏆</span>
+          <span style="font-size:18px;">${renderIcon("trophy", 18)}</span>
           <div>
             <strong>Top Performing Subject (Theory):</strong> <b>${escapeHtml(topTheoryMarks.name)} (${escapeHtml(topTheoryMarks.short)})</b> is your highest-scoring theory course at <strong>${topScoreStr}</strong>. Great academic mastery!
           </div>
@@ -2876,7 +2877,7 @@ function generateAiInsights(analytics, mode = "marks") {
       const lowScoreStr = isI1Only ? `${lowTheoryMarks.i1Val} / ${lowTheoryMarks.i1Max} Marks` : `${lowTheoryMarks.markObtained} / ${lowTheoryMarks.markMax} Marks`;
       html += `
         <li class="ai-recommendation-item ${(isI1Only ? lowTheoryMarks.i1Pct : lowTheoryMarks.markPct) < 50 ? 'alert-item' : ''}">
-          <span style="font-size:18px;">🎯</span>
+          <span style="font-size:18px;">${renderIcon("target", 18)}</span>
           <div>
             <strong>Low Performing Subject (Theory):</strong> <b>${escapeHtml(lowTheoryMarks.name)} (${escapeHtml(lowTheoryMarks.short)})</b> currently stands at <strong>${lowScoreStr}</strong>. Focus on previous internal test blueprints to boost your score.
           </div>
@@ -2888,7 +2889,7 @@ function generateAiInsights(analytics, mode = "marks") {
       const topLabStr = isI1Only ? `${topLabMarks.i1Val} / ${topLabMarks.i1Max} Marks` : `${topLabMarks.markObtained} / ${topLabMarks.markMax} Marks`;
       html += `
         <li class="ai-recommendation-item good-item">
-          <span style="font-size:18px;">🧪</span>
+          <span style="font-size:18px;">${renderIcon("test-tube-2", 18)}</span>
           <div>
             <strong>Top Performing Practical Lab:</strong> <b>${escapeHtml(topLabMarks.name)} (${escapeHtml(topLabMarks.short)})</b> leads practical performance at <strong>${topLabStr}</strong>.
           </div>
@@ -2900,7 +2901,7 @@ function generateAiInsights(analytics, mode = "marks") {
       const lowLabStr = isI1Only ? `${lowLabMarks.i1Val} / ${lowLabMarks.i1Max} Marks` : `${lowLabMarks.markObtained} / ${lowLabMarks.markMax} Marks`;
       html += `
         <li class="ai-recommendation-item">
-          <span style="font-size:18px;">🔬</span>
+          <span style="font-size:18px;">${renderIcon("flask-conical", 18)}</span>
           <div>
             <strong>Low Performing Practical Lab:</strong> <b>${escapeHtml(lowLabMarks.name)} (${escapeHtml(lowLabMarks.short)})</b> stands at <strong>${lowLabStr}</strong>. Complete all pending lab manual submissions.
           </div>
@@ -2911,7 +2912,7 @@ function generateAiInsights(analytics, mode = "marks") {
     html += `
       </ul>
       <div style="margin-top:14px; font-size:12px; color:#475569; font-weight:600; display:flex; align-items:center; gap:6px;">
-        <span>💡 Pro Tip:</span> Scoring above 75% in internal assessments significantly improves overall final semester GPA.
+        <span>${renderIcon("lightbulb", 18)} Pro Tip:</span> Scoring above 75% in internal assessments significantly improves overall final semester GPA.
       </div>
     `;
     return html;
@@ -2926,19 +2927,19 @@ function generateAiInsights(analytics, mode = "marks") {
     let html = `
       <div style="background: rgba(255,255,255,0.75); border:1px solid #c7d2fe; padding:14px 18px; border-radius:14px; margin-bottom:14px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
         <p style="margin:0; font-size:14px; font-weight:600; color:#1e1b4b; line-height:1.5;">
-          🤖 <strong>AI Attendance Diagnosis for ${studentName}:</strong>
+          ${renderIcon("bot", 18)} <strong>AI Attendance Diagnosis for ${studentName}:</strong>
           Your overall attendance rate is <strong>${avgAttPct}% (${attStatusText})</strong> across all theory lectures and practical lab sessions.
         </p>
       </div>
 
-      <div class="insights-section-title">📌 Attendance Tracking & Mandatory Cutoff</div>
+      <div class="insights-section-title">${renderIcon("pin", 18)} Attendance Tracking & Mandatory Cutoff</div>
       <ul class="ai-recommendation-list">
     `;
 
     if (topTheoryAtt) {
       html += `
         <li class="ai-recommendation-item good-item">
-          <span style="font-size:18px;">🌟</span>
+          <span style="font-size:18px;">${renderIcon("sparkles", 18)}</span>
           <div>
             <strong>Top Attendance Subject (Theory):</strong> <b>${escapeHtml(topTheoryAtt.name)} (${escapeHtml(topTheoryAtt.short)})</b> has your highest theory attendance at <strong>${topTheoryAtt.attPct}%</strong>.
           </div>
@@ -2950,7 +2951,7 @@ function generateAiInsights(analytics, mode = "marks") {
       const isRisk = lowTheoryAtt.attPct < 75;
       html += `
         <li class="ai-recommendation-item ${isRisk ? 'alert-item' : ''}">
-          <span style="font-size:18px;">⚠️</span>
+          <span style="font-size:18px;">${renderIcon("alert-triangle", 18)}</span>
           <div>
             <strong>Low Attendance Subject (Theory):</strong> <b>${escapeHtml(lowTheoryAtt.name)} (${escapeHtml(lowTheoryAtt.short)})</b> is at <strong>${lowTheoryAtt.attPct}%</strong>${isRisk ? ' — <strong style="color:#ef4444;">Below mandatory 75% cutoff!</strong>' : ''}.
           </div>
@@ -2961,7 +2962,7 @@ function generateAiInsights(analytics, mode = "marks") {
     if (topLabAtt) {
       html += `
         <li class="ai-recommendation-item good-item">
-          <span style="font-size:18px;">🧪</span>
+          <span style="font-size:18px;">${renderIcon("test-tube-2", 18)}</span>
           <div>
             <strong>Top Attendance Lab:</strong> <b>${escapeHtml(topLabAtt.name)} (${escapeHtml(topLabAtt.short)})</b> leads lab attendance at <strong>${topLabAtt.attPct}%</strong>.
           </div>
@@ -2973,7 +2974,7 @@ function generateAiInsights(analytics, mode = "marks") {
       const isRisk = lowLabAtt.attPct < 75;
       html += `
         <li class="ai-recommendation-item ${isRisk ? 'alert-item' : ''}">
-          <span style="font-size:18px;">🔬</span>
+          <span style="font-size:18px;">${renderIcon("flask-conical", 18)}</span>
           <div>
             <strong>Low Attendance Lab:</strong> <b>${escapeHtml(lowLabAtt.name)} (${escapeHtml(lowLabAtt.short)})</b> stands at <strong>${lowLabAtt.attPct}%</strong>${isRisk ? ' — <strong style="color:#ef4444;">Below mandatory 75% cutoff!</strong>' : ''}.
           </div>
@@ -2985,7 +2986,7 @@ function generateAiInsights(analytics, mode = "marks") {
       const names = lowAttendanceSubjects.map(s => `${escapeHtml(s.name)} (${s.attPct}%)`).join(", ");
       html += `
         <li class="ai-recommendation-item alert-item">
-          <span style="font-size:18px;">🚨</span>
+          <span style="font-size:18px;">${renderIcon("alert-octagon", 18)}</span>
           <div>
             <strong>Action Required (${lowAttendanceSubjects.length} Subject/Lab${lowAttendanceSubjects.length > 1 ? 's' : ''} < 75%):</strong>
             <strong>${names}</strong> require immediate lecture/practical attendance to avoid hall ticket locks.
@@ -2997,7 +2998,7 @@ function generateAiInsights(analytics, mode = "marks") {
     html += `
       </ul>
       <div style="margin-top:14px; font-size:12px; color:#475569; font-weight:600; display:flex; align-items:center; gap:6px;">
-        <span>💡 Pro Tip:</span> Mandatory attendance of 75% is required by the university to sit for semester end examinations.
+        <span>${renderIcon("lightbulb", 18)} Pro Tip:</span> Mandatory attendance of 75% is required by the university to sit for semester end examinations.
       </div>
     `;
     return html;
@@ -3402,14 +3403,14 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
     const isBoth = analytics.internalsMode === "both";
     const modeLabel = isI1Only ? "1st Int" : (isBoth ? "Both Int" : "Marks");
 
-    if ($("aiModalHeaderIcon")) $("aiModalHeaderIcon").textContent = "📈";
+    if ($("aiModalHeaderIcon")) $("aiModalHeaderIcon").innerHTML = renderIcon("trending-up", 18);
     $("aiModalTitle").textContent = `Academic Performance Diagnostics: ${studentName}`;
     $("aiModalSubtitle").textContent = isI1Only
       ? `1st Internal Test Real Marks Evaluation (${analytics.student ? (analytics.student.semester || 'Current Semester') : 'Student Portal'})`
       : (isBoth ? `1st & 2nd Internal Exams Real Marks Evaluation (${analytics.student ? (analytics.student.semester || 'Current Semester') : 'Student Portal'})` : `Academic Real Marks Evaluation`);
 
     // Card 1: Top Performing Subject (Theory)
-    $("aiMetricIcon1").textContent = "🏆";
+    $("aiMetricIcon1").innerHTML = renderIcon("trophy", 21);
     $("aiMetricLabel1").textContent = `Top Subject (${modeLabel})`;
     $("aiMetricVal1").textContent = analytics.topTheoryMarks ? (analytics.topTheoryMarks.short || analytics.topTheoryMarks.name) : "--";
     if (analytics.topTheoryMarks) {
@@ -3421,7 +3422,7 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
     $("aiMetricBadge1").className = "metric-badge good";
 
     // Card 2: Low Performing Subject (Theory)
-    $("aiMetricIcon2").textContent = "🎯";
+    $("aiMetricIcon2").innerHTML = renderIcon("target", 21);
     $("aiMetricLabel2").textContent = `Low Subject (${modeLabel})`;
     $("aiMetricVal2").textContent = analytics.lowTheoryMarks ? (analytics.lowTheoryMarks.short || analytics.lowTheoryMarks.name) : "--";
     if (analytics.lowTheoryMarks) {
@@ -3433,7 +3434,7 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
     $("aiMetricBadge2").className = "metric-badge warn";
 
     // Card 3: Top Performing Lab (Practical)
-    $("aiMetricIcon3").textContent = "🧪";
+    $("aiMetricIcon3").innerHTML = renderIcon("test-tube-2", 21);
     $("aiMetricLabel3").textContent = `Top Lab (${modeLabel})`;
     $("aiMetricVal3").textContent = analytics.topLabMarks ? (analytics.topLabMarks.short || analytics.topLabMarks.name) : "No Labs";
     if (analytics.topLabMarks) {
@@ -3445,7 +3446,7 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
     $("aiMetricBadge3").className = "metric-badge good";
 
     // Card 4: Low Performing Lab (Practical)
-    $("aiMetricIcon4").textContent = "🔬";
+    $("aiMetricIcon4").innerHTML = renderIcon("flask-conical", 21);
     $("aiMetricLabel4").textContent = `Low Lab (${modeLabel})`;
     $("aiMetricVal4").textContent = analytics.lowLabMarks ? (analytics.lowLabMarks.short || analytics.lowLabMarks.name) : "No Labs";
     if (analytics.lowLabMarks) {
@@ -3457,7 +3458,7 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
     $("aiMetricBadge4").className = "metric-badge warn";
 
     // Card 5: Total Real Marks (Replaced Grade Status)
-    $("aiMetricIcon5").textContent = "📊";
+    $("aiMetricIcon5").innerHTML = renderIcon("bar-chart-3", 21);
     $("aiMetricLabel5").textContent = `Total Marks (${modeLabel})`;
     if (isI1Only) {
       $("aiMetricVal5").textContent = analytics.totalI1Max > 0 ? `${analytics.totalI1Obtained} / ${analytics.totalI1Max}` : "--";
@@ -3473,58 +3474,58 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
 
     // Chart titles
     if (isI1Only) {
-      if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "📊 1st Internal Real Marks Comparison (Bar Graph)";
+      if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "1st Internal Real Marks Comparison (Bar Graph)";
       if ($("aiBarChartChip")) $("aiBarChartChip").textContent = "1st Internal";
-      if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "🥧 1st Internal Grade Tier Breakdown (Pie Chart)";
+      if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "1st Internal Grade Tier Breakdown (Pie Chart)";
       if ($("aiPieChartChip")) $("aiPieChartChip").textContent = "1st Internal Tiers";
     } else if (isBoth) {
-      if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "📊 Both Internals Real Marks Comparison (1st vs 2nd Internal Bar Graph)";
+      if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "Both Internals Real Marks Comparison (1st vs 2nd Internal Bar Graph)";
       if ($("aiBarChartChip")) $("aiBarChartChip").textContent = "Both Internals";
-      if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "🥧 Both Internals Overall Grade Breakdown (Pie Chart)";
+      if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "Both Internals Overall Grade Breakdown (Pie Chart)";
       if ($("aiPieChartChip")) $("aiPieChartChip").textContent = "Combined Tiers";
     } else {
-      if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "📊 Theory & Lab Real Marks Comparison (Bar Graph)";
+      if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "Theory & Lab Real Marks Comparison (Bar Graph)";
       if ($("aiBarChartChip")) $("aiBarChartChip").textContent = "Real Marks";
-      if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "🥧 Marks Grade Tier Breakdown (Pie Chart)";
+      if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "Marks Grade Tier Breakdown (Pie Chart)";
       if ($("aiPieChartChip")) $("aiPieChartChip").textContent = "Score Tiers";
     }
 
   } else {
     // Attendance mode
-    if ($("aiModalHeaderIcon")) $("aiModalHeaderIcon").textContent = "📊";
+    if ($("aiModalHeaderIcon")) $("aiModalHeaderIcon").innerHTML = renderIcon("bar-chart-3", 18);
     $("aiModalTitle").textContent = `Attendance Diagnostics: ${studentName}`;
     $("aiModalSubtitle").textContent = `Theory Subject & Practical Lab Attendance Diagnostics (${analytics.student ? (analytics.student.semester || 'Current Semester') : 'Student Portal'})`;
 
     // Card 1: Top Attendance Subject (Theory)
-    $("aiMetricIcon1").textContent = "🌟";
+    $("aiMetricIcon1").innerHTML = renderIcon("sparkles", 21);
     $("aiMetricLabel1").textContent = "Top Subject (Theory)";
     $("aiMetricVal1").textContent = analytics.topTheoryAtt ? (analytics.topTheoryAtt.short || analytics.topTheoryAtt.name) : "--";
     $("aiMetricBadge1").textContent = analytics.topTheoryAtt ? `${analytics.topTheoryAtt.attPct}% Att` : "--";
     $("aiMetricBadge1").className = "metric-badge good";
 
     // Card 2: Low Attendance Subject (Theory)
-    $("aiMetricIcon2").textContent = "⚠️";
+    $("aiMetricIcon2").innerHTML = renderIcon("alert-triangle", 21);
     $("aiMetricLabel2").textContent = "Low Subject (Theory)";
     $("aiMetricVal2").textContent = analytics.lowTheoryAtt ? (analytics.lowTheoryAtt.short || analytics.lowTheoryAtt.name) : "--";
     $("aiMetricBadge2").textContent = analytics.lowTheoryAtt ? `${analytics.lowTheoryAtt.attPct}% Att` : "--";
     $("aiMetricBadge2").className = analytics.lowTheoryAtt && analytics.lowTheoryAtt.attPct < 75 ? "metric-badge danger" : "metric-badge warn";
 
     // Card 3: Top Attendance Lab (Practical)
-    $("aiMetricIcon3").textContent = "🧪";
+    $("aiMetricIcon3").innerHTML = renderIcon("test-tube-2", 21);
     $("aiMetricLabel3").textContent = "Top Lab (Practical)";
     $("aiMetricVal3").textContent = analytics.topLabAtt ? (analytics.topLabAtt.short || analytics.topLabAtt.name) : "No Labs";
     $("aiMetricBadge3").textContent = analytics.topLabAtt ? `${analytics.topLabAtt.attPct}% Att` : "--";
     $("aiMetricBadge3").className = "metric-badge good";
 
     // Card 4: Low Attendance Lab (Practical)
-    $("aiMetricIcon4").textContent = "🔬";
+    $("aiMetricIcon4").innerHTML = renderIcon("flask-conical", 21);
     $("aiMetricLabel4").textContent = "Low Lab (Practical)";
     $("aiMetricVal4").textContent = analytics.lowLabAtt ? (analytics.lowLabAtt.short || analytics.lowLabAtt.name) : "No Labs";
     $("aiMetricBadge4").textContent = analytics.lowLabAtt ? `${analytics.lowLabAtt.attPct}% Att` : "--";
     $("aiMetricBadge4").className = analytics.lowLabAtt && analytics.lowLabAtt.attPct < 75 ? "metric-badge danger" : "metric-badge warn";
 
     // Card 5: Overall Attendance (%)
-    $("aiMetricIcon5").textContent = "📊";
+    $("aiMetricIcon5").innerHTML = renderIcon("bar-chart-3", 21);
     $("aiMetricLabel5").textContent = "Overall Attendance (%)";
     $("aiMetricVal5").textContent = `${analytics.avgAttPct}% Overall`;
     $("aiMetricBadge5").textContent = analytics.avgAttPct >= 75 ? "Eligible" : "At-Risk (<75%)";
@@ -3532,16 +3533,16 @@ function openAiAnalysisModal(targetUsername, mode = "marks") {
 
     // Card 6: Subjects < 75%
     if (card6) card6.style.display = "flex";
-    $("aiMetricIcon6").textContent = "🚨";
+    $("aiMetricIcon6").innerHTML = renderIcon("alert-octagon", 21);
     $("aiMetricLabel6").textContent = "Subjects < 75%";
     $("aiMetricVal6").textContent = `${analytics.lowAttendanceSubjects.length} Subject(s)`;
     $("aiMetricBadge6").textContent = analytics.lowAttendanceSubjects.length === 0 ? "Compliant" : "Low Att Warning";
     $("aiMetricBadge6").className = analytics.lowAttendanceSubjects.length === 0 ? "metric-badge good" : "metric-badge danger";
 
     // Chart titles
-    if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "📊 Theory & Lab Attendance Comparison (Bar Graph)";
+    if ($("aiBarChartTitle")) $("aiBarChartTitle").textContent = "Theory & Lab Attendance Comparison (Bar Graph)";
     if ($("aiBarChartChip")) $("aiBarChartChip").textContent = "Attendance %";
-    if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "🥧 Attendance Status Ratio (Pie Chart)";
+    if ($("aiPieChartTitle")) $("aiPieChartTitle").textContent = "Attendance Status Ratio (Pie Chart)";
     if ($("aiPieChartChip")) $("aiPieChartChip").textContent = "Attendance Ratio";
   }
 
@@ -3581,7 +3582,7 @@ function bindAiAnalysisEvents() {
   if (refreshBtn) {
     refreshBtn.onclick = () => {
       refreshBtn.disabled = true;
-      refreshBtn.innerHTML = `<span>⏳ Analyzing...</span>`;
+      refreshBtn.innerHTML = `<span>${renderIcon("hourglass", 18)} Analyzing...</span>`;
       setTimeout(() => {
         if (currentAiAnalysisUsername) {
           const analytics = calculateStudentAnalytics(currentAiAnalysisUsername);
@@ -3589,7 +3590,7 @@ function bindAiAnalysisEvents() {
           renderAiCharts(analytics, currentAiAnalysisMode);
         }
         refreshBtn.disabled = false;
-        refreshBtn.innerHTML = `<span>🔄 Refresh Insights</span>`;
+        refreshBtn.innerHTML = `<span>${renderIcon("rotate-cw", 18)} Refresh Insights</span>`;
       }, 400);
     };
   }
@@ -4101,7 +4102,7 @@ function handleIncomingNoticeBroadcast(notice) {
   }
 
   sendDesktopNotification({
-    title: `📢 CampusSphere Notice: ${notice.title}`,
+    title: `CampusSphere Notice: ${notice.title}`,
     body: `${notice.authorName ? notice.authorName + ": " : ""}${notice.text ? notice.text.slice(0, 100) : "New notice posted"}`,
     tag: `notice-${notice.id || notice.title}`,
     onClick: () => {
@@ -4128,7 +4129,7 @@ function checkPromptDesktopNotifications() {
       const promptToast = document.createElement("div");
       promptToast.className = "notif-toast notif-permission-toast";
       promptToast.innerHTML = `
-        <span style="font-size:24px; flex-shrink:0;">🖥️</span>
+        <span style="font-size:24px; flex-shrink:0;">${renderIcon("monitor", 18)}</span>
         <div class="notif-toast-body">
           <div class="notif-toast-header">
             <b>Enable Real-Time Notifications?</b>
@@ -4166,8 +4167,8 @@ function checkPromptDesktopNotifications() {
 function buildNav() {
   const isStudentOrFaculty = currentUser && (currentUser.role === "student" || currentUser.role === "faculty");
   const items = isStudentOrFaculty
-    ? [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Profile"], ["attendance", "📊", "Attendance"], ["marks", "📈", "Marks"], ["assignments", "📝", "Assignments"], ["notes", "📚", "Notes"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"]]
-    : [["dashboard", "🏠", "Dashboard"], ["profile", "👤", "Admin Profile"], ["divisions", "🏫", "Divisions"], ["subjects", "📚", "Semester Subjects"], ["students", "👥", "Students"], ["faculty", "🧑‍🏫", "Faculty"], ["timetable", "🗓️", "Timetable"], ["notices", "📢", "Notices"], ["syllabus", "📖", "Courses & Syllabus"]];
+    ? [["dashboard", "home", "Dashboard"], ["profile", "user", "Profile"], ["attendance", "bar-chart-3", "Attendance"], ["marks", "trending-up", "Marks"], ["assignments", "file-edit", "Assignments"], ["notes", "book-open", "Notes"], ["timetable", "calendar-days", "Timetable"], ["notices", "megaphone", "Notices"]]
+    : [["dashboard", "home", "Dashboard"], ["profile", "user", "Admin Profile"], ["divisions", "school", "Divisions"], ["subjects", "book-open", "Semester Subjects"], ["students", "users", "Students"], ["faculty", "graduation-cap", "Faculty"], ["timetable", "calendar-days", "Timetable"], ["notices", "megaphone", "Notices"], ["syllabus", "book-open", "Courses & Syllabus"]];
 
   const unreadNoticeCount = getUnreadNoticeCount();
   const unreadNotesCount = getUnreadNotesCount();
@@ -4179,7 +4180,7 @@ function buildNav() {
     } else if (id === "notes" && unreadNotesCount > 0) {
       badgeMarkup = `<span class="nav-badge notes-badge">${unreadNotesCount}</span>`;
     }
-    return `<button class="nav-item" data-page="${id}"><span>${icon}</span><span>${label}</span>${badgeMarkup}</button>`;
+    return `<button class="nav-item" data-page="${id}"><span>${renderIcon(icon, { size: 20 })}</span><span>${label}</span>${badgeMarkup}</button>`;
   }).join("");
 
   document.querySelectorAll(".nav-item").forEach(b => b.addEventListener("click", () => navigate(b.dataset.page)));
@@ -4567,7 +4568,7 @@ function initStudentProfilePage() {
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳ Saving Changes...</span>`;
+      submitBtn.innerHTML = `<span>${renderIcon("hourglass", 18)} Saving Changes...</span>`;
     }
 
     try {
@@ -4636,7 +4637,7 @@ function initStudentProfilePage() {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>💾 Update Profile & Credentials</span>`;
+        submitBtn.innerHTML = `<span>${renderIcon("save", 18)} Update Profile & Credentials</span>`;
       }
     }
   });
@@ -4828,7 +4829,7 @@ function initFacultyProfilePage() {
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳ Saving Changes...</span>`;
+      submitBtn.innerHTML = `<span>${renderIcon("hourglass", 18)} Saving Changes...</span>`;
     }
 
     try {
@@ -4898,7 +4899,7 @@ function initFacultyProfilePage() {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>💾 Update Profile & Credentials</span>`;
+        submitBtn.innerHTML = `<span>${renderIcon("save", 18)} Update Profile & Credentials</span>`;
       }
     }
   });
@@ -5084,7 +5085,7 @@ function initAdminProfilePage() {
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳ Saving Changes...</span>`;
+      submitBtn.innerHTML = `<span>${renderIcon("hourglass", 18)} Saving Changes...</span>`;
     }
 
     try {
@@ -5156,7 +5157,7 @@ function initAdminProfilePage() {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>💾 Update Profile & Credentials</span>`;
+        submitBtn.innerHTML = `<span>${renderIcon("save", 18)} Update Profile & Credentials</span>`;
       }
     }
   });
@@ -5548,7 +5549,7 @@ adminFacultyEditModal.innerHTML = `
   <div class="modal" style="max-width: 540px;" role="dialog" aria-modal="true" aria-labelledby="adminFacultyEditModalTitle">
     <button class="close-btn" id="closeAdminFacultyEditModal" type="button" aria-label="Close Faculty Classes Manager Modal">&times;</button>
     <div class="modal-header">
-      <span class="modal-icon">👨‍🏫</span>
+      <span class="modal-icon">${renderIcon("graduation-cap", 18)}</span>
       <div>
         <span class="modal-role" style="color: #6366f1;">ADMIN FACULTY MANAGER</span>
         <h2 id="adminFacultyEditModalTitle" style="margin: 0; font-size: 19px; color: #1e293b;">Manage Faculty Classes</h2>
@@ -6043,7 +6044,7 @@ function initAttendancePage() {
       }
       if (!attendanceFilterDivision || !attendanceFilterDate) {
         if (err) {
-          err.textContent = "⚠️ Please select Division and Particular Date to view attendance.";
+          err.textContent = "Please select Division and Particular Date to view attendance.";
           err.style.display = "block";
         }
         return;
@@ -6100,7 +6101,7 @@ function initAttendancePage() {
       const msg = $("attSaveMessage");
       if (hasUnselected) {
         if (msg) {
-          msg.textContent = "⚠️ Please select attendance status (P or A) for all students before saving.";
+          msg.textContent = "Please select attendance status (P or A) for all students before saving.";
           msg.className = "message error";
         }
         return;
@@ -6148,14 +6149,14 @@ function initAttendancePage() {
         if (syncRes && syncRes.success === false) {
           const errMsg = syncRes.message || "Failed to sync attendance to the server. Your selections have been preserved; please retry.";
           if (msg) {
-            msg.textContent = `⚠️ ${errMsg}`;
+            msg.textContent = `${errMsg}`;
             msg.className = "message error";
           }
           showToast(errMsg, "error");
           return;
         }
 
-        const successMsg = `✅ Daily attendance for ${formattedDate} saved successfully!`;
+        const successMsg = `Daily attendance for ${formattedDate} saved successfully!`;
         showToast("Daily attendance saved successfully!", "success");
         resetAttendanceFilters();
         attendanceSaveSuccessMessage = successMsg;
@@ -6258,7 +6259,7 @@ function initAttendancePage() {
         // INSTANT 0ms DOM CLEAR
         const historyWrap = document.querySelector(".attendance-history-list, .att-history-wrap");
         if (historyWrap) {
-          historyWrap.innerHTML = `<div class="empty-state" style="padding:20px; text-align:center; color:#64748b;">🗑️ All stored attendance records cleared.</div>`;
+          historyWrap.innerHTML = `<div class="empty-state" style="padding:20px; text-align:center; color:#64748b;">${renderIcon("trash-2", 18)} All stored attendance records cleared.</div>`;
         }
 
         if (!ACADEMIC.deletedDailyAttendance) ACADEMIC.deletedDailyAttendance = [];
@@ -6361,7 +6362,7 @@ function initMarksPage() {
 
         if (i1 !== null && (isNaN(i1) || i1 < 0 || i1 > maxI1)) {
           if (msg) {
-            msg.textContent = `⚠️ 1st Internal mark for ${s.name} must be between 0 and ${maxI1}.`;
+            msg.textContent = `1st Internal mark for ${s.name} must be between 0 and ${maxI1}.`;
             msg.className = "message error";
           }
           hasError = true;
@@ -6370,7 +6371,7 @@ function initMarksPage() {
 
         if (i2 !== null && (isNaN(i2) || i2 < 0 || i2 > maxI2)) {
           if (msg) {
-            msg.textContent = `⚠️ 2nd Internal mark for ${s.name} must be between 0 and ${maxI2}.`;
+            msg.textContent = `2nd Internal mark for ${s.name} must be between 0 and ${maxI2}.`;
             msg.className = "message error";
           }
           hasError = true;
@@ -6379,7 +6380,7 @@ function initMarksPage() {
 
         if (assign !== null && (isNaN(assign) || assign < 0 || assign > 10)) {
           if (msg) {
-            msg.textContent = `⚠️ Assignment mark for ${s.name} must be between 0 and 10.`;
+            msg.textContent = `Assignment mark for ${s.name} must be between 0 and 10.`;
             msg.className = "message error";
           }
           hasError = true;
@@ -6428,7 +6429,7 @@ function initMarksPage() {
         if (syncRes && syncRes.success === false) {
           const errMsg = syncRes.message || "Failed to sync marks to the server. Your entered marks have been preserved; please retry.";
           if (msg) {
-            msg.textContent = `⚠️ ${errMsg}`;
+            msg.textContent = `${errMsg}`;
             msg.className = "message error";
           }
           showToast(errMsg, "error");
@@ -6436,7 +6437,7 @@ function initMarksPage() {
         }
 
         if (msg) {
-          msg.textContent = "✅ All student marks saved successfully!";
+          msg.textContent = "All student marks saved successfully!";
           msg.className = "message success";
           setTimeout(() => {
             if (msg) msg.textContent = "";
@@ -6666,7 +6667,7 @@ function initNotesPage() {
 
         if (!title) {
           if (msgEl) {
-            msgEl.textContent = "⚠️ Please enter a title for the study notes.";
+            msgEl.textContent = "Please enter a title for the study notes.";
             msgEl.className = "message error";
           }
           return;
@@ -6698,7 +6699,7 @@ function initNotesPage() {
             const file = fileEl.files[0];
             if (file.size > 2 * 1024 * 1024) {
               if (msgEl) {
-                msgEl.textContent = "⚠️ Attachment size exceeds 2 MB limit. Please upload a smaller file.";
+                msgEl.textContent = "Attachment size exceeds 2 MB limit. Please upload a smaller file.";
                 msgEl.className = "message error";
               }
               return;
@@ -6924,7 +6925,7 @@ async function refreshAdminUserList(role = "student") {
   const refreshBtns = document.querySelectorAll(`[data-refresh-admin-users="${role}"]`);
   refreshBtns.forEach(b => {
     b.disabled = true;
-    b.innerHTML = `<span>⏳ Refreshing...</span>`;
+    b.innerHTML = `<span>${renderIcon("hourglass", 18)} Refreshing...</span>`;
   });
   try {
     await hydrateUsersFromServer();
@@ -6941,7 +6942,7 @@ async function refreshAdminUserList(role = "student") {
   } finally {
     refreshBtns.forEach(b => {
       b.disabled = false;
-      b.innerHTML = `<span>🔄 Refresh List</span>`;
+      b.innerHTML = `<span>${renderIcon("rotate-cw", 18)} Refresh List</span>`;
     });
   }
 }
@@ -7633,7 +7634,7 @@ async function saveTimetableDoc(e) {
 
   if (saveBtn) {
     saveBtn.disabled = true;
-    saveBtn.innerHTML = `<span>⏳ Saving...</span>`;
+    saveBtn.innerHTML = `<span>${renderIcon("hourglass", 18)} Saving...</span>`;
   }
   if (msgElem) {
     msgElem.className = "message";
@@ -7715,7 +7716,7 @@ async function saveTimetableDoc(e) {
       showToast(errMsg, "error");
       if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = `<span>💾 Save</span>`;
+        saveBtn.innerHTML = `<span>${renderIcon("save", 18)} Save</span>`;
       }
     }
   } catch (err) {
@@ -7728,7 +7729,7 @@ async function saveTimetableDoc(e) {
     showToast(errMsg, "error");
     if (saveBtn) {
       saveBtn.disabled = false;
-      saveBtn.innerHTML = `<span>💾 Save</span>`;
+      saveBtn.innerHTML = `<span>${renderIcon("save", 18)} Save</span>`;
     }
   }
 }
@@ -7925,14 +7926,14 @@ const pages = {
     return `<div class="welcome">
       <div>
         <p class="eyebrow">Welcome back</p>
-        <h1>${escapeHtml(currentUser.name)} 👋</h1>
+        <h1>${escapeHtml(currentUser.name)} ${renderIcon("hand-metal", 20)}</h1>
         <p>Your academic overview is ready.</p>
       </div>
-      <div class="welcome-icon">🎓</div>
+      <div class="welcome-icon">${renderIcon("graduation-cap", 25)}</div>
     </div>
-    <div class="stat-grid"><div class="stat"><span>📚</span><b>${visibleSubjects.length}</b><small>Subjects</small></div>
-      <div class="stat"><span>📊</span><b>${attendance}%</b><small>Average Attendance</small></div>
-      <div class="stat"><span>📢</span><b>${noticeCount}</b><small>Notices</small></div></div>
+    <div class="stat-grid"><div class="stat"><span>${renderIcon("book-open", 18)}</span><b>${visibleSubjects.length}</b><small>Subjects</small></div>
+      <div class="stat"><span>${renderIcon("bar-chart-3", 18)}</span><b>${attendance}%</b><small>Average Attendance</small></div>
+      <div class="stat"><span>${renderIcon("megaphone", 18)}</span><b>${noticeCount}</b><small>Notices</small></div></div>
       <section class="panel">
         <div class="panel-head">
           <h3>Subject Overview</h3>
@@ -7958,7 +7959,7 @@ const pages = {
 
       const setupBanner = !isConfigured ? `
         <div class="profile-notice-banner" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:14px 18px; border-radius:16px; margin-bottom:20px; font-size:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <div><strong>⚠️ Profile Setup Required:</strong> You haven't selected your academic details yet. Click <b>Edit Profile</b> to choose your Course Year, Semester, Division, and Language.</div>
+          <div><strong>${renderIcon("alert-triangle", 18)} Profile Setup Required:</strong> You haven't selected your academic details yet. Click <b>Edit Profile</b> to choose your Course Year, Semester, Division, and Language.</div>
           <button data-action="open-edit-profile" class="primary-btn" style="padding:6px 14px; font-size:13px;" type="button">Edit Profile Now</button>
         </div>` : "";
 
@@ -7970,8 +7971,8 @@ const pages = {
         const bg = isLab ? "#e0f2fe" : "#eef2ff";
         const color = isLab ? "#075985" : "#3730a3";
         const border = isLab ? "#bae6fd" : "#c7d2fe";
-        const icon = isLab ? "🧪" : "📖";
-        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${icon} ${escapeHtml(s.name)}</span>`;
+        const icon = isLab ? "flask-conical" : "book-open";
+        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${renderIcon(icon, 16)} ${escapeHtml(s.name)}</span>`;
       };
 
       const theorySubjectsMarkup = theorySubjects.length
@@ -7993,15 +7994,15 @@ const pages = {
             <img src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="${escapeHtml(currentUser.name)}" class="profile-picture-img">
           </div>
           <div class="profile-main-info">
-            <h2>${escapeHtml(currentUser.name)} <span class="role-badge-chip">🎓 Student</span></h2>
+            <h2>${escapeHtml(currentUser.name)} <span class="role-badge-chip">${renderIcon("graduation-cap", 18)} Student</span></h2>
             <p>${escapeHtml(subtitleText)}</p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
             <button id="openStudentCredentialsBtn" class="primary-btn profile-edit-btn" type="button" style="width: auto !important; margin: 0; padding: 10px 18px;">
-              <span>✏️ Edit Details</span>
+              <span>${renderIcon("pen-square", 18)} Edit Details</span>
             </button>
             <button id="openEditProfileBtn" class="secondary-btn profile-edit-btn" type="button" style="width: auto !important; margin: 0; padding: 10px 16px;">
-              <span>⚙️ Academic Setup</span>
+              <span>${renderIcon("settings", 18)} Academic Setup</span>
             </button>
           </div>
         </div>
@@ -8019,11 +8020,11 @@ const pages = {
           <div><small>Email Address</small><b>${escapeHtml(email)}</b></div>
           <div><small>Account Role</small><b>Student</b></div>
           <div style="grid-column: 1 / -1; background: #f8fafc; padding: 16px 20px; border-radius: 14px; border: 1px solid #e2e8f0; margin-top: 8px;">
-            <small style="color: #4f46e5; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">📖 Enrolled Semester Subjects (${escapeHtml(sem)})</small>
+            <small style="color: #4f46e5; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">${renderIcon("book-open", 18)} Enrolled Semester Subjects (${escapeHtml(sem)})</small>
             ${theorySubjectsMarkup}
           </div>
           <div style="grid-column: 1 / -1; background: #f0f9ff; padding: 16px 20px; border-radius: 14px; border: 1px solid #bae6fd; margin-top: 8px;">
-            <small style="color: #0284c7; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">🧪 Enrolled Semester Labs (${escapeHtml(sem)})</small>
+            <small style="color: #0284c7; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">${renderIcon("test-tube-2", 18)} Enrolled Semester Labs (${escapeHtml(sem)})</small>
             ${labSubjectsMarkup}
           </div>
         </div>
@@ -8033,7 +8034,7 @@ const pages = {
         <div class="panel-head" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
           <div>
             <h3 style="display: flex; align-items: center; gap: 8px;">
-              <span>🔐</span> Change Username, Password & Profile Info
+              <span>${renderIcon("key-round", 18)}</span> Change Username, Password & Profile Info
             </h3>
             <span class="badge" style="background: #eef2ff; color: #4338ca;">Credentials Manager</span>
           </div>
@@ -8048,7 +8049,7 @@ const pages = {
           <div class="credentials-photo-section" id="credentialsPhotoSection">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
               <label style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin: 0;">
-                <span>📸</span> Profile Picture
+                <span>${renderIcon("camera", 18)}</span> Profile Picture
               </label>
             </div>
 
@@ -8056,7 +8057,7 @@ const pages = {
               <div class="credentials-avatar-interactive" id="credentialsAvatarTrigger" title="Click to upload or change profile photo">
                 <img id="credentialsPreviewImg" src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="Profile Picture" class="credentials-preview-img">
                 <div class="avatar-hover-overlay">
-                  <span>📷</span>
+                  <span>${renderIcon("camera", 18)}</span>
                   <small>Change</small>
                 </div>
                 <div class="avatar-badge-check" title="Active Profile Photo">✓</div>
@@ -8065,14 +8066,14 @@ const pages = {
               <div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 240px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                   <label for="credentialsPicInput" class="primary-btn" style="cursor: pointer; padding: 8px 16px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin: 0; border-radius: 10px;">
-                    <span>📁 Upload Photo</span>
+                    <span>${renderIcon("folder", 18)} Upload Photo</span>
                     <input type="file" id="credentialsPicInput" accept="image/*, .png, .jpg, .jpeg, .webp, .gif, .svg, .bmp, .ico, .avif, .tif, .tiff, .heic, .heif, *" style="display: none;">
                   </label>
                   <button type="button" id="credentialsAdjustCropBtn" class="secondary-btn" style="padding: 8px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px; margin: 0; border-radius: 10px;">
-                    <span>✂️ Adjust / Zoom</span>
+                    <span>${renderIcon("scissors", 18)} Adjust / Zoom</span>
                   </button>
                   <button type="button" id="credentialsRemovePicBtn" class="secondary-btn" style="padding: 8px 14px; font-size: 12.5px; color: #ef4444; border-color: #fecaca; margin: 0; border-radius: 10px;">
-                    <span>🗑️ Reset Avatar</span>
+                    <span>${renderIcon("trash-2", 18)} Reset Avatar</span>
                   </button>
                 </div>
               </div>
@@ -8085,7 +8086,7 @@ const pages = {
                 Student Full Name <span style="color: #e11d48;">*</span>
               </label>
               <div class="input-wrap">
-                <span class="input-icon">👤</span>
+                <span class="input-icon">${renderIcon("user", 17)}</span>
                 <input id="studentProfileName" type="text" value="${escapeHtml(currentUser.name)}" required placeholder="Student Full Name">
               </div>
             </div>
@@ -8095,7 +8096,7 @@ const pages = {
                 Username <span style="color: #e11d48;">*</span>
               </label>
               <div class="input-wrap">
-                <span class="input-icon">🛡️</span>
+                <span class="input-icon">${renderIcon("shield", 18)}</span>
                 <input id="studentProfileUsername" type="text" value="${escapeHtml(currentUser.username)}" required placeholder="Enter username (4–30 chars)">
               </div>
               <small style="display: block; margin-top: 4px; color: #64748b; font-size: 12px;">
@@ -8109,7 +8110,7 @@ const pages = {
               Student Email Address
             </label>
             <div class="input-wrap">
-              <span class="input-icon">✉️</span>
+              <span class="input-icon">${renderIcon("mail", 17)}</span>
               <input id="studentProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="student@campussphere.edu">
             </div>
           </div>
@@ -8117,7 +8118,7 @@ const pages = {
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 22px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
               <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-                <span>🔒</span> Change Student Password
+                <span>${renderIcon("lock", 17)}</span> Change Student Password
               </h4>
               <span style="font-size: 12px; color: #64748b;">(Optional — Leave blank to keep current password)</span>
             </div>
@@ -8128,7 +8129,7 @@ const pages = {
                   Current Password
                 </label>
                 <div class="password-wrap">
-                  <span class="input-icon">🔐</span>
+                  <span class="input-icon">${renderIcon("key-round", 18)}</span>
                   <input id="studentCurrentPassword" type="password" placeholder="Enter current password" autocomplete="current-password">
                   <button type="button" class="eye-btn student-eye-toggle" data-target="studentCurrentPassword" aria-label="Show password" title="Show password">
                     ${eyeOpenSVG}
@@ -8141,7 +8142,7 @@ const pages = {
                   New Password
                 </label>
                 <div class="password-wrap">
-                  <span class="input-icon">🔑</span>
+                  <span class="input-icon">${renderIcon("key", 18)}</span>
                   <input id="studentNewPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password">
                   <button type="button" class="eye-btn student-eye-toggle" data-target="studentNewPassword" aria-label="Show password" title="Show password">
                     ${eyeOpenSVG}
@@ -8154,7 +8155,7 @@ const pages = {
                   Confirm New Password
                 </label>
                 <div class="password-wrap">
-                  <span class="input-icon">🔒</span>
+                  <span class="input-icon">${renderIcon("lock", 17)}</span>
                   <input id="studentConfirmPassword" type="password" placeholder="Re-enter new password" autocomplete="new-password">
                   <button type="button" class="eye-btn student-eye-toggle" data-target="studentConfirmPassword" aria-label="Show password" title="Show password">
                     ${eyeOpenSVG}
@@ -8166,7 +8167,7 @@ const pages = {
 
           <div style="display: flex; align-items: center; justify-content: flex-start; gap: 14px; flex-wrap: wrap;">
             <button id="studentSaveProfileBtn" type="submit" class="primary-btn" style="width: auto !important; min-width: 220px; padding: 12px 28px; font-size: 14px; font-weight: 700; margin: 0;">
-              <span>💾 Update Profile & Credentials</span>
+              <span>${renderIcon("save", 18)} Update Profile & Credentials</span>
             </button>
             <button type="button" class="secondary-btn" id="studentCancelBtn" style="margin: 0; padding: 10px 18px;">
               Cancel
@@ -8188,11 +8189,11 @@ const pages = {
             <img src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="${escapeHtml(currentUser.name)}" class="profile-picture-img">
           </div>
           <div class="profile-main-info">
-            <h2>${escapeHtml(currentUser.name)} <span class="role-badge-chip" style="background:#f3e8ff; color:#7e22ce;">🧑‍🏫 Faculty</span></h2>
+            <h2>${escapeHtml(currentUser.name)} <span class="role-badge-chip" style="background:#f3e8ff; color:#7e22ce;">${renderIcon("graduation-cap", 18)} Faculty</span></h2>
             <p>${escapeHtml(roleLabel(currentUser.role, currentUser.subject))}</p>
           </div>
           <button id="openFacultyCredentialsBtn" class="primary-btn profile-edit-btn" type="button" style="width: auto !important; margin: 0; padding: 10px 20px;">
-            <span>✏️ Edit Details</span>
+            <span>${renderIcon("pen-square", 18)} Edit Details</span>
           </button>
         </div>
         ${statusMarkup}
@@ -8214,7 +8215,7 @@ const pages = {
         <div class="panel-head" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
           <div>
             <h3 style="display: flex; align-items: center; gap: 8px;">
-              <span>🔐</span> Change Username, Password & Profile Info
+              <span>${renderIcon("key-round", 18)}</span> Change Username, Password & Profile Info
             </h3>
             <span class="badge" style="background: #eef2ff; color: #4338ca;">Credentials Manager</span>
           </div>
@@ -8229,7 +8230,7 @@ const pages = {
           <div class="credentials-photo-section" id="credentialsPhotoSection">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
               <label style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin: 0;">
-                <span>📸</span> Profile Picture
+                <span>${renderIcon("camera", 18)}</span> Profile Picture
               </label>
             </div>
 
@@ -8237,7 +8238,7 @@ const pages = {
               <div class="credentials-avatar-interactive" id="credentialsAvatarTrigger" title="Click to upload or change profile photo">
                 <img id="credentialsPreviewImg" src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="Profile Picture" class="credentials-preview-img" style="border-color: #7c3aed;">
                 <div class="avatar-hover-overlay">
-                  <span>📷</span>
+                  <span>${renderIcon("camera", 18)}</span>
                   <small>Change</small>
                 </div>
                 <div class="avatar-badge-check" style="background: #7c3aed;" title="Active Profile Photo">✓</div>
@@ -8246,14 +8247,14 @@ const pages = {
               <div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 240px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                   <label for="credentialsPicInput" class="primary-btn" style="cursor: pointer; padding: 8px 16px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin: 0; border-radius: 10px;">
-                    <span>📁 Upload Photo</span>
+                    <span>${renderIcon("folder", 18)} Upload Photo</span>
                     <input type="file" id="credentialsPicInput" accept="image/*, .png, .jpg, .jpeg, .webp, .gif, .svg, .bmp, .ico, .avif, .tif, .tiff, .heic, .heif, *" style="display: none;">
                   </label>
                   <button type="button" id="credentialsAdjustCropBtn" class="secondary-btn" style="padding: 8px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px; margin: 0; border-radius: 10px;">
-                    <span>✂️ Adjust / Zoom</span>
+                    <span>${renderIcon("scissors", 18)} Adjust / Zoom</span>
                   </button>
                   <button type="button" id="credentialsRemovePicBtn" class="secondary-btn" style="padding: 8px 14px; font-size: 12.5px; color: #ef4444; border-color: #fecaca; margin: 0; border-radius: 10px;">
-                    <span>🗑️ Reset Avatar</span>
+                    <span>${renderIcon("trash-2", 18)} Reset Avatar</span>
                   </button>
                 </div>
               </div>
@@ -8266,7 +8267,7 @@ const pages = {
                 Faculty Full Name <span style="color: #e11d48;">*</span>
               </label>
               <div class="input-wrap">
-                <span class="input-icon">🧑‍🏫</span>
+                <span class="input-icon">${renderIcon("graduation-cap", 18)}</span>
                 <input id="facultyProfileName" type="text" value="${escapeHtml(currentUser.name)}" required placeholder="Faculty Full Name">
               </div>
             </div>
@@ -8276,7 +8277,7 @@ const pages = {
                 Username <span style="color: #e11d48;">*</span>
               </label>
               <div class="input-wrap">
-                <span class="input-icon">🛡️</span>
+                <span class="input-icon">${renderIcon("shield", 18)}</span>
                 <input id="facultyProfileUsername" type="text" value="${escapeHtml(currentUser.username)}" required placeholder="Enter username (4–30 chars)">
               </div>
               <small style="display: block; margin-top: 4px; color: #64748b; font-size: 12px;">
@@ -8291,7 +8292,7 @@ const pages = {
                 Faculty Email Address
               </label>
               <div class="input-wrap">
-                <span class="input-icon">✉️</span>
+                <span class="input-icon">${renderIcon("mail", 17)}</span>
                 <input id="facultyProfileEmail" type="email" value="${escapeHtml(currentUser.email || "")}" placeholder="faculty@campussphere.edu">
               </div>
             </div>
@@ -8301,7 +8302,7 @@ const pages = {
                 Department
               </label>
               <div class="input-wrap">
-                <span class="input-icon">🏛️</span>
+                <span class="input-icon">${renderIcon("landmark", 18)}</span>
                 <input id="facultyProfileDepartment" type="text" value="${escapeHtml(currentUser.department || "Department of Computer Science & Applications")}" placeholder="Department">
               </div>
             </div>
@@ -8321,7 +8322,7 @@ const pages = {
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 22px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 6px;">
               <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-                <span>🔒</span> Change Faculty Password
+                <span>${renderIcon("lock", 17)}</span> Change Faculty Password
               </h4>
               <span style="font-size: 12px; color: #64748b;">(Optional — Leave blank to keep existing password)</span>
             </div>
@@ -8332,7 +8333,7 @@ const pages = {
                   Current Password
                 </label>
                 <div class="password-wrap">
-                  <span class="input-icon">🛡️</span>
+                  <span class="input-icon">${renderIcon("shield", 18)}</span>
                   <input id="facultyCurrentPassword" type="password" placeholder="Enter current password" autocomplete="current-password">
                   <button type="button" class="eye-btn faculty-eye-toggle" data-target="facultyCurrentPassword" aria-label="Show password" title="Show password">
                     ${eyeOpenSVG}
@@ -8345,7 +8346,7 @@ const pages = {
                   New Password
                 </label>
                 <div class="password-wrap">
-                  <span class="input-icon">🔑</span>
+                  <span class="input-icon">${renderIcon("key", 18)}</span>
                   <input id="facultyNewPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password">
                   <button type="button" class="eye-btn faculty-eye-toggle" data-target="facultyNewPassword" aria-label="Show password" title="Show password">
                     ${eyeOpenSVG}
@@ -8358,7 +8359,7 @@ const pages = {
                   Confirm New Password
                 </label>
                 <div class="password-wrap">
-                  <span class="input-icon">🔒</span>
+                  <span class="input-icon">${renderIcon("lock", 17)}</span>
                   <input id="facultyConfirmPassword" type="password" placeholder="Re-enter new password" autocomplete="new-password">
                   <button type="button" class="eye-btn faculty-eye-toggle" data-target="facultyConfirmPassword" aria-label="Show password" title="Show password">
                     ${eyeOpenSVG}
@@ -8370,7 +8371,7 @@ const pages = {
 
           <div style="display: flex; align-items: center; justify-content: flex-start; gap: 14px; flex-wrap: wrap;">
             <button id="facultySaveProfileBtn" type="submit" class="primary-btn" style="width: auto !important; min-width: 220px; padding: 12px 28px; font-size: 14px; font-weight: 700; margin: 0;">
-              <span>💾 Update Profile & Credentials</span>
+              <span>${renderIcon("save", 18)} Update Profile & Credentials</span>
             </button>
             <button type="button" class="secondary-btn" id="facultyCancelBtn" style="margin: 0; padding: 10px 18px;">
               Cancel
@@ -8395,14 +8396,14 @@ const pages = {
         <div class="profile-main-info">
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <h2 style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0;">${escapeHtml(adminName)}</h2>
-            <span class="badge" style="background: linear-gradient(135deg, #e0e7ff, #ede9fe); color: #4338ca; border: 1px solid #c7d2fe; font-weight: 700; padding: 4px 10px; border-radius: 999px; font-size: 12px;">🛡️ Super Administrator</span>
+            <span class="badge" style="background: linear-gradient(135deg, #e0e7ff, #ede9fe); color: #4338ca; border: 1px solid #c7d2fe; font-weight: 700; padding: 4px 10px; border-radius: 999px; font-size: 12px;">${renderIcon("shield", 18)} Super Administrator</span>
           </div>
           <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
             Account ID: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-weight: 700; color: #334155;">${escapeHtml(adminId)}</code> • Username: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-weight: 700; color: #4f46e5;">@${escapeHtml(adminUsername)}</code> • Full Access Level
           </p>
         </div>
         <button id="openAdminCredentialsBtn" class="primary-btn profile-edit-btn" type="button" style="width: auto !important; margin: 0; padding: 10px 20px;">
-          <span>✏️ Edit Details</span>
+          <span>${renderIcon("pen-square", 18)} Edit Details</span>
         </button>
       </div>
       ${statusMarkup}
@@ -8435,7 +8436,7 @@ const pages = {
       <div class="panel-head" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
         <div>
           <h3 style="display: flex; align-items: center; gap: 8px;">
-            <span>🔐</span> Change Username, Password & Profile Info
+            <span>${renderIcon("key-round", 18)}</span> Change Username, Password & Profile Info
           </h3>
           <span class="badge" style="background: #eef2ff; color: #4338ca;">Credentials Manager</span>
         </div>
@@ -8450,7 +8451,7 @@ const pages = {
         <div class="credentials-photo-section" id="credentialsPhotoSection">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
             <label style="font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin: 0;">
-              <span>📸</span> Profile Picture
+              <span>${renderIcon("camera", 18)}</span> Profile Picture
             </label>
           </div>
 
@@ -8458,7 +8459,7 @@ const pages = {
             <div class="credentials-avatar-interactive" id="credentialsAvatarTrigger" title="Click to upload or change profile photo">
               <img id="credentialsPreviewImg" src="${escapeHtml(getProfilePicUrl(currentUser))}" alt="Profile Picture" class="credentials-preview-img" style="border-color: #4f46e5;">
               <div class="avatar-hover-overlay">
-                <span>📷</span>
+                <span>${renderIcon("camera", 18)}</span>
                 <small>Change</small>
               </div>
               <div class="avatar-badge-check" style="background: #4f46e5;" title="Active Profile Photo">✓</div>
@@ -8467,14 +8468,14 @@ const pages = {
             <div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 240px;">
               <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                 <label for="credentialsPicInput" class="primary-btn" style="cursor: pointer; padding: 8px 16px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin: 0; border-radius: 10px;">
-                  <span>📁 Upload Photo</span>
+                  <span>${renderIcon("folder", 18)} Upload Photo</span>
                   <input type="file" id="credentialsPicInput" accept="image/*, .png, .jpg, .jpeg, .webp, .gif, .svg, .bmp, .ico, .avif, .tif, .tiff, .heic, .heif, *" style="display: none;">
                 </label>
                 <button type="button" id="credentialsAdjustCropBtn" class="secondary-btn" style="padding: 8px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px; margin: 0; border-radius: 10px;">
-                  <span>✂️ Adjust / Zoom</span>
+                  <span>${renderIcon("scissors", 18)} Adjust / Zoom</span>
                 </button>
                 <button type="button" id="credentialsRemovePicBtn" class="secondary-btn" style="padding: 8px 14px; font-size: 12.5px; color: #ef4444; border-color: #fecaca; margin: 0; border-radius: 10px;">
-                  <span>🗑️ Reset Avatar</span>
+                  <span>${renderIcon("trash-2", 18)} Reset Avatar</span>
                 </button>
               </div>
             </div>
@@ -8487,7 +8488,7 @@ const pages = {
               Administrator Full Name <span style="color: #e11d48;">*</span>
             </label>
             <div class="input-wrap">
-              <span class="input-icon">👤</span>
+              <span class="input-icon">${renderIcon("user", 17)}</span>
               <input id="adminProfileName" type="text" value="${escapeHtml(adminName)}" required placeholder="Administrator Full Name">
             </div>
           </div>
@@ -8497,7 +8498,7 @@ const pages = {
               Username <span style="color: #e11d48;">*</span>
             </label>
             <div class="input-wrap">
-              <span class="input-icon">🛡️</span>
+              <span class="input-icon">${renderIcon("shield", 18)}</span>
               <input id="adminProfileUsername" type="text" value="${escapeHtml(adminUsername)}" required placeholder="Enter username (4–30 chars)">
             </div>
             <small style="display: block; margin-top: 4px; color: #64748b; font-size: 12px;">
@@ -8511,7 +8512,7 @@ const pages = {
             Administrator Email Address
           </label>
           <div class="input-wrap">
-            <span class="input-icon">✉️</span>
+            <span class="input-icon">${renderIcon("mail", 17)}</span>
             <input id="adminProfileEmail" type="email" value="${escapeHtml(adminEmail)}" placeholder="admin@campussphere.edu">
           </div>
         </div>
@@ -8519,7 +8520,7 @@ const pages = {
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 22px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 6px;">
             <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-              <span>🔒</span> Change Admin Password
+              <span>${renderIcon("lock", 17)}</span> Change Admin Password
             </h4>
             <span style="font-size: 12px; color: #64748b;">(Optional — Leave blank to keep existing password)</span>
           </div>
@@ -8530,7 +8531,7 @@ const pages = {
                 Admin Username
               </label>
               <div class="input-wrap">
-                <span class="input-icon">🛡️</span>
+                <span class="input-icon">${renderIcon("shield", 18)}</span>
                 <input id="adminAuthUsername" type="text" placeholder="Enter admin username" autocomplete="username">
               </div>
             </div>
@@ -8540,7 +8541,7 @@ const pages = {
                 New Password
               </label>
               <div class="password-wrap">
-                <span class="input-icon">🔑</span>
+                <span class="input-icon">${renderIcon("key", 18)}</span>
                 <input id="adminNewPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password">
                 <button type="button" class="eye-btn admin-eye-toggle" data-target="adminNewPassword" aria-label="Show password" title="Show password">
                   ${eyeOpenSVG}
@@ -8553,7 +8554,7 @@ const pages = {
                 Confirm New Password
               </label>
               <div class="password-wrap">
-                <span class="input-icon">🔒</span>
+                <span class="input-icon">${renderIcon("lock", 17)}</span>
                 <input id="adminConfirmPassword" type="password" placeholder="Re-enter new password" autocomplete="new-password">
                 <button type="button" class="eye-btn admin-eye-toggle" data-target="adminConfirmPassword" aria-label="Show password" title="Show password">
                   ${eyeOpenSVG}
@@ -8565,7 +8566,7 @@ const pages = {
 
         <div style="display: flex; align-items: center; justify-content: flex-start; gap: 14px; flex-wrap: wrap;">
           <button id="adminSaveProfileBtn" type="submit" class="primary-btn" style="width: auto !important; min-width: 220px; padding: 12px 28px; font-size: 14px; font-weight: 700; margin: 0;">
-            <span>💾 Update Profile & Credentials</span>
+            <span>${renderIcon("save", 18)} Update Profile & Credentials</span>
           </button>
           <button type="button" class="secondary-btn" id="adminCancelBtn" style="margin: 0; padding: 10px 18px;">
             Cancel
@@ -8576,11 +8577,11 @@ const pages = {
   },
   attendance() {
     if (currentUser.role === "admin") {
-      return `<section class="panel"><div class="empty-state" style="text-align:center; padding: 40px 20px;"><span style="font-size:42px; display:block; margin-bottom:12px;">🚫</span><h4 style="font-size:18px; font-weight:700; color:#334155; margin:0 0 8px;">Access Restricted</h4><p style="font-size:14px; color:#64748b; margin:0;">Attendance management is not available in the Admin Portal.</p></div></section>`;
+      return `<section class="panel"><div class="empty-state" style="text-align:center; padding: 40px 20px;"><span style="font-size:42px; display:block; margin-bottom:12px;">${renderIcon("ban", 38)}</span><h4 style="font-size:18px; font-weight:700; color:#334155; margin:0 0 8px;">Access Restricted</h4><p style="font-size:14px; color:#64748b; margin:0;">Attendance management is not available in the Admin Portal.</p></div></section>`;
     }
     if (currentUser.role === "faculty") {
       const allFacultySubjects = getFacultyEligibleSubjects(currentUser);
-      const subjectObj = subjectById(currentUser.subject) || { name: currentUser.subject || "Subject", icon: "📘" };
+      const subjectObj = subjectById(currentUser.subject) || { name: currentUser.subject || "Subject", icon: "book" };
       const todayISO = getTodayISODate();
       if (attendanceFilterDate > todayISO) {
         attendanceFilterDate = todayISO;
@@ -8645,21 +8646,21 @@ const pages = {
                   data-div="${escapeHtml(log.division)}" 
                   data-sem="${escapeHtml(log.semester)}" 
                   data-year="${escapeHtml(log.courseYear)}">
-                  ✏️ Edit
+                  ${renderIcon("pen-square", 18)} Edit
                 </button>
                 <button type="button" class="btn-sm load-log-btn" 
                   data-date="${escapeHtml(log.isoDate)}" 
                   data-div="${escapeHtml(log.division)}" 
                   data-sem="${escapeHtml(log.semester)}" 
                   data-year="${escapeHtml(log.courseYear)}">
-                  📥 Load
+                  ${renderIcon("download", 18)} Load
                 </button>
                 <button type="button" class="btn-sm delete-log-btn" 
                   data-date="${escapeHtml(log.isoDate)}" 
                   data-div="${escapeHtml(log.division)}" 
                   data-sem="${escapeHtml(log.semester)}" 
                   data-year="${escapeHtml(log.courseYear)}">
-                  🗑️ Delete
+                  ${renderIcon("trash-2", 18)} Delete
                 </button>
               </div>
             </td>
@@ -8675,7 +8676,7 @@ const pages = {
               <small style="color:#64748b; font-weight:600;">Managing: <strong>${escapeHtml(subjectObj.name)}</strong> • ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})</small>
             </div>
             <div class="active-class-badge" style="display:inline-flex; align-items:center; gap:6px; background:#e0e7ff; color:#3730a3; padding:6px 14px; border-radius:8px; font-weight:700; font-size:13px;">
-              <span>📚</span> Active Class: ${escapeHtml(subjectObj.name)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})
+              <span>${renderIcon("book-open", 18)}</span> Active Class: ${escapeHtml(subjectObj.name)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})
             </div>
           </div>
           <div class="attendance-filters-grid">
@@ -8708,16 +8709,16 @@ const pages = {
               <label for="attDateInput">4. Particular Date (DD-MM-YY)</label>
               <div class="date-input-wrap">
                 <input type="date" id="attDateInput" max="${todayISO}" value="${escapeHtml(attendanceFilterDate)}" class="filter-input-date">
-                <span class="date-formatted-badge">📅 ${escapeHtml(displayDate)}</span>
+                <span class="date-formatted-badge">${renderIcon("calendar", 18)} ${escapeHtml(displayDate)}</span>
               </div>
             </div>
 
             <div style="grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; margin-top: 6px;">
               <button type="button" id="submitAttDetailsBtn" class="primary-btn" style="padding: 10px 22px; font-size: 14px;">
-                <span>🔍 Fetch Attendance</span>
+                <span>${renderIcon("search", 16)} Fetch Attendance</span>
               </button>
               <button type="button" id="resetAttDetailsBtn" class="secondary-btn" style="padding: 10px 22px; font-size: 14px;">
-                <span>🔄 Reset Details</span>
+                <span>${renderIcon("rotate-cw", 18)} Reset Details</span>
               </button>
             </div>
             <p id="attFilterErrorMsg" class="message error" style="display:none; grid-column:1/-1; margin-top:6px;"></p>
@@ -8771,7 +8772,7 @@ const pages = {
               ${!isAttendanceReadOnly ? `
                 <div class="att-submit-bar">
                   <button type="button" id="saveDailyAttendanceBtn" class="primary-btn save-att-btn">
-                    <span>💾 Save Daily Attendance (${escapeHtml(displayDate)})</span>
+                    <span>${renderIcon("save", 18)} Save Daily Attendance (${escapeHtml(displayDate)})</span>
                     <span class="arrow">→</span>
                   </button>
                   <p id="attSaveMessage" class="message"></p>
@@ -8779,14 +8780,14 @@ const pages = {
               ` : ''}
             ` : `
               <div class="empty-state" style="text-align:center; padding: 40px 20px;">
-                <span class="empty-icon" style="font-size:36px; display:block; margin-bottom:10px;">👥</span>
+                <span class="empty-icon" style="font-size:36px; display:block; margin-bottom:10px;">${renderIcon("users", 18)}</span>
                 <p style="font-size:16px; font-weight:700; color:#475569; margin:0 0 6px;">No students found for ${escapeHtml(attendanceFilterCourseYear)}, ${escapeHtml(attendanceFilterSemester)}, ${escapeHtml(attendanceFilterDivision)}.</p>
                 <small style="color:#94a3b8;">Try changing the division dropdown above and click Fetch Attendance.</small>
               </div>
             `}
           ` : `
             <div class="empty-state" style="text-align:center; padding: 40px 20px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; margin-top:20px;">
-              <span style="font-size:42px; display:block; margin-bottom:12px;">📝</span>
+              <span style="font-size:42px; display:block; margin-bottom:12px;">${renderIcon("file-edit", 18)}</span>
               <h4 style="font-size:18px; font-weight:700; color:#334155; margin:0 0 8px;">Select Attendance Details</h4>
               <p style="font-size:14px; color:#64748b; margin:0;">Please select <strong>Division</strong>, and <strong>Date</strong> above, then click <strong>Fetch Attendance</strong> to load students list.</p>
             </div>
@@ -8800,7 +8801,7 @@ const pages = {
               <span class="badge">Subject Logs</span>
               ${historyRows ? `
                 <button type="button" id="deleteAllLogsBtn" class="badge badge-clear-all">
-                  🗑️ Clear All
+                  ${renderIcon("trash-2", 18)} Clear All
                 </button>
               ` : ''}
             </div>
@@ -8885,7 +8886,7 @@ const pages = {
         <tr class="student-date-row" data-target="${rowId}">
           <td>
             <button type="button" class="btn-date-toggle" data-target="${rowId}" aria-expanded="false" title="Click/Tap to view subject attendance">
-              <span class="date-highlight">📅 ${dateObj.displayDate}</span>
+              <span class="date-highlight">${renderIcon("calendar", 18)} ${dateObj.displayDate}</span>
               <span class="toggle-chevron">▼</span>
             </button>
           </td>
@@ -8917,7 +8918,7 @@ const pages = {
           <h3>Subject Attendance Summary</h3>
           <div style="display:flex; gap:10px; align-items:center;">
             <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" data-action="open-ai-analysis" data-username="${encodeURIComponent(currentUser.username)}" data-analysis-type="attendance">
-              <span>📊 AI Attendance Analysis</span>
+              <span>${renderIcon("bar-chart-3", 18)} AI Attendance Analysis</span>
             </button>
             <span class="badge">Overall Progress</span>
           </div>
@@ -8939,7 +8940,7 @@ const pages = {
       const isGood = stats.overallPct >= 75;
       return `
                   <tr>
-                    <td>${s.icon ? s.icon + ' ' : ''}<b>${s.name}</b></td>
+                    <td>${s.icon ? renderIcon(s.icon, 16) + ' ' : ''}<b>${s.name}</b></td>
                     <td style="text-align:center; font-weight:700; color:#334155; font-size:15px;">${stats.classesTaken}</td>
                     <td style="text-align:center; font-weight:700; color:#334155; font-size:15px;">${stats.classesAttended}</td>
                     <td style="text-align:center; vertical-align:middle;">
@@ -8983,11 +8984,11 @@ const pages = {
   },
   marks() {
     if (currentUser.role === "admin") {
-      return `<section class="panel"><div class="empty-state" style="text-align:center; padding: 40px 20px;"><span style="font-size:42px; display:block; margin-bottom:12px;">🚫</span><h4 style="font-size:18px; font-weight:700; color:#334155; margin:0 0 8px;">Access Restricted</h4><p style="font-size:14px; color:#64748b; margin:0;">Marks management is not available in the Admin Portal.</p></div></section>`;
+      return `<section class="panel"><div class="empty-state" style="text-align:center; padding: 40px 20px;"><span style="font-size:42px; display:block; margin-bottom:12px;">${renderIcon("ban", 38)}</span><h4 style="font-size:18px; font-weight:700; color:#334155; margin:0 0 8px;">Access Restricted</h4><p style="font-size:14px; color:#64748b; margin:0;">Marks management is not available in the Admin Portal.</p></div></section>`;
     }
     if (currentUser.role === "faculty") {
       const allFacultySubjects = getFacultyEligibleSubjects(currentUser);
-      const subjectObj = subjectById(currentUser.subject) || { name: currentUser.subject || "Subject", icon: "📘" };
+      const subjectObj = subjectById(currentUser.subject) || { name: currentUser.subject || "Subject", icon: "book" };
       const facultySem = getSemesterForSubject(currentUser.subject);
       const facultyYear = getCourseYearForSemester(facultySem);
 
@@ -9080,7 +9081,7 @@ const pages = {
               <small style="color:#64748b; font-weight:600;">Faculty can select whether 1st Internal & 2nd Internal exams are out of 20 or 40 marks for ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)}).</small>
             </div>
             <div class="active-class-badge" style="display:inline-flex; align-items:center; gap:6px; background:#dbeafe; color:#1e40af; padding:6px 14px; border-radius:8px; font-weight:700; font-size:13px;">
-              <span>📊</span> Active Class: ${escapeHtml(subjectObj.name)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})
+              <span>${renderIcon("bar-chart-3", 18)}</span> Active Class: ${escapeHtml(subjectObj.name)} — ${escapeHtml(facultySem)} (${escapeHtml(facultyYear)})
             </div>
           </div>
           <form id="maxMarksConfigForm" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap; background:#f8fafc; padding:14px 18px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:16px;">
@@ -9103,7 +9104,7 @@ const pages = {
               <input type="text" value="Out of 10 (Fixed)" disabled class="filter-select" style="width:150px; background:#f1f5f9; cursor:not-allowed;">
             </div>
             <div>
-              <button type="submit" class="secondary-btn" style="padding:10px 18px; font-size:13px; font-weight:700;">⚙️ Update Max Marks</button>
+              <button type="submit" class="secondary-btn" style="padding:10px 18px; font-size:13px; font-weight:700;">${renderIcon("settings", 18)} Update Max Marks</button>
             </div>
           </form>
         </section>
@@ -9139,7 +9140,7 @@ const pages = {
                 </table>
               </div>
               <div style="margin-top:14px; display:flex; gap:12px; align-items:center;">
-                <button class="primary-btn" type="submit"><span>💾 Save Marks Batch</span><span class="arrow">→</span></button>
+                <button class="primary-btn" type="submit"><span>${renderIcon("save", 18)} Save Marks Batch</span><span class="arrow">→</span></button>
                 <p id="marksMessage" class="message"></p>
               </div>
             </form>
@@ -9204,7 +9205,7 @@ const pages = {
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
             <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" data-action="open-ai-analysis" data-username="${encodeURIComponent(currentUser.username)}" data-analysis-type="marks">
-              <span>📈 AI Marks Analysis</span>
+              <span>${renderIcon("trending-up", 18)} AI Marks Analysis</span>
             </button>
             <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;">${escapeHtml(currentUser.division || 'Div A')} • Student Statement</span>
           </div>
@@ -9233,7 +9234,7 @@ const pages = {
   assignments() {
     if (currentUser.role === "faculty") {
       const allFacultySubjects = getFacultyEligibleSubjects(currentUser);
-      const subjectObj = subjectById(currentUser.subject) || { name: currentUser.subject || "Subject", icon: "📘" };
+      const subjectObj = subjectById(currentUser.subject) || { name: currentUser.subject || "Subject", icon: "book" };
       const activeClassDivision = getFacultySubjectDivision(currentUser, currentUser.subject);
       const targetStudents = getStudentsForSubject(currentUser.subject, activeClassDivision);
       const subjectAssignments = getSubjectAssignments(currentUser.subject);
@@ -9308,7 +9309,7 @@ const pages = {
           </div>
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <div class="assignment-search-box">
-              <span class="assignment-search-icon">🔍</span>
+              <span class="assignment-search-icon">${renderIcon("search", 16)}</span>
               <input id="assignmentStudentSearch" type="text" class="assignment-search-input" placeholder="Search student name or USN..." value="${escapeHtml(assignmentSearchQuery || '')}">
               <button type="button" id="clearAssignmentSearch" class="assignment-search-clear" title="Clear search" style="${assignmentSearchQuery ? 'display:inline-block;' : 'display:none;'}">✕</button>
             </div>
@@ -9321,7 +9322,7 @@ const pages = {
               </select>
             </div>
             <span id="assignmentRecordCount" class="table-count-badge">${qInitial ? initialVisibleCount : list.length} Records</span>
-            ${list.length ? `<button type="button" id="btnClearAllAssignments" class="btn-clear-all" title="Clear assignment status records">🗑️ Clear All</button>` : ''}
+            ${list.length ? `<button type="button" id="btnClearAllAssignments" class="btn-clear-all" title="Clear assignment status records">${renderIcon("trash-2", 18)} Clear All</button>` : ''}
           </div>
         </div>
 
@@ -9370,14 +9371,14 @@ const pages = {
                         </div>
                       </td>
                       <td style="text-align:center;">
-                        <button type="button" class="btn-assign-status btn-del btn-delete-assignment" data-assign-index="${globalIdx}" data-student="${escapeHtml(a.student)}" data-title="${encodeURIComponent(a.title || '')}" data-due="${escapeHtml(a.due)}" title="Delete Record">🗑️ Delete</button>
+                        <button type="button" class="btn-assign-status btn-del btn-delete-assignment" data-assign-index="${globalIdx}" data-student="${escapeHtml(a.student)}" data-title="${encodeURIComponent(a.title || '')}" data-due="${escapeHtml(a.due)}" title="Delete Record">${renderIcon("trash-2", 18)} Delete</button>
                       </td>
                     </tr>
                   `;
       }).join("")}
                 <tr id="assignmentNoResultsRow" style="${(initialVisibleCount === 0 && list.length > 0) ? '' : 'display:none;'}">
                   <td colspan="9" style="text-align:center; padding: 16px; color: #64748b;">
-                    🔍 No student records found matching your search.
+                    ${renderIcon("search", 16)} No student records found matching your search.
                   </td>
                 </tr>
               </tbody>
@@ -9404,7 +9405,7 @@ const pages = {
       const hasAttachments = !!a.fileData;
       const formattedDue = formatDateDDOrdinalMonth(a.due);
       const isSub = a.status === "Submitted";
-      return `<article class="assignment"><div class="assignment-icon">${s ? escapeHtml(s.icon) : '📝'}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${escapeHtml(a.title)}</b>${a.description ? `<p class="assignment-desc">${escapeHtml(a.description)}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${sanitizeDownloadUrl(a.fileData)}" download="${escapeHtml(a.fileName || 'Assignment_Document')}" class="btn-doc-download"><span style="font-size:14px;">📄</span> ${escapeHtml(a.fileName || 'Download Document')}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? escapeHtml(s.name) : ''} • <strong>Submission Date:</strong> ${formattedDue}${isSub && formattedSubmitted ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formattedSubmitted}</span>` : ''}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><span class="status ${isSub ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${isSub ? "✓ Submitted" : "⏳ Pending"}</span><button type="button" class="btn-student-toggle-status" data-student="${escapeHtml(currentUser.username)}" data-title="${encodeURIComponent(a.title || '')}" data-subject="${escapeHtml(a.subject || '')}" data-due="${escapeHtml(a.due || '')}" data-next-status="${isSub ? 'Pending' : 'Submitted'}" style="margin:0; padding:6px 12px; font-size:11.5px; font-weight:700; border-radius:6px; cursor:pointer; background:${isSub ? '#f8fafc' : '#0A2540'}; color:${isSub ? '#64748b' : '#ffffff'}; border:1px solid ${isSub ? '#cbd5e1' : '#0A2540'};"><span>${isSub ? "↩️ Revert to Pending" : "✓ Mark as Submitted"}</span></button></div></article>`;
+      return `<article class="assignment"><div class="assignment-icon">${renderIcon(s && s.icon ? s.icon : 'file-edit', 21)}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${escapeHtml(a.title)}</b>${a.description ? `<p class="assignment-desc">${escapeHtml(a.description)}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${sanitizeDownloadUrl(a.fileData)}" download="${escapeHtml(a.fileName || 'Assignment_Document')}" class="btn-doc-download"><span style="font-size:14px;">${renderIcon("file-text", 18)}</span> ${escapeHtml(a.fileName || 'Download Document')}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? escapeHtml(s.name) : ''} • <strong>Submission Date:</strong> ${formattedDue}${isSub && formattedSubmitted ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formattedSubmitted}</span>` : ''}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><span class="status ${isSub ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${isSub ? "✓ Submitted" : renderIcon("hourglass", 18) + " Pending"}</span><button type="button" class="btn-student-toggle-status" data-student="${escapeHtml(currentUser.username)}" data-title="${encodeURIComponent(a.title || '')}" data-subject="${escapeHtml(a.subject || '')}" data-due="${escapeHtml(a.due || '')}" data-next-status="${isSub ? 'Pending' : 'Submitted'}" style="margin:0; padding:6px 12px; font-size:11.5px; font-weight:700; border-radius:6px; cursor:pointer; background:${isSub ? '#f8fafc' : '#0A2540'}; color:${isSub ? '#64748b' : '#ffffff'}; border:1px solid ${isSub ? '#cbd5e1' : '#0A2540'};"><span>${isSub ? renderIcon("corner-down-left", 16) + " Revert to Pending" : "✓ Mark as Submitted"}</span></button></div></article>`;
     }).join("") : `<div class="empty-state">No assignments assigned to you yet.</div>`}</div></section>`;
   },
   notes() {
@@ -9416,7 +9417,7 @@ const pages = {
       const facultySub = subjectById(currentUser.subject);
       const subjectName = facultySub ? facultySub.name : (currentUser.subject || "Subject");
       const subjectShort = facultySub ? facultySub.short : (currentUser.subject || "Subject");
-      const subjectIcon = facultySub ? facultySub.icon : "📚";
+      const subjectIcon = facultySub && facultySub.icon ? facultySub.icon : "book-open";
 
       const allFacultySubIds = allFacultySubjects.map(s => s.id);
       const facultyNotes = (ACADEMIC.notes || []).filter(n =>
@@ -9443,11 +9444,11 @@ const pages = {
 
         <form id="notesUploadForm" class="entry-form" style="background:#f8fafc; border:1px solid #e2e8f0; padding:18px; border-radius:12px; margin-bottom:24px;">
           <input type="hidden" id="notesTargetSubject" value="${escapeHtml(currentUser.subject)}">
-          <h4 style="margin:0 0 14px 0; color:#1e293b; display:flex; align-items:center; gap:6px;"><span>📤</span> Share New Study Notes</h4>
+          <h4 style="margin:0 0 14px 0; color:#1e293b; display:flex; align-items:center; gap:6px;"><span>${renderIcon("upload", 18)}</span> Share New Study Notes</h4>
           
           <label style="font-weight:700; color:#334155;">1. Note Title / Topic</label>
           <div class="input-wrap" style="margin-bottom:14px;">
-            <span class="input-icon">📝</span>
+            <span class="input-icon">${renderIcon("file-edit", 18)}</span>
             <input id="notesTitle" type="text" required placeholder="e.g. Module 1 Notes - Data Structures & Algorithms">
           </div>
 
@@ -9460,27 +9461,27 @@ const pages = {
 
           <div style="display:flex; align-items:center; gap:12px;">
             <button id="btnUploadNotes" class="primary-btn" type="button" style="height:38px; padding:0 22px; font-weight:700;">
-              <span>📤 Upload & Share Notes</span>
+              <span>${renderIcon("upload", 18)} Upload & Share Notes</span>
             </button>
             <p id="notesMessage" class="message" style="margin:0; font-weight:600;"></p>
           </div>
         </form>
 
-        <h4 style="margin:0 0 14px 0; color:#1e293b; display:flex; align-items:center; gap:6px;"><span>📚</span> Shared Notes History (${facultyNotes.length})</h4>
+        <h4 style="margin:0 0 14px 0; color:#1e293b; display:flex; align-items:center; gap:6px;"><span>${renderIcon("book-open", 18)}</span> Shared Notes History (${facultyNotes.length})</h4>
         <div class="assignment-list">
           ${facultyNotes.length ? facultyNotes.map(n => {
         const hasFile = !!n.fileData;
-        const sub = subjectById(n.subject) || { name: n.subject, icon: "📚" };
+        const sub = subjectById(n.subject) || { name: n.subject, icon: "book-open" };
         return `<article class="assignment" style="border-left:4px solid #0284c7;">
-              <div class="assignment-icon">${escapeHtml(sub.icon || '📚')}</div>
+              <div class="assignment-icon">${renderIcon(sub.icon || 'book-open', 21)}</div>
               <div class="assignment-main">
                 <b style="font-size:15px; color:#1e293b;">${escapeHtml(n.title)}</b>
-                ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Study_Notes')}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0f9ff; border:1px solid #7dd3fc; color:#0369a1; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">📄</span> Download ${escapeHtml(n.fileName || 'Notes Document')}</a></div>` : ''}
+                ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Study_Notes')}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0f9ff; border:1px solid #7dd3fc; color:#0369a1; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">${renderIcon("file-text", 18)}</span> Download ${escapeHtml(n.fileName || 'Notes Document')}</a></div>` : ''}
                 <small style="margin-top:6px; color:#64748b; display:block;">
                   ${escapeHtml(sub.name)} • Target: <strong>${escapeHtml(n.division || 'All Divisions')}</strong> • Uploaded on ${escapeHtml(n.date || 'Today')}
                 </small>
               </div>
-              <button type="button" class="btn-delete-note" data-note-id="${escapeHtml(n.id)}" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;" title="Delete this note">🗑️ Delete</button>
+              <button type="button" class="btn-delete-note" data-note-id="${escapeHtml(n.id)}" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;" title="Delete this note">${renderIcon("trash-2", 18)} Delete</button>
             </article>`;
       }).join("") : `<div class="empty-state">No notes shared for your assigned subjects yet. Upload notes using the form above.</div>`}
         </div>
@@ -9510,7 +9511,7 @@ const pages = {
 
       <div class="assignment-controls-wrap" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:240px;">
-          <input id="notesSearchInput" type="text" placeholder="🔍 Search notes by topic, module or title..." style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; font-weight:600;">
+          <input id="notesSearchInput" type="text" placeholder="Search notes by topic, module or title..." style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; font-weight:600;">
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <label style="font-size:13px; font-weight:700; color:#475569;">Filter Subject:</label>
@@ -9523,17 +9524,17 @@ const pages = {
 
       <div class="assignment-list" id="studentNotesContainer">
         ${allNotes.length ? allNotes.map(n => {
-      const sub = subjectById(n.subject) || { name: n.subject || "General", short: n.subject || "General", icon: "📚" };
+      const sub = subjectById(n.subject) || { name: n.subject || "General", short: n.subject || "General", icon: "book-open" };
       const hasFile = !!n.fileData;
       return `<article class="assignment note-card-item" data-title="${escapeHtml(n.title || '')}" data-subject="${escapeHtml(n.subject || '')}" style="border-left:4px solid #16a34a;">
-            <div class="assignment-icon">${escapeHtml(sub.icon || '📚')}</div>
+            <div class="assignment-icon">${renderIcon(sub.icon || 'book-open', 21)}</div>
             <div class="assignment-main">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
                 <b style="font-size:15px; color:#1e293b;">${escapeHtml(n.title)}</b>
                 <span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:2px 8px; font-weight:700;">${escapeHtml(sub.short)}</span>
                 <span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; padding:2px 8px; font-weight:600;">${escapeHtml(n.division || 'All Divisions')}</span>
               </div>
-              ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Study_Notes')}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #86efac; color:#166534; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">📄</span> Download ${escapeHtml(n.fileName || 'Notes Document')}</a></div>` : ''}
+              ${hasFile ? `<div class="assignment-attachments" style="margin-top:6px;"><a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Study_Notes')}" class="btn-doc-download" style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #86efac; color:#166534; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:13px;"><span style="font-size:14px;">${renderIcon("file-text", 18)}</span> Download ${escapeHtml(n.fileName || 'Notes Document')}</a></div>` : ''}
               <small style="margin-top:6px; color:#64748b; display:block;">
                 Shared by <strong>Prof. ${escapeHtml(n.uploadedByName || 'Faculty')}</strong> • Uploaded on ${escapeHtml(n.date || 'Recently')}
               </small>
@@ -9588,7 +9589,7 @@ const pages = {
     if (isFaculty && allFacultySubjects.length === 0) {
       return `<section class="panel">
         <div class="empty-state" style="padding:45px 20px; text-align:center; background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; margin-top:14px;">
-          <div style="font-size:36px; margin-bottom:10px;">📋</div>
+          <div style="font-size:36px; margin-bottom:10px;">${renderIcon("clipboard-list", 18)}</div>
           <h3 style="margin:0 0 6px 0; color:#1e293b; font-size:16px; font-weight:700;">No Assigned Subjects</h3>
           <p style="margin:0; color:#64748b; font-size:13px;">You have not been assigned any teaching subjects yet. Please contact the administrator to configure your subject assignments.</p>
         </div>
@@ -9620,8 +9621,8 @@ const pages = {
           </div>
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <div style="display:inline-flex; background:#f1f5f9; padding:2px; border-radius:8px; gap:2px;">
-              <button type="button" id="btnSwitchGridView" class="timetable-btn" style="height:28px; padding:0 12px; font-size:11.5px;">📊 Grid View</button>
-              <button type="button" id="btnSwitchFacultyView" class="timetable-btn timetable-btn-primary" style="height:28px; padding:0 12px; font-size:11.5px;">📋 Faculty Subject View</button>
+              <button type="button" id="btnSwitchGridView" class="timetable-btn" style="height:28px; padding:0 12px; font-size:11.5px;">${renderIcon("bar-chart-3", 18)} Grid View</button>
+              <button type="button" id="btnSwitchFacultyView" class="timetable-btn timetable-btn-primary" style="height:28px; padding:0 12px; font-size:11.5px;">${renderIcon("clipboard-list", 18)} Faculty Subject View</button>
             </div>
           </div>
         </div>
@@ -9629,7 +9630,7 @@ const pages = {
         <div style="margin-top:16px;">
           ${subjectKeys.length === 0 ? `
             <div class="empty-state" style="padding:45px 20px; text-align:center; background:#ffffff; border-radius:16px; border:1px solid #e2e8f0;">
-              <div style="font-size:36px; margin-bottom:10px;">📋</div>
+              <div style="font-size:36px; margin-bottom:10px;">${renderIcon("clipboard-list", 18)}</div>
               <h3 style="margin:0 0 6px 0; color:#1e293b; font-size:16px; font-weight:700;">No Scheduled Lectures Found</h3>
               <p style="margin:0; color:#64748b; font-size:13px;">No timetable slots have been scheduled for your assigned subjects yet across divisions.</p>
             </div>
@@ -9700,8 +9701,8 @@ const pages = {
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; white-space:nowrap;">
           ${canEditRole ? `
             <div style="display:inline-flex; background:#f1f5f9; padding:2px; border-radius:8px; gap:2px;">
-              <button type="button" id="btnSwitchGridView" class="timetable-btn timetable-btn-primary" style="height:28px; padding:0 12px; font-size:11.5px;">📊 Grid View</button>
-              <button type="button" id="btnSwitchFacultyView" class="timetable-btn" style="height:28px; padding:0 12px; font-size:11.5px;">📋 Faculty Subject View</button>
+              <button type="button" id="btnSwitchGridView" class="timetable-btn timetable-btn-primary" style="height:28px; padding:0 12px; font-size:11.5px;">${renderIcon("bar-chart-3", 18)} Grid View</button>
+              <button type="button" id="btnSwitchFacultyView" class="timetable-btn" style="height:28px; padding:0 12px; font-size:11.5px;">${renderIcon("clipboard-list", 18)} Faculty Subject View</button>
             </div>
 
             <div style="display:flex; align-items:center; gap:6px;">
@@ -9729,20 +9730,20 @@ const pages = {
           `}
 
           <button id="btnDownloadTimetable" type="button" class="btn-download-timetable" title="Download Timetable PDF">
-            <span>📥 Download Timetable (PDF)</span>
+            <span>${renderIcon("download", 18)} Download Timetable (PDF)</span>
           </button>
 
           ${canEditRole ? `
             ${!isTimetableEditMode ? `
               <button id="btnEditTimetableMode" type="button" class="primary-btn timetable-edit-btn" style="width:auto !important; min-width:60px; height:30px; padding:0 12px; font-size:12px; font-weight:700; white-space:nowrap; margin-top:0;">
-                <span>✏️ Edit</span>
+                <span>${renderIcon("pen-square", 18)} Edit</span>
               </button>
             ` : `
               <button id="btnCancelTimetableEdit" type="button" class="primary-btn timetable-edit-btn" style="width:auto !important; min-width:65px; height:30px; padding:0 12px; font-size:12px; font-weight:700; background:#64748b; white-space:nowrap; margin-top:0;">
                 <span>Cancel</span>
               </button>
               <button id="btnSaveTimetable" type="button" class="primary-btn timetable-edit-btn" style="width:auto !important; min-width:65px; height:30px; padding:0 12px; font-size:12px; font-weight:700; white-space:nowrap; margin-top:0;">
-                <span>💾 Save</span>
+                <span>${renderIcon("save", 18)} Save</span>
               </button>
             `}
           ` : ''}
@@ -9755,7 +9756,7 @@ const pages = {
           ${allFacultySubjects.map(s => {
             const sSem = s.semester || getSemesterForSubject(s.id);
             const isCurrent = (displaySemester === sSem);
-            return `<button type="button" data-action="switch-timetable-semester" data-semester="${escapeHtml(sSem)}" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#1459d9' : '#cbd5e1'}; background:${isCurrent ? '#1459d9' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${escapeHtml(s.icon || '📚')} ${escapeHtml(s.short || s.name)} (${escapeHtml(sSem)})</button>`;
+            return `<button type="button" data-action="switch-timetable-semester" data-semester="${escapeHtml(sSem)}" class="btn-sem-pill" style="padding:5px 12px; font-size:12px; font-weight:700; border-radius:6px; border:1px solid ${isCurrent ? '#1459d9' : '#cbd5e1'}; background:${isCurrent ? '#1459d9' : '#ffffff'}; color:${isCurrent ? '#ffffff' : '#334155'}; cursor:pointer; transition:all 0.2s;">${renderIcon(s && s.icon ? s.icon : "book-open", 16)} ${escapeHtml(s.short || s.name)} (${escapeHtml(sSem)})</button>`;
           }).join("")}
         </div>
       ` : ''}
@@ -9898,10 +9899,10 @@ const pages = {
 
       return `<section class="panel">
         <div class="panel-head">
-          <h3>📢 Publish Notice</h3>
+          <h3>${renderIcon("megaphone", 18)} Publish Notice</h3>
           <div style="display:flex; align-items:center; gap:8px;">
             ${audienceBadge}
-            <span class="notice-header-count">📢 ${countLabel}</span>
+            <span class="notice-header-count">${renderIcon("megaphone", 18)} ${countLabel}</span>
           </div>
         </div>
         <form id="noticeForm" class="entry-form">
@@ -9939,7 +9940,7 @@ const pages = {
 
         return `
           <article class="notice">
-            <span>📢</span>
+            <span>${renderIcon("megaphone", 18)}</span>
             <div style="flex:1;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
                 <small>${escapeHtml(n.date)}</small>
@@ -9951,12 +9952,12 @@ const pages = {
               ${n.fileData ? `
                 <div style="margin-top:10px;">
                   <a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Notice_Document')}" class="notice-doc-link">
-                    <span>📄</span> ${escapeHtml(n.fileName || 'Download Attachment')}
+                    <span>${renderIcon("file-text", 18)}</span> ${escapeHtml(n.fileName || 'Download Attachment')}
                   </a>
                 </div>
               ` : ''}
             </div>
-            ${showDelete ? `<button class="delete-notice-btn" type="button" data-delete-notice-index="${idx}" title="Delete Notice">🗑️</button>` : ''}
+            ${showDelete ? `<button class="delete-notice-btn" type="button" data-delete-notice-index="${idx}" title="Delete Notice">${renderIcon("trash-2", 18)}</button>` : ''}
           </article>`;
       }).join("") : `<div class="empty-state">No notices published yet.</div>`}</div>
       </section>`;
@@ -9964,8 +9965,8 @@ const pages = {
 
     return `<section class="panel">
       <div class="panel-head">
-        <h3>📢 Campus Notices</h3>
-        <span class="notice-header-count">📢 ${countLabel}</span>
+        <h3>${renderIcon("megaphone", 18)} Campus Notices</h3>
+        <span class="notice-header-count">${renderIcon("megaphone", 18)} ${countLabel}</span>
       </div>
       <div class="notice-grid">${notices.length ? notices.map(n => {
       const targetTag = (!n.target || n.target === "all")
@@ -9974,7 +9975,7 @@ const pages = {
 
       return `
         <article class="notice">
-          <span>📢</span>
+          <span>${renderIcon("megaphone", 18)}</span>
           <div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
               <small>${escapeHtml(n.date)}</small>
@@ -9985,7 +9986,7 @@ const pages = {
             ${n.fileData ? `
               <div style="margin-top:10px;">
                 <a href="${sanitizeDownloadUrl(n.fileData)}" download="${escapeHtml(n.fileName || 'Notice_Document')}" class="notice-doc-link">
-                  <span>📄</span> ${escapeHtml(n.fileName || 'Download Attachment')}
+                  <span>${renderIcon("file-text", 18)}</span> ${escapeHtml(n.fileName || 'Download Attachment')}
                 </a>
               </div>
             ` : ''}
@@ -10004,7 +10005,7 @@ const pages = {
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <button type="button" class="secondary-btn" data-refresh-admin-users="student" data-action="refresh-admin-users" data-role="student" style="padding:6px 12px; font-size:12px; font-weight:700; margin:0; cursor:pointer;" title="Refresh list from server">
-            <span>🔄 Refresh List</span>
+            <span>${renderIcon("rotate-cw", 18)} Refresh List</span>
           </button>
           <button type="button" class="primary-btn" data-action="open-signup" data-role="student" style="padding:6px 14px; font-size:12px; font-weight:700; margin:0; cursor:pointer;">
             <span>+ Register Student</span>
@@ -10030,7 +10031,7 @@ const pages = {
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <button type="button" class="secondary-btn" data-refresh-admin-users="faculty" data-action="refresh-admin-users" data-role="faculty" style="padding:6px 12px; font-size:12px; font-weight:700; margin:0; cursor:pointer;" title="Refresh list from server">
-            <span>🔄 Refresh List</span>
+            <span>${renderIcon("rotate-cw", 18)} Refresh List</span>
           </button>
           <button type="button" class="primary-btn" data-action="open-signup" data-role="faculty" style="padding:6px 14px; font-size:12px; font-weight:700; margin:0; cursor:pointer;">
             <span>+ Register Faculty</span>
@@ -10042,9 +10043,9 @@ const pages = {
       <div class="faculty-grid">${USERS.faculty.length ? USERS.faculty.map(f => {
       const subs = getFacultyEligibleSubjects(f);
       const divText = (!f.division || f.division === "Both Divisions" || f.division === "All Divisions") ? "Both Divs (A & B)" : f.division;
-      const divBadge = `<span class="badge" style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:6px;">📍 ${escapeHtml(divText)}</span>`;
+      const divBadge = `<span class="badge" style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:6px;">${renderIcon("map-pin", 18)} ${escapeHtml(divText)}</span>`;
       const subjectBadges = subs.length
-        ? subs.map(sub => `<span class="badge" style="font-size:11px; background:#f1f5f9; color:#334155; padding:3px 7px; border-radius:6px; margin:2px; display:inline-flex; align-items:center; gap:4px;"><span>${escapeHtml(sub.icon || '📚')}</span> <strong>${escapeHtml(sub.short || sub.name)}</strong> <small style="color:#64748b;">(${escapeHtml(sub.semester)})</small></span>`).join(" ")
+        ? subs.map(sub => `<span class="badge" style="font-size:11px; background:#f1f5f9; color:#334155; padding:3px 7px; border-radius:6px; margin:2px; display:inline-flex; align-items:center; gap:4px;"><span>${renderIcon(sub.icon || 'book-open', 15)}</span> <strong>${escapeHtml(sub.short || sub.name)}</strong> <small style="color:#64748b;">(${escapeHtml(sub.semester)})</small></span>`).join(" ")
         : `<span style="font-size:12px; color:#94a3b8;">No subjects assigned</span>`;
       return `<div class="faculty-card" data-user-row="faculty" data-user-name="${escapeHtml(f.name)}" data-user-username="${escapeHtml(f.username)}">
           <div class="big-avatar">${escapeHtml(f.name ? f.name.charAt(0) : 'F')}</div>
@@ -10057,7 +10058,7 @@ const pages = {
           <small>Username: ${escapeHtml(f.username)}</small>
           <span class="status good">Active</span>
           <div class="admin-actions admin-actions-stack">
-            <button class="secondary-btn full-width" type="button" data-action="open-admin-faculty-edit" data-username="${encodeURIComponent(f.username)}" style="margin-bottom:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px; cursor:pointer;">✏️ Manage Classes</button>
+            <button class="secondary-btn full-width" type="button" data-action="open-admin-faculty-edit" data-username="${encodeURIComponent(f.username)}" style="margin-bottom:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px; cursor:pointer;">${renderIcon("pen-square", 18)} Manage Classes</button>
             <button class="danger-btn full-width" type="button" data-remove-user-role="faculty" data-remove-user-username="${escapeHtml(f.username)}" data-remove-user-name="${escapeHtml(f.name)}">Remove</button>
           </div>
         </div>`;
@@ -10085,28 +10086,28 @@ function isLabSubject(subject) {
 }
 
 function getSubjectIcon(subject) {
-  if (subject && subject.icon) return subject.icon;
+  if (subject && subject.icon) return renderIcon(subject.icon, 18);
   const name = (subject.name || "").toLowerCase();
   const id = (subject.id || "").toLowerCase();
-  if (name.includes("lab") || id.includes("lab")) return "🧪";
-  if (name.includes("python") || id.includes("python")) return "🐍";
-  if (name.includes("java") || id.includes("java")) return "☕";
-  if (name.includes("c ") || name.includes("c prog") || id === "cprog") return "💻";
-  if (name.includes("network") || id === "cn") return "🌐";
-  if (name.includes("dbms") || name.includes("database")) return "🗄️";
-  if (name.includes("math") || name.includes("statistical") || id === "nsm") return "📐";
-  if (name.includes("kannada") || name.includes("hindi") || name.includes("english")) return "🗣️";
-  if (name.includes("intelligence") || name.includes("learning") || id === "ai" || id === "ml") return "🤖";
-  if (name.includes("cloud") || id === "cloud") return "☁️";
-  if (name.includes("cyber") || name.includes("security")) return "🛡️";
-  if (name.includes("project")) return "🚀";
-  if (name.includes("web")) return "🌍";
-  if (name.includes("structure") || id === "ds") return "🌲";
-  if (name.includes("operating") || id === "os") return "🖥️";
-  if (name.includes("environment") || id === "evs") return "🌱";
-  if (name.includes("constitution") || id === "ic") return "📜";
-  if (name.includes("accountancy")) return "📊";
-  return "📚";
+  if (name.includes("lab") || id.includes("lab")) return renderIcon("flask-conical", 18);
+  if (name.includes("python") || id.includes("python")) return renderIcon("code-2", 18);
+  if (name.includes("java") || id.includes("java")) return renderIcon("coffee", 18);
+  if (name.includes("c ") || name.includes("c prog") || id === "cprog") return renderIcon("laptop", 18);
+  if (name.includes("network") || id === "cn") return renderIcon("globe", 18);
+  if (name.includes("dbms") || name.includes("database")) return renderIcon("database", 18);
+  if (name.includes("math") || name.includes("statistical") || id === "nsm") return renderIcon("ruler", 18);
+  if (name.includes("kannada") || name.includes("hindi") || name.includes("english")) return renderIcon("message-square", 18);
+  if (name.includes("intelligence") || name.includes("learning") || id === "ai" || id === "ml") return renderIcon("bot", 18);
+  if (name.includes("cloud") || id === "cloud") return renderIcon("cloud", 18);
+  if (name.includes("cyber") || name.includes("security")) return renderIcon("shield", 18);
+  if (name.includes("project")) return renderIcon("rocket", 18);
+  if (name.includes("web")) return renderIcon("globe", 18);
+  if (name.includes("structure") || id === "ds") return renderIcon("network", 18);
+  if (name.includes("operating") || id === "os") return renderIcon("monitor", 18);
+  if (name.includes("environment") || id === "evs") return renderIcon("sprout", 18);
+  if (name.includes("constitution") || id === "ic") return renderIcon("scroll", 18);
+  if (name.includes("accountancy")) return renderIcon("bar-chart-3", 18);
+  return renderIcon("book-open", 18);
 }
 
 function facultyDashboard() {
@@ -10158,26 +10159,26 @@ function facultyDashboard() {
   return `<div class="welcome">
     <div>
       <p class="eyebrow">Faculty Portal</p>
-      <h1>Welcome back, ${escapeHtml(facultyName)} 👋</h1>
+      <h1>Welcome back, ${escapeHtml(facultyName)} ${renderIcon("hand-metal", 20)}</h1>
     </div>
-    <div class="welcome-icon">🧑‍🏫</div>
+    <div class="welcome-icon">${renderIcon("graduation-cap", 25)}</div>
   </div>
 
   <div class="stat-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:17px;">
     <div class="stat" style="cursor: pointer;" data-action="scroll-faculty-classes">
-      <span>📚</span><b>${allFacultySubjects.length}</b><small>Assigned Classes</small>
+      <span>${renderIcon("book-open", 18)}</span><b>${allFacultySubjects.length}</b><small>Assigned Classes</small>
     </div>
     <div class="stat" style="cursor: pointer;" data-navigate="attendance">
-      <span>👥</span><b>${totalEnrolledAcrossClasses}</b><small>Total Enrolled Students</small>
+      <span>${renderIcon("users", 18)}</span><b>${totalEnrolledAcrossClasses}</b><small>Total Enrolled Students</small>
     </div>
     <div class="stat" style="cursor: pointer;" data-navigate="assignments">
-      <span>📝</span><b>${assignmentCount}</b><small>Total Assignments</small>
+      <span>${renderIcon("file-edit", 18)}</span><b>${assignmentCount}</b><small>Total Assignments</small>
     </div>
     <div class="stat" style="cursor: pointer;" data-navigate="notes">
-      <span>📖</span><b>${notesCount}</b><small>Subject Notes</small>
+      <span>${renderIcon("book-open", 18)}</span><b>${notesCount}</b><small>Subject Notes</small>
     </div>
     <div class="stat" style="cursor: pointer;" data-navigate="notices">
-      <span>📢</span><b>${noticeCount}</b><small>Notices</small>
+      <span>${renderIcon("megaphone", 18)}</span><b>${noticeCount}</b><small>Notices</small>
     </div>
   </div>
 
@@ -10185,7 +10186,7 @@ function facultyDashboard() {
   <section class="panel faculty-classes-panel" style="margin-top: 18px;">
     <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <div>
-        <h3 style="display:flex; align-items:center; gap:8px;"><span>📚</span> All Managed Classes & Subjects (${allFacultySubjects.length})</h3>
+        <h3 style="display:flex; align-items:center; gap:8px;"><span>${renderIcon("book-open", 18)}</span> All Managed Classes & Subjects (${allFacultySubjects.length})</h3>
         <small style="color:#64748b; font-weight:600;">You manage classes across different course years & semesters from this single portal</small>
       </div>
       <button type="button" data-action="open-faculty-edit-profile" class="secondary-btn" style="padding:6px 14px; font-size:12.5px; font-weight:700; border-radius:8px; margin:0; cursor:pointer;">
@@ -10236,8 +10237,8 @@ function facultyDashboard() {
             <div style="margin-top:10px; display:flex; gap:6px; flex-direction:column;">
               ${isActive ? `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                  <button type="button" class="btn-sm" data-navigate="attendance" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer;">📊 Attendance</button>
-                  <button type="button" class="btn-sm" data-navigate="marks" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;">📈 Marks</button>
+                  <button type="button" class="btn-sm" data-navigate="attendance" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer;">${renderIcon("bar-chart-3", 18)} Attendance</button>
+                  <button type="button" class="btn-sm" data-navigate="marks" style="padding:7px 8px; font-weight:700; font-size:11.5px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;">${renderIcon("trending-up", 18)} Marks</button>
                 </div>
               ` : `
                 <button type="button" data-action="switch-faculty-active-subject" data-subject-id="${escapeHtml(s.id)}" class="primary-btn" style="width:100% !important; margin:0; padding:8px 12px; font-size:12px; font-weight:700; border-radius:8px; cursor:pointer;">
@@ -10271,14 +10272,14 @@ function facultyDashboard() {
     <section class="panel faculty-course-panel" style="margin-top: 18px;">
       <div class="panel-head">
         <div>
-          <h3>📚 Active Class: ${escapeHtml(subjectObj.name)}</h3>
+          <h3>${renderIcon("book-open", 18)} Active Class: ${escapeHtml(subjectObj.name)}</h3>
           <span class="badge" style="background:#dcfce7; color:#15803d;">${escapeHtml(sem)} • ${escapeHtml(courseYear)}</span>
         </div>
       </div>
 
       <div class="subject-grid">
         <div class="subject-card">
-          <div class="subject-icon">🎓</div>
+          <div class="subject-icon">${renderIcon("graduation-cap", 18)}</div>
           <div>
             <b>Degree Program</b>
             <small>${escapeHtml(courseName)}</small>
@@ -10287,7 +10288,7 @@ function facultyDashboard() {
         </div>
 
         <div class="subject-card">
-          <div class="subject-icon">💻</div>
+          <div class="subject-icon">${renderIcon("laptop", 18)}</div>
           <div>
             <b>Active Subject</b>
             <small>${escapeHtml(subjectObj.name)}</small>
@@ -10296,7 +10297,7 @@ function facultyDashboard() {
         </div>
 
         <div class="subject-card">
-          <div class="subject-icon">📅</div>
+          <div class="subject-icon">${renderIcon("calendar", 18)}</div>
           <div>
             <b>Semester & Year</b>
             <small>${escapeHtml(sem)} (${escapeHtml(courseYear)})</small>
@@ -10305,7 +10306,7 @@ function facultyDashboard() {
         </div>
 
         <div class="subject-card">
-          <div class="subject-icon">🏫</div>
+          <div class="subject-icon">${renderIcon("school", 18)}</div>
           <div>
             <b>Assigned Division(s)</b>
             <small>${escapeHtml(activeDivLabelFull)}</small>
@@ -10314,7 +10315,7 @@ function facultyDashboard() {
         </div>
 
         <div class="subject-card">
-          <div class="subject-icon">👥</div>
+          <div class="subject-icon">${renderIcon("users", 18)}</div>
           <div>
             <b>Enrolled Students</b>
             <small>${enrolledCount} Registered in this Class</small>
@@ -10324,11 +10325,11 @@ function facultyDashboard() {
       </div>
 
       <div class="course-actions-row" style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button type="button" class="action-btn-secondary" data-navigate="attendance" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📊 Manage Attendance</button>
-        <button type="button" class="action-btn-secondary" data-navigate="marks" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📈 Manage Marks</button>
-        <button type="button" class="action-btn-secondary" data-navigate="assignments" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📝 View Assignments</button>
-        <button type="button" class="action-btn-secondary" data-navigate="notes" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">📚 Upload Notes</button>
-        <button type="button" class="action-btn-secondary" data-navigate="timetable" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">🗓️ Timetable</button>
+        <button type="button" class="action-btn-secondary" data-navigate="attendance" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("bar-chart-3", 18)} Manage Attendance</button>
+        <button type="button" class="action-btn-secondary" data-navigate="marks" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("trending-up", 18)} Manage Marks</button>
+        <button type="button" class="action-btn-secondary" data-navigate="assignments" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("file-edit", 18)} View Assignments</button>
+        <button type="button" class="action-btn-secondary" data-navigate="notes" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("book-open", 18)} Upload Notes</button>
+        <button type="button" class="action-btn-secondary" data-navigate="timetable" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("calendar-days", 18)} Timetable</button>
       </div>
     </section>
   `}
@@ -10336,17 +10337,17 @@ function facultyDashboard() {
   <section class="panel faculty-profile-panel" style="margin-top: 18px;">
     <div class="panel-head">
       <div>
-        <h3>👤 Faculty Information</h3>
+        <h3>${renderIcon("user", 17)} Faculty Information</h3>
         <span class="badge">Faculty Account</span>
       </div>
       <button type="button" id="openFacultyEditProfileBtn" data-action="open-faculty-edit-profile" class="primary-btn profile-edit-btn" style="width: auto !important; margin: 0; padding: 6px 14px; cursor:pointer;">
-        <span>✏️ Edit Details</span>
+        <span>${renderIcon("pen-square", 18)} Edit Details</span>
       </button>
     </div>
 
     <div class="subject-grid">
       <div class="subject-card">
-        <div class="subject-icon">🪪</div>
+        <div class="subject-icon">${renderIcon("badge-check", 17)}</div>
         <div>
           <b>Full Name</b>
           <small>${escapeHtml(facultyName)}</small>
@@ -10355,7 +10356,7 @@ function facultyDashboard() {
       </div>
 
       <div class="subject-card">
-        <div class="subject-icon">👤</div>
+        <div class="subject-icon">${renderIcon("user", 17)}</div>
         <div>
           <b>Username</b>
           <small>${escapeHtml(currentUser.username)}</small>
@@ -10364,7 +10365,7 @@ function facultyDashboard() {
       </div>
 
       <div class="subject-card">
-        <div class="subject-icon">✉️</div>
+        <div class="subject-icon">${renderIcon("mail", 17)}</div>
         <div>
           <b>Email Address</b>
           <small style="word-break:break-all;">${escapeHtml(email)}</small>
@@ -10373,7 +10374,7 @@ function facultyDashboard() {
       </div>
 
       <div class="subject-card">
-        <div class="subject-icon">🏛️</div>
+        <div class="subject-icon">${renderIcon("landmark", 18)}</div>
         <div>
           <b>Department</b>
           <small>${escapeHtml(currentUser.department || "Department of Computer Science & Applications")}</small>
@@ -10397,49 +10398,49 @@ function adminDashboard() {
   return `<div class="welcome">
     <div>
       <p class="eyebrow">Administrator</p>
-      <h1>Portal Control Center ⚙️</h1>
+      <h1>Portal Control Center ${renderIcon("settings", 18)}</h1>
       <p>Manage students, faculty, timetables, and academic semester subjects.</p>
     </div>
-    <div class="welcome-icon">🛡️</div>
+    <div class="welcome-icon">${renderIcon("shield", 25)}</div>
   </div>
 
   <div class="stat-grid">
-    <div class="stat" style="cursor: pointer;" data-navigate="profile"><span>👤</span><b>${escapeHtml(adminName)}</b><small>Admin (@${escapeHtml(adminUsername)})</small></div>
-    <div class="stat" style="cursor: pointer;" data-navigate="divisions"><span>🏫</span><b>${totalDivisions}</b><small>Class Divisions</small></div>
-    <div class="stat" style="cursor: pointer;" data-navigate="subjects"><span>📚</span><b>${totalSubjects}</b><small>Semester Subjects</small></div>
-    <div class="stat" style="cursor: pointer;" data-navigate="students"><span>👥</span><b>${USERS.student.length}</b><small>Students</small></div>
-    <div class="stat" style="cursor: pointer;" data-navigate="faculty"><span>🧑‍🏫</span><b>${USERS.faculty.length}</b><small>Faculty</small></div>
-    <div class="stat" style="cursor: pointer;" data-navigate="notices"><span>📢</span><b>${noticeCount}</b><small>Notices</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="profile"><span>${renderIcon("user", 17)}</span><b>${escapeHtml(adminName)}</b><small>Admin (@${escapeHtml(adminUsername)})</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="divisions"><span>${renderIcon("school", 18)}</span><b>${totalDivisions}</b><small>Class Divisions</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="subjects"><span>${renderIcon("book-open", 18)}</span><b>${totalSubjects}</b><small>Semester Subjects</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="students"><span>${renderIcon("users", 18)}</span><b>${USERS.student.length}</b><small>Students</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="faculty"><span>${renderIcon("graduation-cap", 18)}</span><b>${USERS.faculty.length}</b><small>Faculty</small></div>
+    <div class="stat" style="cursor: pointer;" data-navigate="notices"><span>${renderIcon("megaphone", 18)}</span><b>${noticeCount}</b><small>Notices</small></div>
   </div>
 
   <section class="panel" style="margin-top: 18px;">
     <div class="panel-head">
       <div>
-        <h3>⚡ Quick Operations</h3>
+        <h3>${renderIcon("zap", 18)} Quick Operations</h3>
         <span class="badge">Direct Shortcuts</span>
       </div>
     </div>
     <div class="admin-quick-actions-bar">
       <button type="button" class="admin-quick-btn" data-navigate="profile">
-        <span>👤</span> Admin Profile & Security
+        <span>${renderIcon("user", 17)}</span> Admin Profile & Security
       </button>
       <button type="button" class="admin-quick-btn" data-navigate="divisions">
-        <span>🏫</span> Manage Class Divisions
+        <span>${renderIcon("school", 18)}</span> Manage Class Divisions
       </button>
       <button type="button" class="admin-quick-btn" data-navigate="subjects">
-        <span>📚</span> Manage Semester-wise Subjects
+        <span>${renderIcon("book-open", 18)}</span> Manage Semester-wise Subjects
       </button>
       <button type="button" class="admin-quick-btn" data-navigate="students">
-        <span>👥</span> Manage Students
+        <span>${renderIcon("users", 18)}</span> Manage Students
       </button>
       <button type="button" class="admin-quick-btn" data-navigate="faculty">
-        <span>🧑‍🏫</span> Manage Faculty
+        <span>${renderIcon("presentation", 18)}</span> Manage Faculty
       </button>
       <button type="button" class="admin-quick-btn" data-navigate="timetable">
-        <span>🗓️</span> Manage Timetable
+        <span>${renderIcon("calendar-days", 18)}</span> Manage Timetable
       </button>
       <button type="button" class="admin-quick-btn" data-navigate="notices">
-        <span>📢</span> Publish Notices
+        <span>${renderIcon("megaphone", 18)}</span> Publish Notices
       </button>
     </div>
   </section>
@@ -10447,7 +10448,7 @@ function adminDashboard() {
   <section class="panel" style="margin-top: 18px;">
     <div class="panel-head">
       <div>
-        <h3>📚 Semester-wise Curriculum Overview</h3>
+        <h3>${renderIcon("book-open", 18)} Semester-wise Curriculum Overview</h3>
         <span class="badge">6 Semesters • ${totalSubjects} Subjects</span>
       </div>
       <button type="button" class="primary-btn" data-navigate="subjects" style="width: auto !important; margin: 0; padding: 6px 14px; font-size: 12.5px;">
@@ -10463,7 +10464,7 @@ function adminDashboard() {
     return `
           <div class="sem-overview-card">
             <div class="sem-head">
-              <h5 class="sem-title">📚 ${sem}</h5>
+              <h5 class="sem-title">${renderIcon("book-open", 18)} ${sem}</h5>
               <span class="sem-count-pill">${semSubs.length} Subs</span>
             </div>
             <div class="sem-breakdown">
@@ -10521,14 +10522,14 @@ function adminSubjects() {
       <div class="semester-subject-block" data-semester-block="${escapeHtml(sem)}" style="${isVisible ? '' : 'display: none;'}">
         <div class="semester-block-header">
           <div class="header-info">
-            <div class="sem-icon-bubble">📚</div>
+            <div class="sem-icon-bubble">${renderIcon("book-open", 20)}</div>
             <div>
               <h4>${escapeHtml(sem)} <span class="sem-year-badge">${escapeHtml(courseYear)}</span></h4>
               <p class="sem-meta-text">${semSubjects.length} Total Subjects • ${semTheory} Theory • ${semLab} Practical Labs</p>
             </div>
           </div>
           <button type="button" class="primary-btn btn-add-subject-sem" data-action="open-add-subject" data-semester="${escapeHtml(sem)}">
-            <span>➕ Add Subject to ${escapeHtml(sem)}</span>
+            <span>${renderIcon("plus", 18)} Add Subject to ${escapeHtml(sem)}</span>
           </button>
         </div>
 
@@ -10555,23 +10556,23 @@ function adminSubjects() {
                     <span class="subject-code-tag">Code: <code>${escapeHtml(s.id)}</code></span>
                     <span class="subject-sem-tag">${escapeHtml(s.semester)}</span>
                   </div>
-                  ${facultyNames ? `<div class="faculty-assigned-text">🧑‍🏫 <span>${escapeHtml(facultyNames)}</span></div>` : `<div class="faculty-assigned-text unassigned">⚪ No faculty assigned</div>`}
+                  ${facultyNames ? `<div class="faculty-assigned-text">${renderIcon("presentation", 18)} <span>${escapeHtml(facultyNames)}</span></div>` : `<div class="faculty-assigned-text unassigned">${renderIcon("circle", 12)} No faculty assigned</div>`}
                 </div>
                 <div class="card-actions">
                   <button type="button" class="btn-action-edit" data-action="open-edit-subject" data-subject-id="${escapeHtml(s.id)}" title="Edit Subject Details">
-                    <span>✏️ Edit</span>
+                    <span>${renderIcon("pen-square", 18)} Edit</span>
                   </button>
                   <button type="button" class="btn-action-delete" data-action="delete-subject" data-subject-id="${escapeHtml(s.id)}" title="Delete Subject">
-                    <span>🗑️ Delete</span>
+                    <span>${renderIcon("trash-2", 18)} Delete</span>
                   </button>
                 </div>
               </div>
             `;
     }).join("") : `
             <div class="empty-state-box">
-              <span class="empty-icon">📂</span>
+              <span class="empty-icon">${renderIcon("folder-open", 38)}</span>
               <p>No subjects configured for ${escapeHtml(sem)} yet.</p>
-              <button type="button" class="secondary-btn" data-action="open-add-subject" data-semester="${escapeHtml(sem)}">➕ Add Subject to ${escapeHtml(sem)}</button>
+              <button type="button" class="secondary-btn" data-action="open-add-subject" data-semester="${escapeHtml(sem)}">${renderIcon("plus", 18)} Add Subject to ${escapeHtml(sem)}</button>
             </div>
           `}
         </div>
@@ -10590,16 +10591,16 @@ function adminSubjects() {
       </div>
 
       <div class="stat-grid" style="margin-bottom: 20px;">
-        <div class="stat"><span>📚</span><b>${totalSubjects}</b><small>Total Subjects</small></div>
+        <div class="stat"><span>${renderIcon("book-open", 18)}</span><b>${totalSubjects}</b><small>Total Subjects</small></div>
         <div class="stat"><b>${theoryCount}</b><small>Theory Courses</small></div>
         <div class="stat"><b>${labCount}</b><small>Practical Labs</small></div>
-        <div class="stat"><span>🎓</span><b>6 Semesters</b><small>BCA Curriculum</small></div>
+        <div class="stat"><span>${renderIcon("layers", 18)}</span><b>6 Semesters</b><small>BCA Curriculum</small></div>
       </div>
 
       <section class="panel subject-management-panel">
         <div class="panel-head-controls">
           <div class="search-box-wrap">
-            <span class="search-icon">🔍</span>
+            <span class="search-icon">${renderIcon("search", 16)}</span>
             <input type="search" id="subjectSearchInput" placeholder="Search subjects by full name, short name, or subject code..." aria-label="Search Subjects">
           </div>
           ${tabsMarkup}
@@ -11005,7 +11006,7 @@ document.addEventListener("click", e => {
         tbody.innerHTML = `
           <tr>
             <td colspan="9" style="text-align:center; padding: 24px; color: #64748b; font-weight: 600;">
-              🗑️ All assignment status records cleared.
+              ${renderIcon("trash-2", 18)} All assignment status records cleared.
             </td>
           </tr>`;
       }
@@ -11266,7 +11267,7 @@ function adminDivisions() {
         <div class="division-manage-card" data-division-card="${escapeHtml(divName)}">
           <div>
             <div class="card-top">
-              <div class="division-icon-box">🏫</div>
+              <div class="division-icon-box">${renderIcon("school", 20)}</div>
               <span class="division-badge-tag">${count} Students (${pct}%)</span>
             </div>
             <h3 class="division-title">${escapeHtml(divName)}</h3>
@@ -11286,11 +11287,11 @@ function adminDivisions() {
 
           <div class="card-actions" style="display:flex; align-items:center; gap:8px;">
             <button type="button" class="secondary-btn" data-action="rename-division" data-div-name="${escapeHtml(divName)}" data-year="${escapeHtml(yr)}" style="margin:0; padding:6px 12px; font-size:12px; font-weight:700;">
-              <span>✏️ Rename</span>
+              <span>${renderIcon("pen-square", 18)} Rename</span>
             </button>
             ${isRemovable ? `
               <button type="button" class="danger-btn" data-action="delete-division" data-div-name="${escapeHtml(divName)}" data-year="${escapeHtml(yr)}" style="margin:0; padding:6px 14px; font-size:12px; font-weight:700;">
-                <span>🗑️ Remove</span>
+                <span>${renderIcon("trash-2", 18)} Remove</span>
               </button>
             ` : `
               <span style="font-size:11.5px; color:#94a3b8; font-style:italic;">Primary Division (${escapeHtml(yr)})</span>
@@ -11304,7 +11305,7 @@ function adminDivisions() {
       <div class="semester-subject-block" data-division-year-block="${escapeHtml(yr)}" style="${isVisible ? '' : 'display: none;'} margin-bottom: 24px;">
         <div class="semester-block-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 16px;">
           <div class="header-info" style="display: flex; align-items: center; gap: 12px;">
-            <div class="sem-icon-bubble">🏫</div>
+            <div class="sem-icon-bubble">${renderIcon("school", 20)}</div>
             <div>
               <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
                 <span>${escapeHtml(yr)} Divisions</span>
@@ -11332,28 +11333,28 @@ function adminDivisions() {
       <div>
         <p class="eyebrow">Academic Structure Control</p>
         <h1 style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <span>Class Divisions Management 🏫</span>
+          <span>Class Divisions Management ${renderIcon("school", 18)}</span>
           <span style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">
             <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,0.2);"></span>
             <span>Automatic Sync: ALWAYS ON</span>
           </span>
         </h1>
       </div>
-      <div class="welcome-icon">🏫</div>
+      <div class="welcome-icon">${renderIcon("school", 25)}</div>
     </div>
 
     <div class="stat-grid">
-      <div class="stat"><span>🏫</span><b>${totalUniqueDivisions}</b><small>Total Unique Divisions</small></div>
-      <div class="stat"><span>👥</span><b>${totalStudents}</b><small>Total Enrolled Students</small></div>
-      <div class="stat"><span>🧑‍🏫</span><b>${faculty.length}</b><small>Faculty Members</small></div>
-      <div class="stat" style="background:#f0fdf4; border-color:#bbf7d0;"><span>⚡</span><b style="color:#15803d;">Always ON</b><small style="color:#166534;">Auto-Sync Active (All)</small></div>
+      <div class="stat"><span>${renderIcon("school", 18)}</span><b>${totalUniqueDivisions}</b><small>Total Unique Divisions</small></div>
+      <div class="stat"><span>${renderIcon("users", 18)}</span><b>${totalStudents}</b><small>Total Enrolled Students</small></div>
+      <div class="stat"><span>${renderIcon("presentation", 18)}</span><b>${faculty.length}</b><small>Faculty Members</small></div>
+      <div class="stat" style="background:#f0fdf4; border-color:#bbf7d0;"><span>${renderIcon("zap", 18)}</span><b style="color:#15803d;">Always ON</b><small style="color:#166534;">Auto-Sync Active (All)</small></div>
     </div>
 
     <section class="panel" style="margin-top: 18px;">
       <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
         <div>
           <h3>Course Year-wise Class Divisions</h3>
-          <span class="badge" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-weight:700;">⚡ Multi-System Auto-Sync Active</span>
+          <span class="badge" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-weight:700;">${renderIcon("zap", 18)} Multi-System Auto-Sync Active</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <button type="button" class="primary-btn" data-action="open-add-division" data-year="All Years" style="margin: 0; padding: 8px 16px; font-size: 13px; font-weight: 700; background: #0A2540;">
@@ -11948,7 +11949,7 @@ function updateFacultySubjectSwitcher() {
 
   container.innerHTML = `
     <div class="topbar-class-switcher" style="display: flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-left: 8px;">
-      <span style="font-size: 14px;">👨‍🏫</span>
+      <span style="font-size: 14px;">${renderIcon("graduation-cap", 18)}</span>
       <div style="display:flex; flex-direction:column; line-height:1.1;">
         <small style="color: #64748b; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px;">Active Class</small>
         <select data-onchange="switch-faculty-active-subject" aria-label="Select Active Subject" style="padding: 2px 6px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 700; color: #1e293b; background: #f8fafc; cursor: pointer; outline: none; height: 26px; margin-top:2px;">
@@ -12610,7 +12611,7 @@ executeUniversalAutoSync();
     togglePageSignupPassword.addEventListener("click", () => {
       const isPass = pageSignupPassword.type === "password";
       pageSignupPassword.type = isPass ? "text" : "password";
-      togglePageSignupPassword.innerHTML = isPass ? eyeCloseSVG : eyeOpenSVG;
+      togglePageSignupPassword.innerHTML = isPass ? eyeClosedSVG : eyeOpenSVG;
       togglePageSignupPassword.setAttribute("aria-label", isPass ? "Hide password" : "Show password");
       togglePageSignupPassword.setAttribute("title", isPass ? "Hide password" : "Show password");
     });
@@ -13128,7 +13129,7 @@ function renderSyllabusPageHtml() {
             ? "Manage BCA syllabus PDFs for all six semesters."
             : "Access official BCA curriculum guidelines and download semester-wise syllabus PDFs."}</p>
         </div>
-        <div class="welcome-icon">📖</div>
+        <div class="welcome-icon">${renderIcon("book-open", 25)}</div>
       </div>
 
       <div id="syllabusContentContainer" class="syllabus-content-container">
@@ -13170,7 +13171,7 @@ async function loadSyllabusData() {
     if (container) {
       container.innerHTML = `
         <div class="syllabus-error-card">
-          <div style="font-size: 32px; margin-bottom: 10px;">⚠️</div>
+          <div style="font-size: 32px; margin-bottom: 10px;">${renderIcon("alert-triangle", 18)}</div>
           <h3 style="color: #0f172a; margin: 0 0 6px 0;">Unable to Load Syllabus</h3>
           <p style="color: #64748b; margin: 0 0 16px 0; font-size: 14px;">${escapeHtml(error.message || "Please check your network connection.")}</p>
           <button type="button" class="primary-btn" data-action="retry-syllabus">Retry</button>
@@ -13220,7 +13221,7 @@ function renderSyllabusCards(syllabi, maxMb) {
               </div>
               ${isUp ? `
                 <div class="admin-year-file-summary text-truncate" title="${escapeHtml(doc.originalFilename || '')}">
-                  📄 ${escapeHtml(doc.originalFilename || 'Syllabus.pdf')} (${escapeHtml(doc.formattedSize || formatSyllabusFileSize(doc.fileSize))})
+                  ${renderIcon('file-text', 16)} ${escapeHtml(doc.originalFilename || 'Syllabus.pdf')} (${escapeHtml(doc.formattedSize || formatSyllabusFileSize(doc.fileSize))})
                 </div>
               ` : `
                 <div class="admin-year-file-summary text-muted">
@@ -13272,7 +13273,7 @@ function renderSyllabusCards(syllabi, maxMb) {
             </div>
             ${isUp ? `
               <div class="admin-year-file-summary text-truncate" title="${escapeHtml(doc.originalFilename || '')}">
-                📄 ${escapeHtml(doc.originalFilename || 'Syllabus.pdf')} (${escapeHtml(doc.formattedSize || formatSyllabusFileSize(doc.fileSize))})
+                ${renderIcon('file-text', 16)} ${escapeHtml(doc.originalFilename || 'Syllabus.pdf')} (${escapeHtml(doc.formattedSize || formatSyllabusFileSize(doc.fileSize))})
               </div>
             ` : `
               <div class="admin-year-file-summary text-muted">
@@ -13283,7 +13284,7 @@ function renderSyllabusCards(syllabi, maxMb) {
         </div>
 
         <button type="button" class="syllabus-download-btn full-width" ${!isUp ? "disabled" : ""} data-action="download-syllabus-pdf" data-year-level="${yearGroup.yearLevel}" data-filename="${escapeHtml(doc?.originalFilename || '')}" aria-label="Download Syllabus for ${escapeHtml(yearGroup.yearTitle)}">
-          ${isUp ? "📥 DOWNLOAD SYLLABUS" : "⏳ PENDING UPLOAD"}
+          ${isUp ? `${renderIcon("download", 18)} DOWNLOAD SYLLABUS` : `${renderIcon("hourglass", 18)} PENDING UPLOAD`}
         </button>
       </article>
     `;
@@ -13374,16 +13375,16 @@ function renderAdminModalContent() {
 
         <div class="admin-modal-action-bar">
           <button type="button" class="syllabus-btn syllabus-btn-view" data-action="preview-syllabus-pdf" data-year-level="${currentAdminModalYearLevel}" title="View PDF in new tab">
-            👁️ View
+            ${renderIcon("eye", 18)} View
           </button>
           <button type="button" class="syllabus-btn syllabus-btn-download" data-action="download-current-syllabus-pdf" data-filename="${escapeHtml(currentDoc.originalFilename || '')}" title="Download PDF file">
-            📥 Download
+            ${renderIcon("download", 18)} Download
           </button>
           <button type="button" class="syllabus-btn syllabus-btn-replace" data-action="set-admin-modal-replace-mode" data-replace="true" title="Replace with a new PDF file">
-            🔄 Replace
+            ${renderIcon("rotate-cw", 18)} Replace
           </button>
           <button type="button" class="syllabus-btn syllabus-btn-delete" data-action="confirm-delete-syllabus" data-filename="${escapeHtml(currentDoc.originalFilename || '')}" title="Delete this syllabus PDF">
-            🗑️ Delete
+            ${renderIcon("trash-2", 18)} Delete
           </button>
         </div>
       </div>
@@ -13406,14 +13407,14 @@ function renderAdminModalContent() {
           <div id="syllabusDropzone" class="syllabus-dropzone" tabindex="0" role="button" aria-label="Click or drag PDF file here to upload">
             <input type="file" id="syllabusFileInput" accept=".pdf,application/pdf" class="syllabus-file-input" />
             <div class="dropzone-content">
-              <span class="dropzone-icon">📄</span>
+              <span class="dropzone-icon">${renderIcon("file-text", 22)}</span>
               <p class="dropzone-prompt"><strong>Click to browse</strong> or drag & drop PDF here</p>
               <span class="dropzone-hint">Strictly genuine PDF files only (.pdf) • Max size: <span id="syllabusMaxSizeDisplay">${window.__syllabusMaxFileSizeMb || 100}</span> MB</span>
             </div>
           </div>
 
           <div id="syllabusSelectedFileInfo" class="syllabus-selected-file hidden">
-            <span class="file-icon">📑</span>
+            <span class="file-icon">${renderIcon("files", 21)}</span>
             <div class="file-details">
               <strong id="syllabusSelectedFileName">document.pdf</strong>
               <span id="syllabusSelectedFileSize">0 MB</span>
@@ -13435,12 +13436,12 @@ function renderAdminModalContent() {
           ${isSyllabusReplaceMode ? `
             <button type="button" class="secondary-btn" data-action="set-admin-modal-replace-mode" data-replace="false">Back to Details</button>
             <button type="submit" id="syllabusUploadSubmitBtn" class="primary-btn">
-              <span>🔄</span> <span id="syllabusUploadSubmitText">Replace Syllabus</span>
+              <span>${renderIcon("rotate-cw", 18)}</span> <span id="syllabusUploadSubmitText">Replace Syllabus</span>
             </button>
           ` : `
             <button type="button" class="secondary-btn" data-action="close-syllabus-modal">Cancel</button>
             <button type="submit" id="syllabusUploadSubmitBtn" class="primary-btn">
-              <span>📤</span> <span id="syllabusUploadSubmitText">Upload Syllabus</span>
+              <span>${renderIcon("upload", 18)}</span> <span id="syllabusUploadSubmitText">Upload Syllabus</span>
             </button>
           `}
         </div>
@@ -13526,19 +13527,19 @@ function ensureSyllabusModalsInDom() {
           </p>
           <div class="syllabus-file-meta-box" style="margin-bottom: 14px;">
             <div class="syllabus-file-row">
-              <span class="syllabus-file-icon">📄</span>
+              <span class="syllabus-file-icon">${renderIcon("file-text", 21)}</span>
               <strong id="deleteModalFileName" class="syllabus-file-name" style="font-size: 13px;">file.pdf</strong>
             </div>
           </div>
           <p style="color: #dc2626; font-size: 13px; font-weight: 600; margin: 0;">
-            ⚠️ This will remove the PDF from server storage and make it unavailable to students and faculty. This action cannot be undone.
+            ${renderIcon("alert-triangle", 18)} This will remove the PDF from server storage and make it unavailable to students and faculty. This action cannot be undone.
           </p>
         </div>
         <div id="syllabusDeleteAlert" class="message hidden" role="alert"></div>
         <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
           <button type="button" class="secondary-btn" data-action="close-delete-syllabus-modal">Cancel</button>
           <button type="button" id="confirmDeleteSyllabusBtn" class="danger-btn">
-            <span>🗑️</span> Delete Syllabus
+            <span>${renderIcon("trash-2", 18)}</span> Delete Syllabus
           </button>
         </div>
       </div>

@@ -395,7 +395,7 @@ async function main() {
   assert(adminHtml.includes("adminAuthGate"), "admin-courses-syllabus.html contains admin authentication gate");
 
   const scriptJs = fs.existsSync(path.join(__dirname, "../public/script.js")) ? fs.readFileSync(path.join(__dirname, "../public/script.js"), "utf8") : fs.readFileSync(path.join(__dirname, "../script.js"), "utf8");
-  assert(scriptJs.includes('["syllabus", "📖", "Courses & Syllabus"]'), "script.js buildNav() contains syllabus navigation item");
+  assert(scriptJs.includes('["syllabus", "book-open", "Courses & Syllabus"]') || scriptJs.includes('["syllabus", "📖", "Courses & Syllabus"]'), "script.js buildNav() contains syllabus navigation item");
   assert(scriptJs.includes("openSyllabusUploadModal"), "script.js includes openSyllabusUploadModal");
   assert(scriptJs.includes("confirmDeleteSyllabus"), "script.js includes confirmDeleteSyllabus");
   assert(scriptJs.includes("downloadSyllabusPdf"), "script.js includes downloadSyllabusPdf");

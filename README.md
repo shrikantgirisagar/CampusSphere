@@ -1,10 +1,10 @@
-# 🎓 CampusSphere — Academic Management System
+# CampusSphere — Academic Management System
 
 A modern, secure, and responsive **CampusSphere** web application built with HTML5, CSS3, JavaScript, Node.js, Express 5, and MongoDB / Mongoose 9. CampusSphere provides complete role-based institutional management for students, faculty, and administrators with persistent database storage, real-time push notifications, and analytics.
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```text
 CampusSphere/
@@ -63,7 +63,7 @@ CampusSphere/
 
 ---
 
-## 🎨 Design & UI Architecture
+## Design & UI Architecture
 
 CampusSphere features an **enforced light theme design**:
 - **Palette**: Clean slate (`#f8fafc`) and pure white (`#ffffff`) background layers, paired with deep slate text (`#0f172a` / `#334155`) for WCAG AAA contrast compliance.
@@ -73,25 +73,25 @@ CampusSphere features an **enforced light theme design**:
 
 ---
 
-## ✨ Features
+## Features
 
-- **🔐 Role-Based Access Control (RBAC):** Dedicated, secure views for **Student**, **Faculty**, and **Administrator** accounts.
-- **🛡️ Enterprise-Grade Authentication:**
+- **Role-Based Access Control (RBAC):** Dedicated, secure views for **Student**, **Faculty**, and **Administrator** accounts.
+- **Enterprise-Grade Authentication:**
   - Password hashing via Node.js native `crypto.scrypt` with timing-safe equality checks.
   - Signed HMAC SHA-256 session tokens with sliding expiration (12-hour validity, refreshed via `X-Refreshed-Token`).
   - Active token revocation via database-backed `tokenVersion` (invalidates sessions on password change, admin reset, or explicit logout).
   - Per-account brute-force throttling with exponential backoff on consecutive failed logins.
-- **🍃 MongoDB & Mongoose 9 Persistence:** Scalable database schemas with optimistic concurrency control (`__v`) and automated session transactions.
-- **📊 Academic Management & Analytics:**
+- **MongoDB & Mongoose 9 Persistence:** Scalable database schemas with optimistic concurrency control (`__v`) and automated session transactions.
+- **Academic Management & Analytics:**
   - **Student**: Profile details, subject-wise attendance tracking, marks breakdown, downloadable assignments, and Chart.js performance metrics.
   - **Faculty**: Daily attendance recording, batch examination marks entry, assignment publishing, student interaction, and profile customization.
   - **Admin**: Student, faculty, and administrator account provisioning, semester-wise subjects configuration, timetable management, and system health status.
-- **🔔 Web Push Notifications:** Real system-level browser and mobile push alerts powered by standard VAPID Web Push protocols.
-- **📱 Progressive Web App (PWA):** Service worker static asset caching, offline resiliency, manifest metadata, and responsive mobile layout.
+- **Web Push Notifications:** Real system-level browser and mobile push alerts powered by standard VAPID Web Push protocols.
+- **Progressive Web App (PWA):** Service worker static asset caching, offline resiliency, manifest metadata, and responsive mobile layout.
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 Configure application settings by copying `.env.example` to `.env`:
 
@@ -111,7 +111,7 @@ Configure application settings by copying `.env.example` to `.env`:
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## Quick Start (Local Development)
 
 ### 1. Prerequisites
 - [Node.js](https://nodejs.org/) `>= 20.19.0` (required for Mongoose 9 and native crypto support).
@@ -142,7 +142,7 @@ cp .env.example .env
 
 ---
 
-## 🧪 Test Suites & Verification
+## Test Suites & Verification
 
 CampusSphere includes comprehensive automated unit, security, and integration test suites:
 
@@ -170,7 +170,7 @@ npm test
 
 ---
 
-## 🔑 Starter Demo Accounts (Development Mode Only)
+## Starter Demo Accounts (Development Mode Only)
 
 In local development environments where `NODE_ENV === "development"`, when connecting to a completely empty database, the server automatically provisions a temporary development administrator account:
 
@@ -183,7 +183,7 @@ In local development environments where `NODE_ENV === "development"`, when conne
 
 ---
 
-## 🛡️ Security Architecture & Practices
+## Security Architecture & Practices
 
 1. **Content Security Policy (CSP)**:
    - Configured via strict HTTP response headers: `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none';`
@@ -205,7 +205,7 @@ In local development environments where `NODE_ENV === "development"`, when conne
 
 ---
 
-## 🚢 Production Deployment Guide
+## Production Deployment Guide
 
 Follow these steps to deploy CampusSphere to a production environment:
 
@@ -271,7 +271,7 @@ pm2 startup
 
 ---
 
-## 🛠️ Operational Workflows & Administrative Tools
+## Operational Workflows & Administrative Tools
 
 ### 1. The Operational Golden Rule: "Backup, Then Migrate, Then Start"
 When updating CampusSphere or running schema migrations in production, always follow the three-phase operational workflow:
@@ -315,7 +315,7 @@ To audit and safely clean up excess administrator accounts:
 
 ---
 
-## 📄 License & Maintainers
+## License & Maintainers
 
 Maintained by the CampusSphere Engineering Team. Developed with **Antigravity IDE**.
 All rights reserved.
