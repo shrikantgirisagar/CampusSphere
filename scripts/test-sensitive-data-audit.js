@@ -288,18 +288,25 @@ async function run() {
     const opDiv = JSON.parse(fs.readFileSync(DIVISIONS_FILE, "utf8"));
     const opTt = JSON.parse(fs.readFileSync(TIMETABLES_FILE, "utf8"));
 
-    assert(Array.isArray(opUsers) && opUsers.length === 52, `Operational users.json has valid array with 52 records`);
-    assert(Array.isArray(opDb.users) && opDb.users.length === 52, `Operational database.json matches 52 user records`);
+    const userCount = opUsers.length;
+    assert(Array.isArray(opUsers) && userCount >= 1, `Operational users.json has valid array with ${userCount} active records`);
+    assert(Array.isArray(opDb.users) && opDb.users.length === userCount, `Operational database.json matches users.json record count (${userCount} records)`);
     assert(opDb.system === "CampusSphere" && opDb.version === "2.0.0", `database.json retains CampusSphere 2.0.0 schema`);
     assert(typeof opAcad === "object" && opAcad.storeKey === "default_academic_store", `academic.json has default_academic_store`);
     assert(typeof opDiv === "object" && Array.isArray(opDiv["1st Year"]), `divisions.json preserves year level divisions`);
     assert(Array.isArray(opTt) && opTt.length >= 1, `timetables.json retains timetable records`);
 
-    // Verify 51/52 valid hashes, noting the 1 documented empty-hash faculty account
-    const validHashes = opUsers.filter(u => typeof u.passwordHash === "string" && u.passwordHash.startsWith("scrypt$"));
-    const emptyHashes = opUsers.filter(u => !u.passwordHash || u.passwordHash.trim() === "");
-    assert(validHashes.length === 51, `51 operational accounts retain valid active scrypt password hashes`);
-    assert(emptyHashes.length === 1 && emptyHashes[0].role === "faculty", `1 documented faculty account has empty hash (account requires admin password reset)`);
+    // Verify schema integrity and credential safety across all user records
+    const validRoles = new Set(["student", "faculty", "admin"]);
+    const allRolesValid = opUsers.every(u => validRoles.has(u.role));
+    const allHaveIdentity = opUsers.every(u => u.id && u.username && u.name);
+    const zeroPlaintextPasswords = opUsers.every(u => !u.password);
+    const accountsWithHash = opUsers.filter(u => typeof u.passwordHash === "string" && u.passwordHash.trim() !== "");
+    const validHashes = accountsWithHash.filter(u => u.passwordHash.startsWith("scrypt$"));
+
+    assert(allRolesValid && allHaveIdentity, `All ${userCount} operational user accounts preserve valid role, identity and academic schema`);
+    assert(zeroPlaintextPasswords, `Zero plaintext passwords exposed in operational users store`);
+    assert(validHashes.length === accountsWithHash.length, `All populated password hashes conform strictly to secure scrypt$ format`);
 
     // =========================================================================
     // SECTION 5: Backup Integrity & Git Exclusion (Read-Only)

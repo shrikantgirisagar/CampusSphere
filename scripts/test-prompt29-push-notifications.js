@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const PushSubscription = require('../models/PushSubscription');
+const { setupTestDb, stopTestDb } = require('./lib/test-db');
 
 let totalTests = 0;
 let passedTests = 0;
@@ -160,56 +161,125 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
   // -------------------------------------------------------------------------
   console.log('\n--- TEST SUITE 6: Live API Endpoints & Database Integration ---');
 
-  const TEST_PORT = 3105;
+  const TEST_PORT = Number(process.env.TEST_PORT || 3105);
   const BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
-  let serverInstance = null;
+  let testDbActive = false;
 
   try {
-    // Start temporary server instance for live API testing
-    const serverModule = require('../server');
-    // server.js starts listening on its configured port; we can query it directly
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // Connect to database directly if needed
-    if (mongoose.connection.readyState !== 1) {
-      await mongoose.connect(process.env.MONGODB_URI, { dbName: 'CampusSphere' });
+    // 1. Setup isolated in-memory test database first
+    try {
+      if (mongoose.connection.readyState !== 1) {
+        await setupTestDb('PushNotification_test');
+        testDbActive = true;
+      }
+    } catch (dbErr) {
+      console.warn('  [WARN] Isolated test database initialization notice:', dbErr.message);
     }
 
-    // 1. GET /api/push/public-key
-    const pubKeyRes = await fetch(`http://127.0.0.1:3000/api/push/public-key`);
+    // 2. Start test server instance with isolated test port and test environment
+    process.env.PORT = String(TEST_PORT);
+    process.env.NODE_ENV = 'test';
+    try { delete require.cache[require.resolve('../server')]; } catch (_) {}
+    const serverModule = require('../server');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // 3. Resolve cryptographic session secret consistent with server.js contract
+    let activeSecret = '';
+    if (serverModule && typeof serverModule.validateAuthConfig === 'function') {
+      try {
+        const authCfg = serverModule.validateAuthConfig(process.env);
+        if (authCfg && authCfg.secret) activeSecret = authCfg.secret;
+      } catch (_) {}
+    }
+    if (!activeSecret) {
+      const devSecretPath = path.resolve(rootDir, '.dev-secret');
+      if (fs.existsSync(devSecretPath)) {
+        try {
+          const devSecret = fs.readFileSync(devSecretPath, 'utf8').trim();
+          if (devSecret && devSecret.length >= 32) activeSecret = devSecret;
+        } catch (_) {}
+      }
+    }
+    if (!activeSecret) {
+      activeSecret = process.env.SESSION_SECRET || 'campussphere_dev_session_secret_2026_insecure';
+    }
+
+    // 4. Verify GET /api/push/public-key
+    const pubKeyRes = await fetch(`${BASE_URL}/api/push/public-key`);
     const pubKeyData = await pubKeyRes.json();
     logTest('GET /api/push/public-key returns HTTP 200 with valid publicKey', pubKeyRes.ok && pubKeyData.success && typeof pubKeyData.publicKey === 'string' && pubKeyData.publicKey.length > 20);
     logTest('GET /api/push/public-key never exposes private key', !('privateKey' in pubKeyData) && !JSON.stringify(pubKeyData).includes('private'));
 
-    // 2. Unauthenticated POST /api/push/subscribe rejected with 401
-    const unauthSubRes = await fetch(`http://127.0.0.1:3000/api/push/subscribe`, {
+    // 5. Verify unauthenticated POST /api/push/subscribe rejected with 401
+    const unauthSubRes = await fetch(`${BASE_URL}/api/push/subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscription: { endpoint: 'https://push.example.com/test' } })
     });
     logTest('Unauthenticated POST /api/push/subscribe is rejected with HTTP 401', unauthSubRes.status === 401);
 
-    // 3. Authenticated subscribe for Student
-    // Find or create test student token
-    const testStudentUser = await User.findOne({ role: 'student' }).lean();
+    // 6. Seed test student and attacker in database if connected
+    let testStudentUser = null;
+    let attackerUser = null;
+    if (mongoose.connection.readyState === 1) {
+      const hashPwd = (pwd) => new Promise((resolve, reject) => {
+        const salt = crypto.randomBytes(16);
+        crypto.scrypt(pwd, salt, 64, { N: 16384, r: 8, p: 1 }, (err, key) => {
+          if (err) return reject(err);
+          resolve(`scrypt$16384$8$1$${salt.toString('base64url')}$${key.toString('base64url')}`);
+        });
+      });
+
+      testStudentUser = await User.findOne({ role: 'student' }).lean();
+      if (!testStudentUser) {
+        testStudentUser = await User.create({
+          id: `p29-student-${Date.now()}`,
+          username: `p29_student_${Date.now()}`,
+          role: 'student',
+          name: 'Push Test Student',
+          passwordHash: await hashPwd('StudentSecure@123'),
+          department: 'Computer Applications',
+          courseYear: '1st Year',
+          semester: '1st Semester',
+          division: 'Div A'
+        });
+        testStudentUser = testStudentUser.toObject ? testStudentUser.toObject() : testStudentUser;
+      }
+
+      attackerUser = await User.findOne({ username: 'attacker_user' }).lean();
+      if (!attackerUser) {
+        attackerUser = await User.create({
+          id: 'attacker-123',
+          username: 'attacker_user',
+          role: 'student',
+          name: 'Push Attacker Student',
+          passwordHash: await hashPwd('AttackerSecure@123'),
+          department: 'Computer Applications'
+        });
+        attackerUser = attackerUser.toObject ? attackerUser.toObject() : attackerUser;
+      }
+    }
+
     if (testStudentUser) {
-      // Generate valid token for test student
-      const crypto = require('crypto');
-      const testTokenPayload = Buffer.from(JSON.stringify({
-        id: testStudentUser.id,
-        role: testStudentUser.role,
-        username: testStudentUser.username,
-        exp: Date.now() + 3600000
-      })).toString('base64url');
-      const secret = process.env.SESSION_SECRET || 'campussphere_dev_session_secret_2026_insecure';
-      const sig = crypto.createHmac('sha256', secret).update(testTokenPayload).digest('base64url');
-      const studentAuthToken = `${testTokenPayload}.${sig}`;
+      const buildToken = (u, sec) => {
+        const payload = Buffer.from(JSON.stringify({
+          id: String(u.id || ''),
+          role: String(u.role || ''),
+          username: String(u.username || ''),
+          tokenVersion: typeof u.tokenVersion === 'number' ? u.tokenVersion : 0,
+          exp: Date.now() + 3600000
+        })).toString('base64url');
+        const sig = crypto.createHmac('sha256', sec).update(payload).digest('base64url');
+        return `${payload}.${sig}`;
+      };
+
+      const studentAuthToken = buildToken(testStudentUser, activeSecret);
 
       const testEndpoint1 = `https://fcm.googleapis.com/fcm/send/test_sub_p29_${Date.now()}_1`;
       const testEndpoint2 = `https://fcm.googleapis.com/fcm/send/test_sub_p29_${Date.now()}_2`;
 
       // Device 1 Subscription
-      const subRes1 = await fetch(`http://127.0.0.1:3000/api/push/subscribe`, {
+      const subRes1 = await fetch(`${BASE_URL}/api/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -230,10 +300,10 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
 
       // Verify in MongoDB
       const doc1 = await PushSubscription.findOne({ endpoint: testEndpoint1 }).lean();
-      logTest('PushSubscription saved in MongoDB with correct username and role derived from token', doc1 && doc1.username.toLowerCase() === testStudentUser.username.toLowerCase() && doc1.role === 'student');
+      logTest('PushSubscription saved in MongoDB with correct username and role derived from token', Boolean(doc1 && doc1.username.toLowerCase() === testStudentUser.username.toLowerCase() && doc1.role === 'student'));
 
       // Device 2 Subscription (Multi-Device Support for same user)
-      const subRes2 = await fetch(`http://127.0.0.1:3000/api/push/subscribe`, {
+      const subRes2 = await fetch(`${BASE_URL}/api/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +325,7 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
       logTest('Multiple active device subscriptions simultaneously preserved for the same user in MongoDB', userSubCount >= 2);
 
       // Duplicate Subscription on same endpoint (should update without duplicate key collision)
-      const subResDup = await fetch(`http://127.0.0.1:3000/api/push/subscribe`, {
+      const subResDup = await fetch(`${BASE_URL}/api/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -274,17 +344,9 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
       logTest('Submitting existing endpoint updates subscription idempotently without duplicate error', subResDup.ok);
 
       // User A cannot unsubscribe User B's endpoint
-      // Simulate another user token
-      const attackerPayload = Buffer.from(JSON.stringify({
-        id: 'attacker-123',
-        role: 'student',
-        username: 'attacker_user',
-        exp: Date.now() + 3600000
-      })).toString('base64url');
-      const attackerSig = crypto.createHmac('sha256', secret).update(attackerPayload).digest('base64url');
-      const attackerToken = `${attackerPayload}.${attackerSig}`;
+      const attackerToken = buildToken(attackerUser || { id: 'attacker-123', role: 'student', username: 'attacker_user' }, activeSecret);
 
-      const maliciousUnsub = await fetch(`http://127.0.0.1:3000/api/push/subscribe`, {
+      const maliciousUnsub = await fetch(`${BASE_URL}/api/push/subscribe`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -296,7 +358,7 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
       logTest('Cross-user IDOR unsubscribe attack blocked (attacker cannot delete another user endpoint)', Boolean(stillExists));
 
       // Valid unsubscribe for Device 1
-      const validUnsub = await fetch(`http://127.0.0.1:3000/api/push/subscribe`, {
+      const validUnsub = await fetch(`${BASE_URL}/api/push/subscribe`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -313,6 +375,10 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
 
   } catch (err) {
     console.warn('  [WARN] Live API test encountered non-fatal error:', err.message);
+  } finally {
+    if (testDbActive) {
+      try { await stopTestDb(); } catch (_) {}
+    }
   }
 
   // -------------------------------------------------------------------------

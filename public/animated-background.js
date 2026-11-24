@@ -1,25 +1,13 @@
 /**
- * CampusSphere Reusable Animated Background Component
+ * CampusSphere Ambient Background Foundation Component
  * 
- * Provides a universal, GPU-accelerated ambient animated background
+ * Provides a clean, universal ambient visual foundation
  * for all portals, dashboards, section pages, and standalone views.
  */
 (function () {
   "use strict";
 
-  const AMBIENT_BG_TEMPLATE = `
-    <div class="ambient-blob blob-blue" aria-hidden="true"></div>
-    <div class="ambient-blob blob-indigo" aria-hidden="true"></div>
-    <div class="ambient-blob blob-cyan" aria-hidden="true"></div>
-    <div class="ambient-blob blob-emerald" aria-hidden="true"></div>
-    <div class="ambient-blob blob-violet" aria-hidden="true"></div>
-    <div class="ambient-grid-overlay" aria-hidden="true"></div>
-    <div class="ambient-shapes" aria-hidden="true">
-      <span class="ambient-ring ring-1"></span>
-      <span class="ambient-ring ring-2"></span>
-      <span class="ambient-ring ring-3"></span>
-    </div>
-  `.trim();
+  const AMBIENT_BG_TEMPLATE = "";
 
   /**
    * HTML Custom Element: <animated-background>
@@ -30,9 +18,6 @@
         this.classList.add("campus-ambient-bg");
       }
       this.setAttribute("aria-hidden", "true");
-      if (!this.firstElementChild) {
-        this.innerHTML = AMBIENT_BG_TEMPLATE;
-      }
     }
   }
 
@@ -50,7 +35,7 @@
      * Return markup as a string
      */
     render() {
-      return `<animated-background class="campus-ambient-bg" aria-hidden="true">${AMBIENT_BG_TEMPLATE}</animated-background>`;
+      return `<animated-background class="campus-ambient-bg" aria-hidden="true"></animated-background>`;
     },
 
     /**
@@ -64,14 +49,11 @@
         el = document.createElement("animated-background");
         el.className = "campus-ambient-bg";
         el.setAttribute("aria-hidden", "true");
-        el.innerHTML = AMBIENT_BG_TEMPLATE;
         if (target.firstChild) {
           target.insertBefore(el, target.firstChild);
         } else {
           target.appendChild(el);
         }
-      } else if (!el.firstElementChild) {
-        el.innerHTML = AMBIENT_BG_TEMPLATE;
       }
       return el;
     },

@@ -125,9 +125,10 @@ async function runTests() {
     const server = http.createServer((req, res) => {
       let reqPath = req.url.split('?')[0];
       if (reqPath === '/' || reqPath === '/index.html') reqPath = '/index.html';
-      const filePath = path.join(rootDir, reqPath.replace(/^\//, ''));
+      const safePath = path.normalize(reqPath).replace(/^(\.\.[\/\\])+/, '');
+      const filePath = path.resolve(assetDir, safePath.replace(/^[\\\/]+/, ''));
 
-      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      if (filePath.startsWith(assetDir) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath);
         const mimeTypes = {
           '.html': 'text/html',
@@ -171,11 +172,13 @@ async function runTests() {
       browserProc.kill();
       server.close();
     } else {
-      const listRes = await fetch('http://127.0.0.1:9460/json/list');
-      const targets = await listRes.json();
-      const pageTarget = targets.find(t => t.type === 'page');
-      const ws = new WebSocket(pageTarget.webSocketDebuggerUrl);
-      await new Promise(resolve => ws.onopen = resolve);
+      let ws = null;
+      try {
+        const listRes = await fetch('http://127.0.0.1:9460/json/list');
+        const targets = await listRes.json();
+        const pageTarget = targets.find(t => t.type === 'page');
+        ws = new WebSocket(pageTarget.webSocketDebuggerUrl);
+        await new Promise(resolve => ws.onopen = resolve);
 
       let msgId = 1;
       const pending = new Map();
@@ -410,9 +413,13 @@ async function runTests() {
       // Check console errors
       logTest('Zero JavaScript console errors encountered during full hover audit', consoleErrors.length === 0, consoleErrors.join('; '));
 
-      ws.close();
-      browserProc.kill();
-      server.close();
+      } finally {
+        if (ws) {
+          try { ws.close(); } catch (_) {}
+        }
+        try { browserProc.kill(); } catch (_) {}
+        try { server.close(); } catch (_) {}
+      }
     }
   }
 

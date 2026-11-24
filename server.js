@@ -21,7 +21,9 @@ const Note = require("./models/Note");
 const AcademicStore = require("./models/AcademicStore");
 const Syllabus = require("./models/Syllabus");
 const PushSubscription = require("./models/PushSubscription");
-const { VALID_YEAR_CONFIG, VALID_SEMESTER_YEAR_MAP } = require("./models/Syllabus");
+const AcademicYear = require("./models/AcademicYear");
+const academicYearService = require("./services/academicYearService");
+const { COURSE_YEAR_LEVELS } = require("./models/Syllabus");
 const multer = require("multer");
 const pushService = require("./services/pushNotificationService");
 const fileSyncService = require("./services/fileSyncService");
@@ -513,6 +515,15 @@ function hasMongoOperators(obj) {
   return false;
 }
 
+function getCourseYearForSemester(sem) {
+  if (!sem) return "1st Year";
+  const s = String(sem).toLowerCase();
+  if (s.includes("1") || s.includes("2")) return "1st Year";
+  if (s.includes("3") || s.includes("4")) return "2nd Year";
+  if (s.includes("5") || s.includes("6")) return "3rd Year";
+  return "1st Year";
+}
+
 function sanitizeUser(user, options = {}) {
   if (!user) return null;
   const doc = typeof user.toPublicJSON === "function" ? user.toPublicJSON() : (user.toObject ? user.toObject() : { ...user });
@@ -546,6 +557,18 @@ function sanitizeUser(user, options = {}) {
 
   if (options.redactSensitive) {
     delete doc.email;
+    delete doc.facultyAllocations;
+  }
+
+  if (doc.role === "student") {
+    // Section 3.3.3.4: Preserve admission cohort and operational academic context as separate attributes.
+    // Zero cross-fallback or fabrication between admissionYear and academicYear.
+    doc.admissionYear = doc.admissionYear || "";
+    doc.academicYear = doc.academicYear || "";
+  }
+
+  if (doc.role === "faculty") {
+    doc.facultyAllocations = Array.isArray(doc.facultyAllocations) ? doc.facultyAllocations : [];
   }
 
   return doc;
@@ -985,6 +1008,10 @@ mongoose.connection.on("disconnected", () => {
   console.warn("[MongoDB] Connection lost. Built-in driver reconnecting...");
 });
 
+// Track database initialization readiness state for external diagnostic callers
+let isDatabaseInitialized = false;
+let databaseInitError = null;
+
 // Connect to MongoDB & Seed Initial Accounts
 async function initDatabase() {
   try {
@@ -1006,6 +1033,13 @@ async function initDatabase() {
     await Attendance.syncIndexes().catch(err => {
       console.warn("Attendance index sync warning:", err.message);
     });
+    try {
+      await AcademicYear.syncIndexes().catch(err => {
+        console.warn("AcademicYear index sync warning:", err.message);
+      });
+    } catch (ayErr) {
+      console.warn("AcademicYear initialization warning:", ayErr.message);
+    }
 
     // Seed default admin or migrate local json if user count is zero
     const userCount = await User.countDocuments();
@@ -1161,7 +1195,9 @@ async function initDatabase() {
     } catch (fsErr) {
       console.warn("[FileSync] Initial sync warning:", fsErr.message);
     }
+    isDatabaseInitialized = true;
   } catch (error) {
+    databaseInitError = error.message || String(error);
     console.error("MongoDB Connection Error:", error.message);
     if (process.env.NODE_ENV === "production") {
       console.error("[FATAL] Exiting due to MongoDB connection failure in production environment.");
@@ -1199,7 +1235,9 @@ app.get("/api/status", (req, res) => {
     success: true,
     message: "CampusSphere backend is running.",
     database: "MongoDB",
-    databaseState: dbState
+    databaseState: dbState,
+    initialized: isDatabaseInitialized,
+    initError: databaseInitError
   });
 });
 
@@ -1552,6 +1590,10 @@ app.post("/api/users", rateLimitRegistration, async (req, res) => {
       passwordHash: await hashPassword(password)
     };
 
+    if (targetRole === "faculty" && Array.isArray(req.body.facultyAllocations)) {
+      userObj.facultyAllocations = req.body.facultyAllocations;
+    }
+
     if (targetRole === "student") {
       userObj.division = stripHtmlTags(String(division || "Div A").trim());
       userObj.semester = stripHtmlTags(String(semester || "1st Semester").trim());
@@ -1559,6 +1601,8 @@ app.post("/api/users", rateLimitRegistration, async (req, res) => {
       userObj.course = stripHtmlTags(String(course || "Bachelor of Computer Applications (BCA)").trim());
       userObj.languageChoice = stripHtmlTags(String(languageChoice || "Kannada").trim());
       userObj.mathChoice = stripHtmlTags(String(mathChoice || "Mathematics").trim());
+      userObj.admissionYear = req.body.admissionYear !== undefined ? stripHtmlTags(String(req.body.admissionYear).trim()) : "";
+      userObj.academicYear = req.body.academicYear !== undefined ? stripHtmlTags(String(req.body.academicYear).trim()) : "";
     }
 
     const createdUser = await User.create(userObj);
@@ -1805,6 +1849,29 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
           user.subjectDivisions = subjectDivisions;
           user.markModified("subjectDivisions");
         }
+        if (req.body.facultyAllocations !== undefined && Array.isArray(req.body.facultyAllocations)) {
+          user.facultyAllocations = req.body.facultyAllocations.filter(a => a && typeof a === "object").map(a => ({
+            ...a,
+            academicYear: stripHtmlTags(String(a.academicYear || a.yearCode || "").trim()),
+            subject: a.subject ? stripHtmlTags(String(a.subject).trim()) : undefined,
+            division: a.division ? stripHtmlTags(String(a.division).trim()) : undefined,
+            semester: a.semester ? stripHtmlTags(String(a.semester).trim()) : undefined
+          }));
+          user.markModified("facultyAllocations");
+        }
+        if (req.body.allocationAcademicYear && Array.isArray(req.body.yearAllocations)) {
+          const targetYear = stripHtmlTags(String(req.body.allocationAcademicYear).trim());
+          const otherYearsAllocs = (user.facultyAllocations || []).filter(a => {
+            const y = String(a.academicYear || a.yearCode || "").trim();
+            return y !== targetYear;
+          });
+          const newYearAllocs = req.body.yearAllocations.map(a => ({
+            ...a,
+            academicYear: targetYear
+          }));
+          user.facultyAllocations = [...otherYearsAllocs, ...newYearAllocs];
+          user.markModified("facultyAllocations");
+        }
       }
     }
 
@@ -1815,6 +1882,16 @@ app.put("/api/users/:role/:username", requireAuth(), async (req, res) => {
       if (course !== undefined) user.course = stripHtmlTags(String(course).trim());
       if (languageChoice !== undefined) user.languageChoice = stripHtmlTags(String(languageChoice).trim());
       if (mathChoice !== undefined) user.mathChoice = stripHtmlTags(String(mathChoice).trim());
+      // Section 3.3.3.4: Admission cohort is an immutable historical attribute.
+      // Ordinary profile updates cannot overwrite admissionYear. Only authorized admin can correct it.
+      if (isAdmin) {
+        if (req.body.admissionYear !== undefined) {
+          user.admissionYear = stripHtmlTags(String(req.body.admissionYear).trim());
+        }
+        if (req.body.academicYear !== undefined) {
+          user.academicYear = stripHtmlTags(String(req.body.academicYear).trim());
+        }
+      }
     }
 
     if (password) {
@@ -2156,9 +2233,193 @@ const handlePushUnsubscribe = async (req, res) => {
 app.delete("/api/push/subscribe", rateLimitExpensive, requireAuth(), handlePushUnsubscribe);
 app.post("/api/push/unsubscribe", rateLimitExpensive, requireAuth(), handlePushUnsubscribe);
 
+// ============================================================================
+// --- Dynamic Academic Year Architecture REST API Endpoints ---
+// ============================================================================
+
+// GET /api/academic-years - List all academic years
+app.get("/api/academic-years", async (req, res) => {
+  try {
+    const filter = {};
+    if (req.query.status) {
+      filter.status = String(req.query.status).trim().toLowerCase();
+    }
+    const years = await academicYearService.getAllAcademicYears(filter);
+    const publicYears = years.map(y => academicYearService.formatPublicAcademicYear(y));
+    res.json({ success: true, academicYears: publicYears, count: publicYears.length });
+  } catch (error) {
+    console.error("Fetch academic years error:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve academic years." });
+  }
+});
+
+// GET /api/academic-years/active - Get currently active academic year
+app.get("/api/academic-years/active", async (req, res) => {
+  try {
+    const active = await academicYearService.getActiveAcademicYear();
+    if (!active) {
+      return res.status(404).json({ success: false, message: "No active academic year configured." });
+    }
+    res.json({ success: true, academicYear: academicYearService.formatPublicAcademicYear(active) });
+  } catch (error) {
+    if (error && error.code === "MULTIPLE_ACTIVE_YEARS") {
+      return res.status(500).json({
+        success: false,
+        code: "MULTIPLE_ACTIVE_YEARS",
+        message: "Data integrity error: Multiple academic years are marked active. Please contact administrator."
+      });
+    }
+    console.error("Fetch active academic year error:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve active academic year." });
+  }
+});
+
+// GET /api/academic-years/:id - Get specific academic year by id or yearCode
+app.get("/api/academic-years/:id", async (req, res) => {
+  try {
+    const year = await academicYearService.getAcademicYearByIdOrCode(req.params.id);
+    if (!year) {
+      return res.status(404).json({ success: false, message: "Academic year not found." });
+    }
+    res.json({ success: true, academicYear: academicYearService.formatPublicAcademicYear(year) });
+  } catch (error) {
+    console.error("Fetch academic year by ID error:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve academic year." });
+  }
+});
+
+// GET /api/academic-years/:id/semesters - Get operational semesters for a specific academic year
+app.get("/api/academic-years/:id/semesters", async (req, res) => {
+  try {
+    const year = await academicYearService.getAcademicYearByIdOrCode(req.params.id);
+    if (!year) {
+      return res.status(404).json({ success: false, message: "Academic year not found." });
+    }
+    const rawSemesters = Array.isArray(year.semesterConfiguration) ? year.semesterConfiguration : [];
+    const semesters = rawSemesters.map(s => ({
+      semester: s.semester,
+      cycle: s.cycle,
+      courseYear: s.courseYear,
+      isOperational: Boolean(s.isOperational),
+      status: s.status
+    }));
+    const operationalSemesters = semesters
+      .filter(s => s && s.isOperational && s.status === "active")
+      .map(s => s.semester);
+    res.json({
+      success: true,
+      academicYear: year.yearCode,
+      semesters,
+      operationalSemesters,
+      count: semesters.length
+    });
+  } catch (error) {
+    console.error("Fetch year semesters error:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve semester configuration." });
+  }
+});
+
+// POST /api/academic-years - Create new academic year (Admin only)
+app.post("/api/academic-years", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
+  try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "MongoDB operators are not permitted." });
+    }
+    const created = await academicYearService.createAcademicYear(req.body, req.user?.username || "admin");
+    fileSyncService.triggerSync();
+    res.status(201).json({ success: true, message: "Academic year created successfully.", academicYear: created });
+  } catch (error) {
+    console.error("Create academic year error:", error);
+    res.status(400).json({ success: false, message: error.message || "Failed to create academic year." });
+  }
+});
+
+// PATCH /api/academic-years/:id - Update academic year metadata (Admin only)
+app.patch("/api/academic-years/:id", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
+  try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "MongoDB operators are not permitted." });
+    }
+    const updated = await academicYearService.updateAcademicYear(req.params.id, req.body, req.user?.username || "admin");
+    fileSyncService.triggerSync();
+    res.json({ success: true, message: "Academic year updated successfully.", academicYear: updated });
+  } catch (error) {
+    console.error("Update academic year error:", error);
+    res.status(400).json({ success: false, message: error.message || "Failed to update academic year." });
+  }
+});
+
+// PATCH /api/academic-years/:id/semesters - Update operational semesters (Admin only)
+app.patch("/api/academic-years/:id/semesters", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
+  try {
+    if (hasMongoOperators(req.body)) {
+      return res.status(400).json({ success: false, message: "MongoDB operators are not permitted." });
+    }
+    const semesters = req.body.semesterConfiguration || req.body.semesters || req.body;
+    const updated = await academicYearService.updateSemesterConfiguration(req.params.id, semesters, req.user?.username || "admin");
+    fileSyncService.triggerSync();
+    res.json({ success: true, message: "Semester configuration updated successfully.", academicYear: updated });
+  } catch (error) {
+    console.error("Update semester configuration error:", error);
+    res.status(400).json({ success: false, message: error.message || "Failed to update semester configuration." });
+  }
+});
+
+// PATCH /api/academic-years/:id/activate - Safe atomic academic year activation (Admin only)
+app.patch("/api/academic-years/:id/activate", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
+  try {
+    const result = await academicYearService.activateAcademicYear(req.params.id, req.user?.username || "admin");
+
+    // Also update AcademicStore activeAcademicYear for legacy consumers
+    await AcademicStore.updateOne(
+      { storeKey: "default_academic_store" },
+      { $set: { activeAcademicYear: result.activeAcademicYear ? result.activeAcademicYear.yearCode : "" } }
+    ).catch(() => {});
+
+    fileSyncService.triggerSync();
+    res.json({
+      success: true,
+      message: result.message,
+      previousActiveYear: result.previousActiveYear,
+      activeAcademicYear: result.activeAcademicYear
+    });
+  } catch (error) {
+    console.error("Activate academic year error:", error);
+    res.status(400).json({ success: false, message: error.message || "Failed to activate academic year." });
+  }
+});
+
+// PATCH /api/academic-years/:id/complete - Mark academic year completed (Admin only)
+app.patch("/api/academic-years/:id/complete", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
+  try {
+    const options = {
+      successorId: req.body.successorId || req.body.transitionToYear,
+      intentionalDeactivation: Boolean(req.body.intentionalDeactivation || req.body.allowZeroActive)
+    };
+    const completed = await academicYearService.completeAcademicYear(req.params.id, req.user?.username || "admin", options);
+    fileSyncService.triggerSync();
+    res.json({ success: true, message: `Academic year transition completed successfully.`, academicYear: completed });
+  } catch (error) {
+    console.error("Complete academic year error:", error);
+    res.status(400).json({ success: false, message: error.message || "Failed to complete academic year." });
+  }
+});
+
+// PATCH /api/academic-years/:id/archive - Archive academic year (Admin only)
+app.patch("/api/academic-years/:id/archive", rateLimitExpensive, requireAuth(["admin"]), async (req, res) => {
+  try {
+    const archived = await academicYearService.archiveAcademicYear(req.params.id, req.user?.username || "admin");
+    fileSyncService.triggerSync();
+    res.json({ success: true, message: `Academic year "${archived.yearCode}" archived.`, academicYear: archived });
+  } catch (error) {
+    console.error("Archive academic year error:", error);
+    res.status(400).json({ success: false, message: error.message || "Failed to archive academic year." });
+  }
+});
+
 // --- Prompt 17: Timetable Dynamic Builder & Server-Side RBAC ---
 
-const TIMETABLE_ALLOWED_FONTS = ["Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New", "Outfit", "Plus Jakarta Sans"];
+const TIMETABLE_ALLOWED_FONTS = ["DM Sans", "Sora", "Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New", "Outfit", "Plus Jakarta Sans"];
 const TIMETABLE_ALLOWED_FONT_SIZES = ["11px", "12px", "13px", "14px", "16px", "18px", "20px"];
 const TIMETABLE_ALLOWED_ALIGNMENTS = ["left", "center", "right"];
 const TIMETABLE_ALLOWED_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -2214,9 +2475,115 @@ function getSubjectSemester(subId) {
   return "";
 }
 
-function getFacultyAuthorizedScope(user) {
+function getFacultyAuthorizedScope(user, academicYear) {
   if (!user || user.role !== "faculty") {
-    return { isAuthorized: false, subjects: [], semesters: [], divisionsBySubject: {}, defaultDivision: "all" };
+    return {
+      isAuthorized: false,
+      subjects: [],
+      semesters: [],
+      divisionsBySubject: {},
+      defaultDivision: "all",
+      reason: "User is not authenticated or not in faculty role.",
+      code: "ROLE_NOT_AUTHORIZED"
+    };
+  }
+
+  const rawYear = academicYear !== undefined && academicYear !== null ? String(academicYear).trim() : "";
+  const targetYear = rawYear || null;
+  const hasVersionedAllocations = Array.isArray(user.facultyAllocations) && user.facultyAllocations.length > 0;
+
+  if (hasVersionedAllocations) {
+    if (!targetYear) {
+      return {
+        isAuthorized: false,
+        subjects: [],
+        semesters: [],
+        divisionsBySubject: {},
+        defaultDivision: "all",
+        reason: "Academic-year context is required to resolve versioned faculty allocations.",
+        code: "ACADEMIC_YEAR_REQUIRED"
+      };
+    }
+
+    const normTargetYear = targetYear.toLowerCase();
+    const matchingAllocations = user.facultyAllocations.filter(alloc => {
+      if (!alloc || typeof alloc !== "object") return false;
+      const allocYear = String(alloc.academicYear || alloc.yearCode || "").trim().toLowerCase();
+      if (allocYear !== normTargetYear) return false;
+      if (alloc.status && (alloc.status === "inactive" || alloc.status === "revoked")) return false;
+      if (alloc.isActive === false) return false;
+      return true;
+    });
+
+    if (matchingAllocations.length === 0) {
+      return {
+        isAuthorized: false,
+        subjects: [],
+        semesters: [],
+        divisionsBySubject: {},
+        defaultDivision: "all",
+        reason: `Faculty has no active allocations for academic year '${targetYear}'.`,
+        code: "NO_ACTIVE_ALLOCATIONS"
+      };
+    }
+
+    const assignedSubjects = new Set();
+    const authorizedSemesters = new Set();
+    const divisionsBySubject = {};
+
+    matchingAllocations.forEach(alloc => {
+      const sub = alloc.subject ? String(alloc.subject).trim() : null;
+      if (sub) {
+        assignedSubjects.add(sub);
+        const div = alloc.division ? String(alloc.division).trim() : (user.division || "all");
+        if (divisionsBySubject[sub]) {
+          const prev = divisionsBySubject[sub].toLowerCase();
+          const curr = div.toLowerCase();
+          if (prev !== curr) {
+            if (
+              (prev.includes("a") && curr.includes("b")) ||
+              (prev.includes("b") && curr.includes("a")) ||
+              prev === "all" || curr === "all" ||
+              prev === "both divisions" || curr === "both divisions" ||
+              prev === "all divisions" || curr === "all divisions"
+            ) {
+              divisionsBySubject[sub] = "Both Divisions";
+            }
+          }
+        } else {
+          divisionsBySubject[sub] = div;
+        }
+
+        const sem = alloc.semester ? String(alloc.semester).trim() : getSubjectSemester(sub);
+        if (sem) authorizedSemesters.add(sem);
+      }
+      if (alloc.semester) authorizedSemesters.add(String(alloc.semester).trim());
+    });
+
+    return {
+      isAuthorized: true,
+      subjects: Array.from(assignedSubjects),
+      semesters: Array.from(authorizedSemesters),
+      divisionsBySubject,
+      defaultDivision: user.division || "all"
+    };
+  }
+
+  // Legacy fallback policy: applies ONLY to legacy-only profiles without versioned allocations
+  if (targetYear && user.academicYear) {
+    const normProfileYear = String(user.academicYear).trim().toLowerCase();
+    const normTargetYear = targetYear.toLowerCase();
+    if (normProfileYear && normProfileYear !== normTargetYear) {
+      return {
+        isAuthorized: false,
+        subjects: [],
+        semesters: [],
+        divisionsBySubject: {},
+        defaultDivision: "all",
+        reason: `Legacy profile associated with academic year '${user.academicYear}' cannot grant access for requested year '${targetYear}'.`,
+        code: "LEGACY_YEAR_MISMATCH"
+      };
+    }
   }
 
   const assignedSubjects = Array.from(new Set([
@@ -2326,13 +2693,13 @@ function isSameSubject(subA, subB) {
   return false;
 }
 
-function isFacultyAuthorizedForTimetable(user, semester, division) {
+function isFacultyAuthorizedForTimetable(user, semester, division, academicYear) {
   if (!user) return false;
   if (user.role === "admin") return true;
   if (user.role !== "faculty") return false;
 
-  const scope = getFacultyAuthorizedScope(user);
-  if (!scope.subjects.length) return false;
+  const scope = getFacultyAuthorizedScope(user, academicYear);
+  if (!scope.isAuthorized || !scope.subjects.length) return false;
 
   const normTargetDiv = String(division || "").trim().toLowerCase();
   const normTargetSem = String(semester || "").trim().toLowerCase();
@@ -2353,6 +2720,7 @@ function isFacultyAuthorizedForTimetable(user, semester, division) {
 }
 
 function canFacultySetSubject(user, subject, semester, division) {
+  const academicYear = arguments[4];
   if (!user) return false;
   if (user.role === "admin") return true;
   if (user.role !== "faculty") return false;
@@ -2360,7 +2728,9 @@ function canFacultySetSubject(user, subject, semester, division) {
   const cleanSub = String(subject || "").trim();
   if (!cleanSub) return true;
 
-  const scope = getFacultyAuthorizedScope(user);
+  const scope = getFacultyAuthorizedScope(user, academicYear);
+  if (!scope.isAuthorized) return false;
+
   return scope.subjects.some(assigned => {
     if (!isSameSubject(assigned, cleanSub)) {
       return false;
@@ -2429,7 +2799,7 @@ function validateTimetablePayload(body) {
       }
 
       const bold = Boolean(c.bold);
-      const fontFamily = String(c.fontFamily || "Inter").trim();
+      const fontFamily = String(c.fontFamily || "DM Sans").trim();
       if (!TIMETABLE_ALLOWED_FONTS.includes(fontFamily)) {
         return { error: `Invalid fontFamily: '${fontFamily}'. Allowed: ${TIMETABLE_ALLOWED_FONTS.join(", ")}` };
       }
@@ -2487,9 +2857,10 @@ function validateTimetablePayload(body) {
   };
 }
 
-function sanitizeTimetableForFaculty(doc, user) {
+function sanitizeTimetableForFaculty(doc, user, academicYear) {
   if (!doc) return null;
   const sanitized = JSON.parse(JSON.stringify(doc));
+  const targetYear = academicYear || sanitized.academicYear || null;
   if (Array.isArray(sanitized.cells)) {
     sanitized.cells = sanitized.cells.map(cell => {
       if (!cell || !cell.subject) {
@@ -2499,7 +2870,7 @@ function sanitizeTimetableForFaculty(doc, user) {
         };
       }
       // Keep cell subject only if assigned to this faculty member
-      if (canFacultySetSubject(user, cell.subject, sanitized.semester, sanitized.division)) {
+      if (canFacultySetSubject(user, cell.subject, sanitized.semester, sanitized.division, targetYear)) {
         return {
           ...cell,
           textAlign: "center"
@@ -2519,30 +2890,33 @@ function sanitizeTimetableForFaculty(doc, user) {
 
 app.get("/api/timetable", requireAuth(), async (req, res) => {
   try {
-    const { semester, division } = req.query;
+    const { semester, division, academicYear } = req.query;
 
     // 1. Student role: strictly lock to authenticated user's semester & division (IDOR protection)
     if (req.user.role === "student") {
       const studentSem = req.user.semester || "1st Semester";
       const studentDiv = req.user.division || "Div A";
-      const doc = await Timetable.findOne({ semester: studentSem, division: studentDiv }).select("-__v").lean();
+      const targetYear = academicYear || req.user.academicYear || (await academicYearService.getActiveYearCode());
+      let doc = await Timetable.findOne({ semester: studentSem, division: studentDiv, academicYear: targetYear }).select("-__v").lean();
       if (!doc) {
         return res.json({
           success: true,
           timetable: (semester || division) ? null : [],
           timetableDoc: null,
           semester: studentSem,
-          division: studentDiv
+          division: studentDiv,
+          academicYear: targetYear
         });
       }
       if (!Array.isArray(doc.days)) {
-        const legacyDocs = await Timetable.find({ semester: studentSem, division: studentDiv }).select("-__v").limit(1000).lean();
+        const legacyDocs = await Timetable.find({ semester: studentSem, division: studentDiv, academicYear: targetYear }).select("-__v").limit(1000).lean();
         return res.json({
           success: true,
           timetable: legacyDocs,
           timetableDoc: legacyDocs[0] || null,
           semester: studentSem,
-          division: studentDiv
+          division: studentDiv,
+          academicYear: targetYear
         });
       }
       return res.json({
@@ -2550,58 +2924,64 @@ app.get("/api/timetable", requireAuth(), async (req, res) => {
         timetable: doc,
         timetableDoc: doc,
         semester: studentSem,
-        division: studentDiv
+        division: studentDiv,
+        academicYear: targetYear
       });
     }
 
     // 2. Faculty role: verify scope & filter strictly to assigned subjects
     if (req.user.role === "faculty") {
-      const scope = getFacultyAuthorizedScope(req.user);
-      if (!scope.subjects || !scope.subjects.length) {
+      const targetYear = academicYear || (await academicYearService.getActiveYearCode());
+      const scope = getFacultyAuthorizedScope(req.user, targetYear);
+      if (!scope.isAuthorized || !scope.subjects || !scope.subjects.length) {
         return res.json({
           success: true,
           timetable: null,
           timetableDoc: null,
-          message: "No assigned subjects found for this faculty member."
+          message: scope.reason || "No assigned subjects found for this faculty member."
         });
       }
 
       if (semester && division) {
-        if (!isFacultyAuthorizedForTimetable(req.user, semester, division)) {
+        if (!isFacultyAuthorizedForTimetable(req.user, semester, division, targetYear)) {
           return res.status(403).json({ success: false, message: "Access forbidden: You are not authorized to view this timetable." });
         }
-        const doc = await Timetable.findOne({ semester, division }).select("-__v").lean();
-        const facultyDoc = sanitizeTimetableForFaculty(doc, req.user);
-        return res.json({ success: true, timetable: facultyDoc || null, timetableDoc: facultyDoc || null });
+        let doc = await Timetable.findOne({ semester, division, academicYear: targetYear }).select("-__v").lean();
+        const facultyDoc = doc ? sanitizeTimetableForFaculty(doc, req.user, targetYear) : null;
+        return res.json({ success: true, timetable: facultyDoc, timetableDoc: facultyDoc, academicYear: targetYear });
       }
 
       // If no query parameters, return all timetables within faculty scope sanitized for this faculty
-      const allDocs = await Timetable.find({}).select("-__v").limit(1000).lean();
+      const query = { academicYear: targetYear };
+      const allDocs = await Timetable.find(query).select("-__v").limit(1000).lean();
       const authorizedDocs = allDocs
-        .filter(doc => isFacultyAuthorizedForTimetable(req.user, doc.semester, doc.division))
-        .map(doc => sanitizeTimetableForFaculty(doc, req.user));
-      return res.json({ success: true, timetable: authorizedDocs, timetableDoc: authorizedDocs[0] || null });
+        .filter(doc => isFacultyAuthorizedForTimetable(req.user, doc.semester, doc.division, targetYear))
+        .map(doc => sanitizeTimetableForFaculty(doc, req.user, targetYear));
+      return res.json({ success: true, timetable: authorizedDocs, timetableDoc: authorizedDocs[0] || null, academicYear: targetYear });
     }
 
     // 3. Admin role: unrestricted
     if (req.user.role === "admin") {
+      const targetYear = academicYear || (await academicYearService.getActiveYearCode());
       if (semester && division) {
-        const doc = await Timetable.findOne({ semester, division }).select("-__v").lean();
+        let doc = await Timetable.findOne({ semester, division, academicYear: targetYear }).select("-__v").lean();
         return res.json({
           success: true,
           timetable: doc || null,
-          timetableDoc: doc || null
+          timetableDoc: doc || null,
+          academicYear: targetYear
         });
       }
 
-      const filter = {};
+      const filter = { academicYear: targetYear };
       if (semester) filter.semester = semester;
       if (division) filter.division = division;
       const docs = await Timetable.find(filter).select("-__v").limit(1000).lean();
       return res.json({
         success: true,
         timetable: docs,
-        timetableDoc: docs[0] || null
+        timetableDoc: docs[0] || null,
+        academicYear: targetYear
       });
     }
 
@@ -2614,11 +2994,15 @@ app.get("/api/timetable", requireAuth(), async (req, res) => {
 
 app.get("/api/timetable/faculty-view", requireAuth(["faculty", "admin"]), async (req, res) => {
   try {
+    const targetYear = req.query.academicYear ? stripHtmlTags(String(req.query.academicYear)).trim() : (await academicYearService.getActiveYearCode());
     let subjects = [];
     if (req.user.role === "admin") {
       subjects = Object.keys(SUBJECT_SEMESTER_CATALOGUE);
     } else {
-      const scope = getFacultyAuthorizedScope(req.user);
+      const scope = getFacultyAuthorizedScope(req.user, targetYear);
+      if (!scope.isAuthorized) {
+        return res.json({ success: true, facultyView: [] });
+      }
       subjects = scope.subjects;
       // If query param 'subject' was requested by faculty, verify it is in their scope
       if (req.query.subject) {
@@ -2634,7 +3018,7 @@ app.get("/api/timetable/faculty-view", requireAuth(["faculty", "admin"]), async 
       return res.json({ success: true, facultyView: [] });
     }
 
-    const allDocs = await Timetable.find({}).select("-__v").lean();
+    const allDocs = await Timetable.find({ academicYear: targetYear }).select("-__v").lean();
     const facultyViewList = [];
 
     for (const sub of subjects) {
@@ -2704,15 +3088,17 @@ async function handleSaveTimetable(req, res) {
     }
 
     const { semester, division, days, timeSlots, cells } = validated;
+    const activeCode = await academicYearService.getActiveYearCode();
+    const cleanAcademicYear = req.body.academicYear ? stripHtmlTags(String(req.body.academicYear)).trim() : activeCode;
 
     // Faculty authorization verification
     if (req.user.role === "faculty") {
-      if (!isFacultyAuthorizedForTimetable(req.user, semester, division)) {
+      if (!isFacultyAuthorizedForTimetable(req.user, semester, division, cleanAcademicYear)) {
         return res.status(403).json({ success: false, message: "Access forbidden: You are not authorized to manage timetable for this Semester and Division." });
       }
 
       // Check existing document to prevent faculty from modifying other subjects' cells
-      const existing = await Timetable.findOne({ semester, division }).lean();
+      const existing = await Timetable.findOne({ semester, division, academicYear: cleanAcademicYear }).lean();
 
       // 1. Faculty can ONLY author/assign subjects that are authorized for them
       for (const c of cells) {
@@ -2721,7 +3107,7 @@ async function handleSaveTimetable(req, res) {
           ? existing.cells.find(ec => ec.dayIndex === c.dayIndex && ec.slotIndex === c.slotIndex)
           : null;
         const isUnchangedSubject = matchingExisting && isSameSubject(matchingExisting.subject, c.subject);
-        if (!isUnchangedSubject && !canFacultySetSubject(req.user, c.subject, semester, division)) {
+        if (!isUnchangedSubject && !canFacultySetSubject(req.user, c.subject, semester, division, cleanAcademicYear)) {
           return res.status(403).json({
             success: false,
             message: `Access forbidden: You are not authorized to assign subject '${c.subject}'.`
@@ -2732,7 +3118,7 @@ async function handleSaveTimetable(req, res) {
       // 2. Protect existing cells belonging to other faculty members
       if (existing && Array.isArray(existing.cells)) {
         for (const ec of existing.cells) {
-          if (ec.subject && !canFacultySetSubject(req.user, ec.subject, semester, division)) {
+          if (ec.subject && !canFacultySetSubject(req.user, ec.subject, semester, division, cleanAcademicYear)) {
             const matchingNewCell = cells.find(nc => nc.dayIndex === ec.dayIndex && nc.slotIndex === ec.slotIndex);
             if (matchingNewCell) {
               if (matchingNewCell.subject && !isSameSubject(matchingNewCell.subject, ec.subject)) {
@@ -2759,13 +3145,13 @@ async function handleSaveTimetable(req, res) {
     }
 
     const updated = await Timetable.findOneAndUpdate(
-      { semester, division },
-      { $set: { semester, division, days, timeSlots, cells } },
+      { semester, division, academicYear: cleanAcademicYear },
+      { $set: { semester, division, academicYear: cleanAcademicYear, days, timeSlots, cells } },
       { upsert: true, returnDocument: "after", runValidators: true }
     );
 
     const returnDoc = req.user.role === "faculty"
-      ? sanitizeTimetableForFaculty(updated.toObject ? updated.toObject() : updated, req.user)
+      ? sanitizeTimetableForFaculty(updated.toObject ? updated.toObject() : updated, req.user, cleanAcademicYear)
       : updated;
 
     fileSyncService.triggerSync();
@@ -2783,20 +3169,21 @@ app.delete("/api/timetable", rateLimitExpensive, requireAuth(["faculty", "admin"
   try {
     const semester = stripHtmlTags(String(req.query.semester || "").trim());
     const division = stripHtmlTags(String(req.query.division || "").trim());
+    const targetYear = req.query.academicYear ? stripHtmlTags(String(req.query.academicYear).trim()) : (await academicYearService.getActiveYearCode());
 
     if (!semester || !division) {
       return res.status(400).json({ success: false, message: "Both semester and division are required to delete a timetable." });
     }
 
     if (req.user.role === "faculty") {
-      if (!isFacultyAuthorizedForTimetable(req.user, semester, division)) {
+      if (!isFacultyAuthorizedForTimetable(req.user, semester, division, targetYear)) {
         return res.status(403).json({ success: false, message: "Access forbidden: You are not authorized to delete this timetable." });
       }
     }
 
-    const delResult = await Timetable.deleteOne({ semester, division });
+    const delResult = await Timetable.deleteOne({ semester, division, academicYear: targetYear });
     if (delResult.deletedCount === 0) {
-      return res.status(404).json({ success: false, message: "No timetable found for the specified Semester and Division." });
+      return res.status(404).json({ success: false, message: "No timetable found for the specified Semester, Division, and Academic Year." });
     }
 
     fileSyncService.triggerSync();
@@ -2965,22 +3352,33 @@ function validateAttendanceRecords(records) {
   return { valid: true, records: normalized };
 }
 
-function validateFacultyAttendanceAuthorization(user, subject, division, semester) {
-  if (!user) return { authorized: false, reason: "Authentication required." };
+function validateFacultyAttendanceAuthorization(user, subject, division, semester, academicYear) {
+  if (!user) return { authorized: false, reason: "Authentication required.", code: "AUTH_REQUIRED" };
   if (user.role === "admin") return { authorized: true };
-  if (user.role !== "faculty") return { authorized: false, reason: "Requires faculty or admin role." };
+  if (user.role !== "faculty") return { authorized: false, reason: "Requires faculty or admin role.", code: "ROLE_NOT_AUTHORIZED" };
 
   const cleanSub = String(subject || "").trim();
-  if (!cleanSub) return { authorized: false, reason: "Subject is required." };
+  if (!cleanSub) return { authorized: false, reason: "Subject is required.", code: "SUBJECT_REQUIRED" };
 
-  const scope = getFacultyAuthorizedScope(user);
+  const scope = getFacultyAuthorizedScope(user, academicYear);
+  if (!scope.isAuthorized) {
+    return {
+      authorized: false,
+      reason: scope.reason || "Faculty is not authorized for the requested academic year.",
+      code: scope.code || "ACADEMIC_YEAR_SCOPE_UNAUTHORIZED"
+    };
+  }
   if (!scope.subjects || scope.subjects.length === 0) {
-    return { authorized: false, reason: "Faculty has no assigned subjects." };
+    return { authorized: false, reason: "Faculty has no assigned subjects.", code: "NO_ASSIGNED_SUBJECTS" };
   }
 
   const isAssignedSubject = scope.subjects.some(assigned => isSameSubject(assigned, cleanSub));
   if (!isAssignedSubject) {
-    return { authorized: false, reason: `Faculty is not authorized to manage attendance for unassigned subject: ${cleanSub}` };
+    return {
+      authorized: false,
+      reason: `Faculty is not authorized to manage attendance for unassigned subject: ${cleanSub}`,
+      code: "UNAUTHORIZED_SUBJECT"
+    };
   }
 
   // Division check
@@ -2994,7 +3392,11 @@ function validateFacultyAttendanceAuthorization(user, subject, division, semeste
     if (divRule !== "all" && divRule !== "both divisions" && divRule !== "all divisions") {
       const cleanRule = divRule.replace(/^div\s*/i, "").trim();
       if (divRule !== normDiv && cleanRule !== cleanTargetDiv) {
-        return { authorized: false, reason: `Faculty is not authorized to manage attendance for division: ${division}` };
+        return {
+          authorized: false,
+          reason: `Faculty is not authorized to manage attendance for division: ${division}`,
+          code: "UNAUTHORIZED_DIVISION"
+        };
       }
     }
   }
@@ -3004,11 +3406,16 @@ function validateFacultyAttendanceAuthorization(user, subject, division, semeste
     const normSem = String(semester).trim().toLowerCase();
     const cleanTargetSem = normSem.replace(/[\s_-]+/g, "");
     const matchedSubject = scope.subjects.find(assigned => isSameSubject(assigned, cleanSub));
-    const assignedSem = getSubjectSemester(matchedSubject) || user.semester;
+    const assignedSem = (scope.semesters && scope.semesters.find(s => String(s).trim().toLowerCase().replace(/[\s_-]+/g, "") === cleanTargetSem)) ||
+      getSubjectSemester(matchedSubject) || user.semester;
     if (assignedSem) {
       const normAssignedSem = String(assignedSem).trim().toLowerCase().replace(/[\s_-]+/g, "");
       if (normAssignedSem && cleanTargetSem && normAssignedSem !== cleanTargetSem) {
-        return { authorized: false, reason: `Faculty is not authorized to manage attendance for semester: ${semester}` };
+        return {
+          authorized: false,
+          reason: `Faculty is not authorized to manage attendance for semester: ${semester}`,
+          code: "UNAUTHORIZED_SEMESTER"
+        };
       }
     }
   }
@@ -3070,7 +3477,7 @@ function recalculateOverallAttendance(dailyAttendance = [], students = {}, targe
 // GET /api/attendance
 app.get("/api/attendance", requireAuth(), async (req, res) => {
   try {
-    const { semester, division, subject, date, isoDate, studentUsername } = req.query;
+    const { semester, division, subject, date, isoDate, studentUsername, academicYear } = req.query;
 
     // 1. Student role: IDOR lockdown to authenticated student profile
     if (req.user.role === "student") {
@@ -3083,6 +3490,7 @@ app.get("/api/attendance", requireAuth(), async (req, res) => {
         ]
       };
       if (subject) query.subject = subject;
+      if (academicYear) query.academicYear = academicYear;
 
       let docs = await Attendance.find(query).sort({ date: -1, createdAt: -1 }).lean();
 
@@ -3091,6 +3499,7 @@ app.get("/api/attendance", requireAuth(), async (req, res) => {
         docs = (store?.dailyAttendance || []).filter(a => {
           if (!a) return false;
           if (subject && !isSameSubject(a.subject, subject)) return false;
+          if (academicYear && a.academicYear && a.academicYear !== academicYear) return false;
           const hasRec = a.records && typeof a.records === "object" &&
             Object.keys(a.records).some(k => String(k).toLowerCase() === normStudent);
           return hasRec || (a.studentUsername && String(a.studentUsername).toLowerCase() === normStudent);
@@ -3119,20 +3528,24 @@ app.get("/api/attendance", requireAuth(), async (req, res) => {
 
     // 2. Faculty role: scope strictly to assigned subjects and divisions
     if (req.user.role === "faculty") {
+      const targetYear = academicYear || (await academicYearService.getActiveYearCode());
       if (subject) {
-        const authCheck = validateFacultyAttendanceAuthorization(req.user, subject, division, semester);
+        const authCheck = validateFacultyAttendanceAuthorization(req.user, subject, division, semester, targetYear);
         if (!authCheck.authorized) {
           return res.status(403).json({ success: false, message: authCheck.reason });
         }
       }
       if (division) {
-        const authCheck = validateFacultyAttendanceAuthorization(req.user, subject || req.user.subject, division, semester);
+        const authCheck = validateFacultyAttendanceAuthorization(req.user, subject || req.user.subject, division, semester, targetYear);
         if (!authCheck.authorized) {
           return res.status(403).json({ success: false, message: authCheck.reason });
         }
       }
 
-      const scope = getFacultyAuthorizedScope(req.user);
+      const scope = getFacultyAuthorizedScope(req.user, targetYear);
+      if (!scope.isAuthorized) {
+        return res.status(403).json({ success: false, message: scope.reason || "Access forbidden." });
+      }
       const query = {};
       if (subject) {
         query.subject = subject;
@@ -3141,6 +3554,7 @@ app.get("/api/attendance", requireAuth(), async (req, res) => {
       }
       if (division) query.division = division;
       if (semester) query.semester = semester;
+      if (targetYear) query.academicYear = targetYear;
       if (isoDate || date) query.$or = [{ isoDate: isoDate || date }, { date: date || isoDate }];
 
       let docs = await Attendance.find(query).sort({ date: -1, createdAt: -1 }).lean();
@@ -3152,7 +3566,8 @@ app.get("/api/attendance", requireAuth(), async (req, res) => {
           if (subject && !isSameSubject(a.subject, subject)) return false;
           if (division && a.division !== division) return false;
           if (semester && a.semester !== semester) return false;
-          return canFacultySetSubject(req.user, a.subject, a.semester, a.division);
+          if (targetYear && a.academicYear && a.academicYear !== targetYear) return false;
+          return canFacultySetSubject(req.user, a.subject, a.semester, a.division, targetYear);
         });
       }
 
@@ -3165,6 +3580,7 @@ app.get("/api/attendance", requireAuth(), async (req, res) => {
       if (subject) query.subject = subject;
       if (division) query.division = division;
       if (semester) query.semester = semester;
+      if (academicYear) query.academicYear = academicYear;
       if (studentUsername) query.$or = [{ studentUsername }, { [`records.${studentUsername}`]: { $exists: true } }];
       if (isoDate || date) query.$or = [{ isoDate: isoDate || date }, { date: date || isoDate }];
 
@@ -3176,6 +3592,7 @@ app.get("/api/attendance", requireAuth(), async (req, res) => {
           if (subject && !isSameSubject(a.subject, subject)) return false;
           if (division && a.division !== division) return false;
           if (semester && a.semester !== semester) return false;
+          if (academicYear && a.academicYear && a.academicYear !== academicYear) return false;
           return true;
         });
       }
@@ -3247,11 +3664,25 @@ async function handleSaveAttendance(req, res) {
       topStatus = normSt === "P" ? "Present" : "Absent";
     }
 
+    const activeCode = await academicYearService.getActiveYearCode();
+    const cleanAcademicYear = req.body?.academicYear ? stripHtmlTags(String(req.body.academicYear)).trim() : activeCode;
+
     // Role authorization
     if (req.user.role === "faculty") {
-      const auth = validateFacultyAttendanceAuthorization(req.user, subject, division, semester);
+      const auth = validateFacultyAttendanceAuthorization(req.user, subject, division, semester, cleanAcademicYear);
       if (!auth.authorized) {
-        return res.status(403).json({ success: false, message: auth.reason });
+        return res.status(403).json({ success: false, code: auth.code || "FACULTY_UNAUTHORIZED", message: auth.reason });
+      }
+
+      // Academic-year lifecycle write guard (Historical Immutability)
+      const targetYearDoc = await academicYearService.getAcademicYearByIdOrCode(cleanAcademicYear);
+      if (targetYearDoc && (targetYearDoc.status === "completed" || targetYearDoc.status === "archived")) {
+        const isCompleted = targetYearDoc.status === "completed";
+        return res.status(403).json({
+          success: false,
+          code: isCompleted ? "ACADEMIC_YEAR_COMPLETED" : "ACADEMIC_YEAR_ARCHIVED",
+          message: `Attendance modification rejected: Academic year '${cleanAcademicYear}' is ${targetYearDoc.status} and strictly read-only.`
+        });
       }
     }
 
@@ -3262,18 +3693,30 @@ async function handleSaveAttendance(req, res) {
     const cleanYear = stripHtmlTags(courseYear || "").trim();
 
     const targetAttId = attendanceId || id ||
-      ("att_" + crypto.createHash("sha256").update(`${dateRes.isoDate}_${cleanSub}_${cleanDiv}_${cleanSem}`).digest("hex").slice(0, 16));
+      ("att_" + crypto.createHash("sha256").update(`${dateRes.isoDate}_${cleanSub}_${cleanDiv}_${cleanSem}_${cleanAcademicYear}`).digest("hex").slice(0, 16));
 
     const facultyUser = req.user.role === "faculty" ? req.user.username : (stripHtmlTags(facultyUsername || "admin"));
 
     // Capture previous state to ensure idempotency and prevent duplicate pushes on identical saves
-    const prevAtt = await Attendance.findOne(
-      { $or: [{ attendanceId: targetAttId }, { subject: cleanSub, division: cleanDiv, semester: cleanSem, isoDate: dateRes.isoDate }] }
-    ).lean();
+    // Strictly scoped by academicYear: unversioned legacy or other years' records will never match
+    const prevAtt = await Attendance.findOne({
+      academicYear: cleanAcademicYear,
+      $or: [
+        { attendanceId: targetAttId },
+        { subject: cleanSub, division: cleanDiv, semester: cleanSem, isoDate: dateRes.isoDate }
+      ]
+    }).lean();
 
     // 1. Non-destructive update in dedicated Attendance collection
+    // Guaranteed to match ONLY records belonging to the exact target academicYear
     const attDoc = await Attendance.findOneAndUpdate(
-      { $or: [{ attendanceId: targetAttId }, { subject: cleanSub, division: cleanDiv, semester: cleanSem, isoDate: dateRes.isoDate }] },
+      {
+        academicYear: cleanAcademicYear,
+        $or: [
+          { attendanceId: targetAttId },
+          { subject: cleanSub, division: cleanDiv, semester: cleanSem, isoDate: dateRes.isoDate }
+        ]
+      },
       {
         $set: {
           id: targetAttId,
@@ -3282,6 +3725,7 @@ async function handleSaveAttendance(req, res) {
           division: cleanDiv,
           semester: cleanSem,
           courseYear: cleanYear,
+          academicYear: cleanAcademicYear,
           date: dateRes.date,
           isoDate: dateRes.isoDate,
           records: validatedRecords,
@@ -3307,9 +3751,15 @@ async function handleSaveAttendance(req, res) {
     }
     if (!store.students) store.students = {};
     const daily = store.dailyAttendance || [];
+    // Strict year-scoped matching: unversioned legacy attendance (d.academicYear is empty/missing)
+    // or attendance records from different academic years will NEVER match and are 100% preserved.
     const existingIdx = daily.findIndex(d =>
-      (d && (d.id === targetAttId || d.attendanceId === targetAttId)) ||
-      (d && isSameSubject(d.subject, cleanSub) && d.division === cleanDiv && d.semester === cleanSem && (d.isoDate === dateRes.isoDate || d.date === dateRes.date))
+      d &&
+      d.academicYear === cleanAcademicYear &&
+      (
+        (d.id === targetAttId || d.attendanceId === targetAttId) ||
+        (isSameSubject(d.subject, cleanSub) && d.division === cleanDiv && d.semester === cleanSem && (d.isoDate === dateRes.isoDate || d.date === dateRes.date))
+      )
     );
 
     const entryToSave = {
@@ -3319,6 +3769,7 @@ async function handleSaveAttendance(req, res) {
       division: cleanDiv,
       semester: cleanSem,
       courseYear: cleanYear,
+      academicYear: cleanAcademicYear,
       date: dateRes.date,
       isoDate: dateRes.isoDate,
       records: validatedRecords,
@@ -3384,11 +3835,23 @@ async function handleDeleteAttendance(req, res) {
     const recSubject = doc?.subject || storeEntry?.subject || "";
     const recDiv = doc?.division || storeEntry?.division || "";
     const recSem = doc?.semester || storeEntry?.semester || "";
+    const recYear = doc?.academicYear || storeEntry?.academicYear || (await academicYearService.getActiveYearCode());
 
     if (req.user.role === "faculty") {
-      const auth = validateFacultyAttendanceAuthorization(req.user, recSubject, recDiv, recSem);
+      const auth = validateFacultyAttendanceAuthorization(req.user, recSubject, recDiv, recSem, recYear);
       if (!auth.authorized) {
-        return res.status(403).json({ success: false, message: auth.reason });
+        return res.status(403).json({ success: false, code: auth.code || "FACULTY_UNAUTHORIZED", message: auth.reason });
+      }
+
+      // Academic-year lifecycle delete guard (Historical Immutability)
+      const targetYearDoc = await academicYearService.getAcademicYearByIdOrCode(recYear);
+      if (targetYearDoc && (targetYearDoc.status === "completed" || targetYearDoc.status === "archived")) {
+        const isCompleted = targetYearDoc.status === "completed";
+        return res.status(403).json({
+          success: false,
+          code: isCompleted ? "ACADEMIC_YEAR_COMPLETED" : "ACADEMIC_YEAR_ARCHIVED",
+          message: `Attendance deletion rejected: Academic year '${recYear}' is ${targetYearDoc.status} and strictly read-only.`
+        });
       }
     }
 
@@ -3555,10 +4018,11 @@ app.get("/api/academic/data", requireAuth(), async (req, res) => {
 
     // Faculty role: scope dailyAttendance to authorized subjects & divisions
     if (req.user.role === "faculty") {
-      const scope = getFacultyAuthorizedScope(req.user);
+      const targetYear = req.query.academicYear ? stripHtmlTags(String(req.query.academicYear)).trim() : (await academicYearService.getActiveYearCode());
+      const scope = getFacultyAuthorizedScope(req.user, targetYear);
       const facultyAttendance = (store.dailyAttendance || []).filter(att => {
         if (!att || !att.subject) return false;
-        return canFacultySetSubject(req.user, att.subject, att.semester, att.division);
+        return canFacultySetSubject(req.user, att.subject, att.semester, att.division, targetYear);
       });
 
       return res.json({
@@ -3714,6 +4178,7 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                     division: a.division || "",
                     semester: a.semester || "",
                     courseYear: a.courseYear || "",
+                    academicYear: a.academicYear || "",
                     date: a.date || "",
                     isoDate: a.isoDate || "",
                     records: a.records && typeof a.records === "object" ? a.records : {},
@@ -3741,13 +4206,23 @@ async function syncCollectionsFromAcademicData(payload = {}) {
       }
 
       // 3. Sync Student Marks into MongoDB 'marks' collection via safe bulkWrite upsert
+      // F-02 Remediation: Year-scoped identity (<academicYear>_<username>_<subId>) and year-scoped upsert filter
       if (payload.students && typeof payload.students === "object") {
         const markOps = [];
+        const activeYearCode = await academicYearService.getActiveYearCode();
         for (const [username, record] of Object.entries(payload.students)) {
           if (record && record.marks && typeof record.marks === "object") {
+            const studentAcademicYear = (record.academicYear && String(record.academicYear).trim())
+              || (payload.activeAcademicYear && String(payload.activeAcademicYear).trim())
+              || activeYearCode;
             for (const [subId, m] of Object.entries(record.marks)) {
               if (m && typeof m === "object") {
-                const markId = `${username}_${subId}`;
+                const markAcademicYear = (m.academicYear && String(m.academicYear).trim()) || studentAcademicYear;
+                if (!markAcademicYear) {
+                  console.warn(`[SyncMarks] Skipping mark for ${username}/${subId}: Missing required academicYear context.`);
+                  continue;
+                }
+                const markId = `${markAcademicYear}_${username}_${subId}`;
                 const totalVal = typeof m.total === "number" ? m.total : (
                   (typeof m.internal1 === "number" ? m.internal1 : 0) +
                   (typeof m.internal2 === "number" ? m.internal2 : 0) +
@@ -3755,7 +4230,7 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                 );
                 markOps.push({
                   updateOne: {
-                    filter: { markId },
+                    filter: { markId, academicYear: markAcademicYear, studentUsername: username, subject: subId },
                     update: {
                       $set: {
                         markId,
@@ -3772,7 +4247,8 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                         maxFinal: typeof m.maxFinal === "number" ? m.maxFinal : 70,
                         total: totalVal,
                         grade: m.grade || "",
-                        marksObtained: totalVal
+                        marksObtained: totalVal,
+                        academicYear: markAcademicYear
                       }
                     },
                     upsert: true
@@ -3810,7 +4286,8 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                     status: as.status || "Pending",
                     submittedDate: as.submittedDate || "",
                     facultyUsername: as.facultyUsername || "",
-                    submissions: Array.isArray(as.submissions) ? as.submissions : []
+                    submissions: Array.isArray(as.submissions) ? as.submissions : [],
+                    academicYear: as.academicYear || ""
                   }
                 },
                 upsert: true
@@ -3864,7 +4341,8 @@ async function syncCollectionsFromAcademicData(payload = {}) {
                     fileData: n.fileData || "",
                     uploadedBy: n.uploadedBy || "",
                     uploadedByName: stripHtmlTags(n.uploadedByName || "Faculty"),
-                    date: n.date || new Date().toISOString().slice(0, 10)
+                    date: n.date || new Date().toISOString().slice(0, 10),
+                    academicYear: n.academicYear || ""
                   }
                 },
                 upsert: true
@@ -3961,6 +4439,7 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
 
     const existingStore = await AcademicStore.findOne({ storeKey: "default_academic_store" });
     const update = {};
+    const defaultAcademicYear = payload.academicYear ? stripHtmlTags(String(payload.academicYear)).trim() : (await academicYearService.getActiveYearCode());
 
     // 3. Per-student, per-subject validated merges (replaces blanket merge)
     if (payload.students && typeof payload.students === "object") {
@@ -3969,6 +4448,7 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
         if (!studentData || typeof studentData !== "object") continue;
         const existingStudent = mergedStudents[studentKey] || { marks: {} };
         const updatedStudent = { ...existingStudent };
+        const studentYear = studentData.academicYear || defaultAcademicYear;
 
         if (req.user.role === "admin") {
           for (const [prop, val] of Object.entries(studentData)) {
@@ -3989,7 +4469,8 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
                 req.user,
                 subId,
                 studentData.division || updatedStudent.division,
-                studentData.semester || updatedStudent.semester
+                studentData.semester || updatedStudent.semester,
+                studentYear
               );
               if (!subAuth.authorized) {
                 return res.status(403).json({
@@ -4110,9 +4591,21 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
 
           // Faculty role authorization enforcement
           if (req.user.role === "faculty") {
-            const authCheck = validateFacultyAttendanceAuthorization(req.user, a.subject, a.division, a.semester);
+            const attYear = a.academicYear || defaultAcademicYear;
+            const authCheck = validateFacultyAttendanceAuthorization(req.user, a.subject, a.division, a.semester, attYear);
             if (!authCheck.authorized) {
-              return res.status(403).json({ success: false, message: authCheck.reason });
+              return res.status(403).json({ success: false, code: authCheck.code || "FACULTY_UNAUTHORIZED", message: authCheck.reason });
+            }
+
+            // Academic-year lifecycle write guard (Historical Immutability)
+            const targetYearDoc = await academicYearService.getAcademicYearByIdOrCode(attYear);
+            if (targetYearDoc && (targetYearDoc.status === "completed" || targetYearDoc.status === "archived")) {
+              const isCompleted = targetYearDoc.status === "completed";
+              return res.status(403).json({
+                success: false,
+                code: isCompleted ? "ACADEMIC_YEAR_COMPLETED" : "ACADEMIC_YEAR_ARCHIVED",
+                message: `Academic sync rejected: Academic year '${attYear}' is ${targetYearDoc.status} and strictly read-only.`
+              });
             }
           }
         }
@@ -4137,9 +4630,21 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
         for (const delId of delDaily) {
           const existing = attMap.get(delId);
           if (existing && req.user.role === "faculty") {
-            const authCheck = validateFacultyAttendanceAuthorization(req.user, existing.subject, existing.division, existing.semester);
+            const delYear = existing.academicYear || defaultAcademicYear;
+            const authCheck = validateFacultyAttendanceAuthorization(req.user, existing.subject, existing.division, existing.semester, delYear);
             if (!authCheck.authorized) {
-              return res.status(403).json({ success: false, message: authCheck.reason });
+              return res.status(403).json({ success: false, code: authCheck.code || "FACULTY_UNAUTHORIZED", message: authCheck.reason });
+            }
+
+            // Academic-year lifecycle delete guard (Historical Immutability)
+            const targetYearDoc = await academicYearService.getAcademicYearByIdOrCode(delYear);
+            if (targetYearDoc && (targetYearDoc.status === "completed" || targetYearDoc.status === "archived")) {
+              const isCompleted = targetYearDoc.status === "completed";
+              return res.status(403).json({
+                success: false,
+                code: isCompleted ? "ACADEMIC_YEAR_COMPLETED" : "ACADEMIC_YEAR_ARCHIVED",
+                message: `Academic sync deletion rejected: Academic year '${delYear}' is ${targetYearDoc.status} and strictly read-only.`
+              });
             }
           }
           attMap.delete(delId);
@@ -4154,7 +4659,8 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
       for (const a of payload.assignments) {
         if (!a || typeof a !== "object") continue;
         if (req.user.role === "faculty") {
-          const authCheck = validateFacultyAttendanceAuthorization(req.user, a.subject, a.division, a.semester);
+          const asgnYear = a.academicYear || defaultAcademicYear;
+          const authCheck = validateFacultyAttendanceAuthorization(req.user, a.subject, a.division, a.semester, asgnYear);
           if (!authCheck.authorized) {
             return res.status(403).json({
               success: false,
@@ -4210,7 +4716,8 @@ app.post("/api/academic/sync", rateLimitExpensive, requireAuth(["faculty", "admi
       for (const n of payload.notes) {
         if (!n || typeof n !== "object") continue;
         if (req.user.role === "faculty") {
-          const authCheck = validateFacultyAttendanceAuthorization(req.user, n.subject, n.division, n.semester);
+          const noteYear = n.academicYear || defaultAcademicYear;
+          const authCheck = validateFacultyAttendanceAuthorization(req.user, n.subject, n.division, n.semester, noteYear);
           if (!authCheck.authorized) {
             return res.status(403).json({
               success: false,
@@ -4952,11 +5459,10 @@ app.post("/api/academic/divisions/cascade", rateLimitExpensive, requireAuth(["ad
 // COURSES & SYLLABUS MANAGEMENT API (Admin + Student/Faculty + PDF)
 // ============================================================================
 
-const ALL_YEARS_METADATA = [
+const COURSE_YEAR_METADATA = [
   {
     yearLevel: 1,
     yearTitle: "First Year BCA",
-    academicYear: "2025–26",
     semesterLabel: "Semester I & II",
     semesters: [1, 2],
     semester: 1
@@ -4964,7 +5470,6 @@ const ALL_YEARS_METADATA = [
   {
     yearLevel: 2,
     yearTitle: "Second Year BCA",
-    academicYear: "2026–27",
     semesterLabel: "Semester III & IV",
     semesters: [3, 4],
     semester: 2
@@ -4972,7 +5477,6 @@ const ALL_YEARS_METADATA = [
   {
     yearLevel: 3,
     yearTitle: "Third Year BCA",
-    academicYear: "2027–28",
     semesterLabel: "Semester V & VI",
     semesters: [5, 6],
     semester: 3
@@ -4995,14 +5499,14 @@ function formatSyllabus(doc) {
     formattedSize = size + " B";
   }
 
-  const config = VALID_YEAR_CONFIG[doc.yearLevel] || {};
+  const courseMeta = COURSE_YEAR_METADATA.find(m => m.yearLevel === doc.yearLevel) || {};
 
   return {
     yearLevel: doc.yearLevel,
-    yearTitle: doc.yearTitle || config.yearTitle || `Year ${doc.yearLevel} BCA`,
-    academicYear: doc.academicYear || config.academicYear || "",
-    semesterLabel: doc.semesterLabel || config.semesterLabel || "",
-    semesters: config.semesters || [],
+    yearTitle: doc.yearTitle || courseMeta.yearTitle || `Year ${doc.yearLevel} BCA`,
+    academicYear: doc.academicYear || "",
+    semesterLabel: doc.semesterLabel || courseMeta.semesterLabel || "",
+    semesters: courseMeta.semesters || [],
     semester: doc.semester || doc.yearLevel,
     isUploaded: true,
     originalFilename: doc.originalFilename,
@@ -5015,25 +5519,35 @@ function formatSyllabus(doc) {
   };
 }
 
-// GET /api/syllabus - Returns 3 year cards syllabus metadata for authenticated users
-app.get("/api/syllabus", requireAuth(), async (req, res) => {
+// GET /api/syllabus - Returns 3 year cards syllabus metadata dynamically scoped by academicYear
+app.get("/api/syllabus", async (req, res) => {
   try {
-    const docs = await Syllabus.find({}).lean();
+    const requestedYear = req.query.academicYear ? stripHtmlTags(String(req.query.academicYear)).trim() : "";
+    const activeCode = await academicYearService.getActiveYearCode();
+    const targetAcademicYear = requestedYear || activeCode || "";
+
+    const query = {};
+    if (targetAcademicYear) {
+      query.academicYear = targetAcademicYear;
+    }
+    const docs = targetAcademicYear ? await Syllabus.find(query).lean() : [];
     const docMap = new Map();
     for (const d of docs) {
       docMap.set(d.yearLevel, d);
     }
 
-    const syllabi = ALL_YEARS_METADATA.map(meta => {
+    const syllabi = COURSE_YEAR_METADATA.map(meta => {
       const existing = docMap.get(meta.yearLevel);
       if (existing) {
         return {
           ...meta,
+          academicYear: existing.academicYear || targetAcademicYear,
           ...formatSyllabus(existing)
         };
       }
       return {
         ...meta,
+        academicYear: targetAcademicYear,
         isUploaded: false,
         originalFilename: null,
         fileSize: null,
@@ -5047,7 +5561,9 @@ app.get("/api/syllabus", requireAuth(), async (req, res) => {
     res.json({
       success: true,
       maxFileSizeMb: SYLLABUS_MAX_FILE_SIZE_MB,
-      syllabi
+      syllabi,
+      activeAcademicYear: activeCode,
+      selectedAcademicYear: targetAcademicYear
     });
   } catch (error) {
     console.error("Fetch syllabi error:", error);
@@ -5164,8 +5680,8 @@ app.post("/api/syllabus", requireAuth(["admin"]), (req, res) => {
         return res.status(400).json({ success: false, message: "Invalid year level. Must be 1 (First Year), 2 (Second Year), or 3 (Third Year)." });
       }
 
-      const config = VALID_YEAR_CONFIG[yearLevel];
-      if (!config) {
+      const courseMeta = COURSE_YEAR_METADATA.find(m => m.yearLevel === yearLevel);
+      if (!courseMeta) {
         if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
         return res.status(400).json({ success: false, message: "Invalid year configuration." });
       }
@@ -5179,14 +5695,26 @@ app.post("/api/syllabus", requireAuth(["admin"]), (req, res) => {
         });
       }
 
-      let existing = await Syllabus.findOne({ yearLevel });
+      const targetAcademicYear = req.body.academicYear
+        ? stripHtmlTags(String(req.body.academicYear).trim())
+        : (await academicYearService.getActiveYearCode());
+
+      if (!targetAcademicYear) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(400).json({
+          success: false,
+          message: "An academic year must be specified or an active academic year must be configured before uploading syllabus."
+        });
+      }
+
+      let existing = await Syllabus.findOne({ yearLevel, academicYear: targetAcademicYear });
       let oldPathToDelete = null;
 
       if (existing) {
         oldPathToDelete = existing.storagePath;
-        existing.yearTitle = config.yearTitle;
-        existing.academicYear = config.academicYear;
-        existing.semesterLabel = config.semesterLabel;
+        existing.yearTitle = courseMeta.yearTitle;
+        existing.academicYear = targetAcademicYear;
+        existing.semesterLabel = courseMeta.semesterLabel;
         existing.semester = yearLevel;
         existing.originalFilename = req.file.originalname;
         existing.storedFilename = req.file.filename;
@@ -5200,9 +5728,9 @@ app.post("/api/syllabus", requireAuth(["admin"]), (req, res) => {
         existing = await Syllabus.create({
           yearLevel,
           semester: yearLevel,
-          yearTitle: config.yearTitle,
-          academicYear: config.academicYear,
-          semesterLabel: config.semesterLabel,
+          yearTitle: courseMeta.yearTitle,
+          academicYear: targetAcademicYear,
+          semesterLabel: courseMeta.semesterLabel,
           originalFilename: req.file.originalname,
           storedFilename: req.file.filename,
           storagePath: req.file.path,
@@ -5275,8 +5803,8 @@ app.put("/api/syllabus/:yearLevel", requireAuth(["admin"]), (req, res) => {
         return res.status(400).json({ success: false, message: "Invalid year level: Must be 1, 2, or 3." });
       }
 
-      const config = VALID_YEAR_CONFIG[yearLevel];
-      if (!config) {
+      const courseMeta = COURSE_YEAR_METADATA.find(m => m.yearLevel === yearLevel);
+      if (!courseMeta) {
         if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
         return res.status(400).json({ success: false, message: "Invalid year configuration." });
       }
@@ -5290,11 +5818,26 @@ app.put("/api/syllabus/:yearLevel", requireAuth(["admin"]), (req, res) => {
         });
       }
 
-      let existing = await Syllabus.findOne({ yearLevel });
+      const targetAcademicYear = req.body.academicYear
+        ? stripHtmlTags(String(req.body.academicYear).trim())
+        : (await academicYearService.getActiveYearCode());
+
+      if (!targetAcademicYear) {
+        if (fs.existsSync(uploadedFilePath)) fs.unlinkSync(uploadedFilePath);
+        return res.status(400).json({
+          success: false,
+          message: "An academic year must be specified or an active academic year must be configured before replacing syllabus."
+        });
+      }
+
+      let existing = await Syllabus.findOne({ yearLevel, academicYear: targetAcademicYear });
       let oldPathToDelete = null;
 
       if (existing) {
         oldPathToDelete = existing.storagePath;
+        existing.yearTitle = courseMeta.yearTitle;
+        existing.academicYear = targetAcademicYear;
+        existing.semesterLabel = courseMeta.semesterLabel;
         existing.originalFilename = req.file.originalname;
         existing.storedFilename = req.file.filename;
         existing.storagePath = req.file.path;
@@ -5307,9 +5850,9 @@ app.put("/api/syllabus/:yearLevel", requireAuth(["admin"]), (req, res) => {
         existing = await Syllabus.create({
           yearLevel,
           semester: yearLevel,
-          yearTitle: config.yearTitle,
-          academicYear: config.academicYear,
-          semesterLabel: config.semesterLabel,
+          yearTitle: courseMeta.yearTitle,
+          academicYear: targetAcademicYear,
+          semesterLabel: courseMeta.semesterLabel,
           originalFilename: req.file.originalname,
           storedFilename: req.file.filename,
           storagePath: req.file.path,
@@ -5334,7 +5877,7 @@ app.put("/api/syllabus/:yearLevel", requireAuth(["admin"]), (req, res) => {
       fileSyncService.triggerSync();
       return res.status(200).json({
         success: true,
-        message: `${config.yearTitle} syllabus replaced successfully.`,
+        message: `${courseMeta.yearTitle} syllabus replaced successfully.`,
         syllabus: formatSyllabus(existing)
       });
     } catch (saveErr) {
@@ -5355,9 +5898,21 @@ app.delete("/api/syllabus/:yearLevel", requireAuth(["admin"]), async (req, res) 
       return res.status(400).json({ success: false, message: "Invalid year level: Must be 1, 2, or 3." });
     }
 
-    const doc = await Syllabus.findOne({ yearLevel });
+    const targetAcademicYear = req.query.academicYear
+      ? stripHtmlTags(String(req.query.academicYear)).trim()
+      : (await academicYearService.getActiveYearCode());
+
+    const query = { yearLevel };
+    if (targetAcademicYear) {
+      query.academicYear = targetAcademicYear;
+    }
+
+    const doc = await Syllabus.findOne(query);
     if (!doc) {
-      return res.status(404).json({ success: false, message: `Syllabus not found for Year ${yearLevel}.` });
+      return res.status(404).json({
+        success: false,
+        message: `Syllabus not found for Year ${yearLevel}${targetAcademicYear ? ` in academic year ${targetAcademicYear}` : ""}.`
+      });
     }
 
     if (doc.storagePath) {
@@ -5487,6 +6042,10 @@ process.on("uncaughtException", (error) => {
 
 app.validateAuthConfig = validateAuthConfig;
 app.validateStartupConfig = validateStartupConfig;
+app.getFacultyAuthorizedScope = getFacultyAuthorizedScope;
+app.isFacultyAuthorizedForTimetable = isFacultyAuthorizedForTimetable;
+app.canFacultySetSubject = canFacultySetSubject;
+app.validateFacultyAttendanceAuthorization = validateFacultyAttendanceAuthorization;
 
 module.exports = app;
 

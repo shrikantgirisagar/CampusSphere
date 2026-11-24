@@ -1,36 +1,24 @@
 const mongoose = require("mongoose");
 
-const VALID_YEAR_CONFIG = {
+const COURSE_YEAR_LEVELS = {
   1: {
     yearLevel: 1,
     yearTitle: "First Year BCA",
-    academicYear: "2025–26",
     semesterLabel: "Semester I & II",
     semesters: [1, 2]
   },
   2: {
     yearLevel: 2,
     yearTitle: "Second Year BCA",
-    academicYear: "2026–27",
     semesterLabel: "Semester III & IV",
     semesters: [3, 4]
   },
   3: {
     yearLevel: 3,
     yearTitle: "Third Year BCA",
-    academicYear: "2027–28",
     semesterLabel: "Semester V & VI",
     semesters: [5, 6]
   }
-};
-
-const VALID_SEMESTER_YEAR_MAP = {
-  1: { yearLevel: 1, academicYear: "2025–26" },
-  2: { yearLevel: 1, academicYear: "2025–26" },
-  3: { yearLevel: 2, academicYear: "2026–27" },
-  4: { yearLevel: 2, academicYear: "2026–27" },
-  5: { yearLevel: 3, academicYear: "2027–28" },
-  6: { yearLevel: 3, academicYear: "2027–28" }
 };
 
 const syllabusSchema = new mongoose.Schema(
@@ -38,9 +26,13 @@ const syllabusSchema = new mongoose.Schema(
     yearLevel: {
       type: Number,
       required: true,
-      enum: [1, 2, 3],
-      unique: true,
+      min: 1,
       index: true
+    },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null
     },
     semester: {
       type: Number,
@@ -108,26 +100,27 @@ const syllabusSchema = new mongoose.Schema(
   }
 );
 
-// Schema validation hook ensuring accurate year configuration
+// Compound index ensuring one syllabus document per year level within a specific academic year
+syllabusSchema.index({ academicYear: 1, yearLevel: 1 }, { unique: true });
+
+// Schema validation hook ensuring accurate structural labels without hardcoding academic years
 syllabusSchema.pre("validate", function () {
-  const config = VALID_YEAR_CONFIG[this.yearLevel];
-  if (!config) {
-    throw new Error(`Invalid yearLevel: ${this.yearLevel}. Must be 1, 2, or 3.`);
-  }
+  const config = COURSE_YEAR_LEVELS[this.yearLevel] || {
+    yearLevel: this.yearLevel,
+    yearTitle: `Year ${this.yearLevel} BCA`,
+    semesterLabel: `Semester ${this.yearLevel * 2 - 1} & ${this.yearLevel * 2}`
+  };
   if (!this.yearTitle) {
     this.yearTitle = config.yearTitle;
-  }
-  if (!this.academicYear) {
-    this.academicYear = config.academicYear;
   }
   if (!this.semesterLabel) {
     this.semesterLabel = config.semesterLabel;
   }
   if (!this.semester) {
-    this.semester = config.yearLevel;
+    this.semester = config.yearLevel || this.yearLevel;
   }
 });
 
 module.exports = mongoose.model("Syllabus", syllabusSchema);
-module.exports.VALID_YEAR_CONFIG = VALID_YEAR_CONFIG;
-module.exports.VALID_SEMESTER_YEAR_MAP = VALID_SEMESTER_YEAR_MAP;
+module.exports.COURSE_YEAR_LEVELS = COURSE_YEAR_LEVELS;
+module.exports.VALID_YEAR_CONFIG = COURSE_YEAR_LEVELS;

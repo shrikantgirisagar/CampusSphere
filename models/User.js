@@ -89,6 +89,22 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 50
     },
+    academicYear: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50
+    },
+    admissionYear: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50
+    },
+    facultyAllocations: {
+      type: Array,
+      default: []
+    },
     course: {
       type: String,
       default: "",

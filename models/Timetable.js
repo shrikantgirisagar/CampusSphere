@@ -24,8 +24,8 @@ const cellSchema = new mongoose.Schema(
     },
     fontFamily: {
       type: String,
-      enum: ["Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New", "Outfit", "Plus Jakarta Sans"],
-      default: "Inter"
+      enum: ["DM Sans", "Sora", "Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New", "Outfit", "Plus Jakarta Sans"],
+      default: "DM Sans"
     },
     fontSize: {
       type: String,
@@ -89,6 +89,18 @@ const timetableSchema = new mongoose.Schema(
       maxlength: 50,
       index: true
     },
+    academicYear: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50,
+      index: true
+    },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null
+    },
     days: {
       type: [String],
       default: undefined
@@ -124,9 +136,10 @@ timetableSchema.index(
   }
 );
 
-// Compound index on semester + division for grid documents
+// Compound unique index on academicYear + semester + division for grid documents
+// Permits different academic years to have separate timetables for the same semester and division
 timetableSchema.index(
-  { semester: 1, division: 1 },
+  { academicYear: 1, semester: 1, division: 1 },
   {
     unique: true,
     partialFilterExpression: { days: { $exists: true, $type: "array" } }

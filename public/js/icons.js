@@ -12,6 +12,7 @@
     root.CampusSphereIcons = exports;
     root.renderIcon = exports.renderIcon;
     root.createIconElement = exports.createIconElement;
+    root.renderAcademicIllustration = exports.renderAcademicIllustration;
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -332,11 +333,61 @@
     }
   }
 
+  /* =========================================================
+     Phase 3: Premium Illustrated Academic Cards Vector System
+     ========================================================= */
+  var ILLUSTRATION_SVGS = {
+    resources: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" class="{class}" aria-hidden="true"><rect x="10" y="38" width="44" height="14" rx="3" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/><line x1="16" y1="45" x2="48" y2="45" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/><rect x="14" y="25" width="40" height="13" rx="3" fill="#93C5FD" stroke="#1D4ED8" stroke-width="2"/><line x1="20" y1="31.5" x2="48" y2="31.5" stroke="#1E40AF" stroke-width="1.5" stroke-linecap="round"/><path d="M14 20C18 17 26 17 32 20C38 17 46 17 50 20V10C46 7 38 7 32 10C26 7 18 7 14 10V20Z" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="2" stroke-linejoin="round"/><path d="M32 10V20" stroke="#1D4ED8" stroke-width="2"/><path d="M20 12C23 11 27 11 30 12" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/><path d="M34 12C37 11 41 11 44 12" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/><path d="M30 7V17L32 15L34 17V7H30Z" fill="#F59E0B"/></svg>',
+    notes: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" class="{class}" aria-hidden="true"><rect x="18" y="10" width="36" height="46" rx="4" fill="#CCFBF1" stroke="#0D9488" stroke-width="2"/><rect x="12" y="14" width="36" height="44" rx="3" fill="#FFFFFF" stroke="#0F766E" stroke-width="2"/><rect x="8" y="19" width="8" height="3" rx="1.5" fill="#14B8A6"/><rect x="8" y="27" width="8" height="3" rx="1.5" fill="#14B8A6"/><rect x="8" y="35" width="8" height="3" rx="1.5" fill="#14B8A6"/><rect x="8" y="43" width="8" height="3" rx="1.5" fill="#14B8A6"/><line x1="20" y1="23" x2="42" y2="23" stroke="#99F6E4" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="29" x2="38" y2="29" stroke="#99F6E4" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="35" x2="42" y2="35" stroke="#99F6E4" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="41" x2="34" y2="41" stroke="#99F6E4" stroke-width="2" stroke-linecap="round"/><path d="M44 32L54 22C55.5 20.5 57.5 20.5 59 22C60.5 23.5 60.5 25.5 59 27L49 37L43 39L44 32Z" fill="#F59E0B" stroke="#B45309" stroke-width="1.5" stroke-linejoin="round"/><path d="M43 39L46 36" stroke="#B45309" stroke-width="1.5"/></svg>',
+    assignments: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" class="{class}" aria-hidden="true"><rect x="14" y="12" width="36" height="46" rx="4" fill="#EDE9FE" stroke="#7C3AED" stroke-width="2"/><rect x="18" y="18" width="28" height="36" rx="2" fill="#FFFFFF" stroke="#A78BFA" stroke-width="1.5"/><rect x="25" y="8" width="14" height="7" rx="2" fill="#8B5CF6" stroke="#6D28D9" stroke-width="1.5"/><circle cx="32" cy="11.5" r="1.5" fill="#FFFFFF"/><circle cx="24" cy="27" r="2.5" fill="#DDD6FE"/><line x1="29" y1="27" x2="41" y2="27" stroke="#7C3AED" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="35" r="2.5" fill="#DDD6FE"/><line x1="29" y1="35" x2="41" y2="35" stroke="#7C3AED" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="43" r="2.5" fill="#DDD6FE"/><line x1="29" y1="43" x2="37" y2="43" stroke="#7C3AED" stroke-width="1.5" stroke-linecap="round"/><circle cx="48" cy="44" r="10" fill="#7C3AED" stroke="#FFFFFF" stroke-width="2"/><path d="M45 46.5L48 40L51 46.5M46 44.5H50" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    calendar: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" class="{class}" aria-hidden="true"><rect x="10" y="14" width="44" height="42" rx="5" fill="#FFFFFF" stroke="#E11D48" stroke-width="2"/><path d="M10 19C10 16.2 12.2 14 15 14H49C51.8 14 54 16.2 54 19V24H10V19Z" fill="#FFE4E6"/><line x1="10" y1="24" x2="54" y2="24" stroke="#E11D48" stroke-width="1.5"/><rect x="18" y="9" width="4" height="8" rx="2" fill="#E11D48"/><rect x="42" y="9" width="4" height="8" rx="2" fill="#E11D48"/><rect x="16" y="29" width="6" height="6" rx="1.5" fill="#F43F5E"/><rect x="25" y="29" width="6" height="6" rx="1.5" fill="#FECDD3"/><rect x="34" y="29" width="6" height="6" rx="1.5" fill="#FECDD3"/><rect x="43" y="29" width="6" height="6" rx="1.5" fill="#FECDD3"/><rect x="16" y="38" width="6" height="6" rx="1.5" fill="#FECDD3"/><rect x="25" y="38" width="6" height="6" rx="1.5" fill="#F43F5E"/><rect x="34" y="38" width="6" height="6" rx="1.5" fill="#FECDD3"/><circle cx="46" cy="46" r="9" fill="#FFFFFF" stroke="#BE123C" stroke-width="2"/><polyline points="46 41 46 46 49 48" stroke="#E11D48" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    attendance: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" class="{class}" aria-hidden="true"><rect x="12" y="12" width="40" height="44" rx="4" fill="#FFFFFF" stroke="#059669" stroke-width="2"/><path d="M12 16C12 13.8 13.8 12 16 12H20V56H16C13.8 56 12 54.2 12 52V16Z" fill="#D1FAE5"/><line x1="20" y1="12" x2="20" y2="56" stroke="#059669" stroke-width="1.5"/><line x1="26" y1="22" x2="46" y2="22" stroke="#6EE7B7" stroke-width="1.5" stroke-linecap="round"/><polyline points="25 21 27 23 31 19" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="26" y1="30" x2="46" y2="30" stroke="#6EE7B7" stroke-width="1.5" stroke-linecap="round"/><polyline points="25 29 27 31 31 27" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="26" y1="38" x2="42" y2="38" stroke="#6EE7B7" stroke-width="1.5" stroke-linecap="round"/><polyline points="25 37 27 39 31 35" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="46" r="10" fill="#059669" stroke="#FFFFFF" stroke-width="2"/><path d="M42 46L45 49L51 43" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    notices: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" class="{class}" aria-hidden="true"><rect x="12" y="10" width="36" height="46" rx="4" fill="#FFFFFF" stroke="#0284C7" stroke-width="2"/><path d="M40 10H48V18H40V10Z" fill="#BAE6FD"/><path d="M40 18L48 10" stroke="#0284C7" stroke-width="1.5"/><line x1="18" y1="20" x2="34" y2="20" stroke="#0369A1" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="26" x2="42" y2="26" stroke="#7DD3FC" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="32" x2="42" y2="32" stroke="#7DD3FC" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="38" x2="32" y2="38" stroke="#7DD3FC" stroke-width="1.5" stroke-linecap="round"/><circle cx="46" cy="44" r="11" fill="#E0F2FE" stroke="#0284C7" stroke-width="1.5"/><path d="M42 48V40L49 42V46L42 48Z" fill="#0284C7"/><path d="M49 43C50.5 43.5 51.5 44.5 51.5 44C51.5 43.5 50.5 44.5 49 45" stroke="#0284C7" stroke-width="1.5" stroke-linecap="round"/><rect x="40" y="42" width="3" height="4" rx="1" fill="#0369A1"/></svg>',
+    admin: '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" class="{class}" aria-hidden="true"><path d="M32 10L14 20H50L32 10Z" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2" stroke-linejoin="round"/><rect x="12" y="20" width="40" height="4" fill="#C7D2FE" stroke="#4F46E5" stroke-width="1.5"/><rect x="16" y="24" width="5" height="22" rx="1" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.5"/><rect x="25" y="24" width="5" height="22" rx="1" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.5"/><rect x="34" y="24" width="5" height="22" rx="1" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.5"/><rect x="43" y="24" width="5" height="22" rx="1" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.5"/><rect x="10" y="46" width="44" height="6" rx="2" fill="#C7D2FE" stroke="#4F46E5" stroke-width="1.5"/><circle cx="32" cy="33" r="5" fill="#4F46E5"/><path d="M32 30V36M29 33H35" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/></svg>'
+  };
+
+  /**
+   * Render an academic illustration SVG
+   */
+  function renderAcademicIllustration(name, size, className) {
+    var key = String(name || '').toLowerCase().trim();
+    var svg = ILLUSTRATION_SVGS[key] || ILLUSTRATION_SVGS.resources;
+    var s = size || 56;
+    var c = className ? 'illust-svg ' + className : 'illust-svg';
+    return svg.replace(/\{size\}/g, String(s)).replace(/\{class\}/g, c);
+  }
+
+  // Register Web Component <cs-illustration name="resources" size="56"></cs-illustration>
+  if (typeof window !== 'undefined' && typeof customElements !== 'undefined') {
+    if (!customElements.get('cs-illustration')) {
+      try {
+        var CsIllustration = function () {
+          return Reflect.construct(HTMLElement, [], CsIllustration);
+        };
+        Object.setPrototypeOf(CsIllustration.prototype, HTMLElement.prototype);
+        Object.setPrototypeOf(CsIllustration, HTMLElement);
+
+        CsIllustration.prototype.connectedCallback = function () {
+          var name = this.getAttribute('name') || this.getAttribute('type') || 'resources';
+          var size = parseInt(this.getAttribute('size') || '56', 10);
+          var customClass = this.getAttribute('class') || '';
+          this.innerHTML = renderAcademicIllustration(name, size, customClass);
+        };
+
+        customElements.define('cs-illustration', CsIllustration);
+      } catch (e) {
+        // Fallback for customElements
+      }
+    }
+  }
+
   return {
     renderIcon: renderIcon,
     createIconElement: createIconElement,
+    renderAcademicIllustration: renderAcademicIllustration,
     normalizeName: normalizeName,
     ICON_PATHS: ICON_PATHS,
-    EMOJI_MAP: EMOJI_MAP
+    EMOJI_MAP: EMOJI_MAP,
+    ILLUSTRATION_SVGS: ILLUSTRATION_SVGS
   };
 });

@@ -19,6 +19,9 @@
       window.sanitizeImageUrl = window.sanitizeImageUrl || utils.sanitizeImageUrl;
       window.validatePasswordStrength = window.validatePasswordStrength || utils.validatePasswordStrength;
       window.isValidEmailAddress = window.isValidEmailAddress || utils.isValidEmailAddress;
+      window.getCourseYearForSemester = window.getCourseYearForSemester || utils.getCourseYearForSemester;
+      window.getAcademicYearForSemester = window.getAcademicYearForSemester || utils.getAcademicYearForSemester;
+      window.getAcademicYearForCourseYear = window.getAcademicYearForCourseYear || utils.getAcademicYearForCourseYear;
     }
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
@@ -160,10 +163,21 @@
   }
 
   function getCourseYearForSemester(sem) {
-    if (sem === "1st Semester" || sem === "2nd Semester") return "1st Year";
-    if (sem === "3rd Semester" || sem === "4th Semester") return "2nd Year";
-    if (sem === "5th Semester" || sem === "6th Semester") return "3rd Year";
+    if (!sem) return "1st Year";
+    const s = String(sem).toLowerCase();
+    if (s.includes("1") || s.includes("2")) return "1st Year";
+    if (s.includes("3") || s.includes("4")) return "2nd Year";
+    if (s.includes("5") || s.includes("6")) return "3rd Year";
     return "1st Year";
+  }
+
+  function getAcademicYearForSemester(sem) {
+    // A semester number alone does not determine an academic year (Phase 8 Section 3.3.3.3)
+    return (typeof window !== "undefined" && window.activeInstitutionalAcademicYear) ? window.activeInstitutionalAcademicYear : null;
+  }
+
+  function getAcademicYearForCourseYear(courseYear) {
+    return (typeof window !== "undefined" && window.activeInstitutionalAcademicYear) ? window.activeInstitutionalAcademicYear : null;
   }
 
   return {
@@ -175,6 +189,8 @@
     validatePasswordStrength,
     validateUsername,
     isValidEmailAddress,
-    getCourseYearForSemester
+    getCourseYearForSemester,
+    getAcademicYearForSemester,
+    getAcademicYearForCourseYear
   };
 });

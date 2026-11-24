@@ -63,6 +63,14 @@ const academicStoreSchema = new mongoose.Schema(
         "2nd Year": ["Div A", "Div B"],
         "3rd Year": ["Div A", "Div B"]
       })
+    },
+    activeAcademicYear: {
+      type: String,
+      default: "2026–27"
+    },
+    academicYears: {
+      type: Array,
+      default: []
     }
   },
   {

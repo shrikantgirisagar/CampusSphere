@@ -92,6 +92,9 @@ function sanitizeUserForExport(u, index = 0) {
   if (typeof u.semester === "string" && u.semester.trim()) sanitized.semester = u.semester.trim();
   if (typeof u.division === "string" && u.division.trim()) sanitized.division = u.division.trim();
   if (typeof u.subject === "string" && u.subject.trim()) sanitized.subject = u.subject.trim();
+  if (typeof u.academicYear === "string" && u.academicYear.trim()) sanitized.academicYear = u.academicYear.trim();
+  if (typeof u.admissionYear === "string" && u.admissionYear.trim()) sanitized.admissionYear = u.admissionYear.trim();
+  if (Array.isArray(u.facultyAllocations)) sanitized.facultyAllocations = u.facultyAllocations;
 
   if (Array.isArray(u.subjects)) {
     sanitized.subjects = u.subjects.map(s => String(s).trim()).filter(Boolean);
@@ -179,6 +182,8 @@ function sanitizeDatabaseForExport(databaseDump, sanitizedUsers = []) {
     customBreakRows: rawAcademic.customBreakRows && typeof rawAcademic.customBreakRows === "object"
       ? JSON.parse(JSON.stringify(rawAcademic.customBreakRows))
       : {},
+    activeAcademicYear: rawAcademic.activeAcademicYear || databaseDump.activeAcademicYear || "2026–27",
+    academicYears: Array.isArray(rawAcademic.academicYears) ? rawAcademic.academicYears : (Array.isArray(databaseDump.academicYears) ? databaseDump.academicYears : []),
     notices: Array.isArray(rawAcademic.notices)
       ? rawAcademic.notices.map(n => ({
           id: n.id || n.noticeId || "",
@@ -274,13 +279,15 @@ async function syncFromMongoToFiles() {
     const AcademicStore = require("../models/AcademicStore");
     const Timetable = require("../models/Timetable");
     const Syllabus = require("../models/Syllabus");
+    const AcademicYear = require("../models/AcademicYear");
 
     // Fetch live state from MongoDB
-    const [rawUsers, store, timetables, syllabi] = await Promise.all([
+    const [rawUsers, store, timetables, syllabi, academicYears] = await Promise.all([
       User.find({}).sort({ role: 1, username: 1 }).lean(),
       AcademicStore.findOne({ storeKey: "default_academic_store" }).lean(),
       Timetable.find({}).sort({ semester: 1, division: 1 }).lean(),
-      Syllabus.find({}).sort({ yearLevel: 1 }).lean()
+      Syllabus.find({}).sort({ yearLevel: 1 }).lean(),
+      AcademicYear.find({}).sort({ startDate: -1 }).lean()
     ]);
 
     // Sanitized records: credentials, hashes, and session tokens completely excluded via strict allowlist
@@ -289,6 +296,16 @@ async function syncFromMongoToFiles() {
     const academicData = store ? { ...store } : {};
     delete academicData.__v;
     delete academicData._id;
+
+    const activeYearDoc = (academicYears || []).find(y => y.status === "active");
+    if (activeYearDoc) {
+      academicData.activeAcademicYear = activeYearDoc.yearCode;
+    }
+    academicData.academicYears = (academicYears || []).map(y => {
+      const c = { ...y };
+      delete c.__v;
+      return c;
+    });
 
     const divisions = academicData.divisions || {
       "1st Year": ["Div A", "Div B"],

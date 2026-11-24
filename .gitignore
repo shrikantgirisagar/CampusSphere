@@ -29,6 +29,9 @@ Thumbs.db
 .antigravity/*
 !.antigravity/extensions.json
 
+# Agent instructions
+AGENTS.md
+
 # Scratch and test caches
 scratch/
 

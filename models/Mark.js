@@ -11,7 +11,13 @@ const markSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      maxlength: 100
+      maxlength: 100,
+      default: function () {
+        if (this.academicYear && this.studentUsername && this.subject) {
+          return `${this.academicYear}_${this.studentUsername}_${this.subject}`;
+        }
+        return undefined;
+      }
     },
     studentUsername: {
       type: String,
@@ -115,6 +121,18 @@ const markSchema = new mongoose.Schema(
       default: "",
       trim: true,
       maxlength: 50
+    },
+    academicYear: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50,
+      index: true
+    },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null
     }
   },
   {
@@ -124,7 +142,25 @@ const markSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for student marks lookup by subject
+// Pre-validate hook ensuring year-scoped mark identity
+markSchema.pre("validate", function () {
+  if (this.academicYear && this.studentUsername && this.subject) {
+    const expectedPrefix = `${this.academicYear}_`;
+    if (!this.markId || this.markId === `${this.studentUsername}_${this.subject}`) {
+      this.markId = `${this.academicYear}_${this.studentUsername}_${this.subject}`;
+    }
+  }
+});
+
+// Compound unique index for student marks lookup by subject and academic year
+// Guarantees that separate academic years can maintain independent marks for the same student & subject
+markSchema.index(
+  { academicYear: 1, studentUsername: 1, subject: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { academicYear: { $type: "string", $gt: "" } }
+  }
+);
 markSchema.index({ studentUsername: 1, subject: 1 });
 
 module.exports = mongoose.model("Mark", markSchema);

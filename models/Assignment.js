@@ -88,6 +88,18 @@ const assignmentSchema = new mongoose.Schema(
       trim: true,
       maxlength: 50
     },
+    academicYear: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50,
+      index: true
+    },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null
+    },
     submissions: [submissionSchema]
   },
   {

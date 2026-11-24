@@ -2,71 +2,71 @@ const API_BASE_URL = window.location.protocol.startsWith("http") ? window.locati
 
 const SUBJECTS = [
   // 1st Sem Core, Languages & Labs
-  { id: "kannada", name: "Kannada", short: "Kannada", icon: "", semester: "1st Semester" },
-  { id: "hindi", name: "Hindi", short: "Hindi", icon: "", semester: "1st Semester" },
-  { id: "english", name: "English", short: "English", icon: "", semester: "1st Semester" },
-  { id: "maths", name: "Mathematics", short: "Maths", icon: "", semester: "1st Semester" },
-  { id: "accountancy", name: "Accountancy", short: "Acc", icon: "", semester: "1st Semester" },
-  { id: "cprog", name: "C Programming", short: "C Prog", icon: "", semester: "1st Semester" },
-  { id: "dbms", name: "DBMS", short: "DBMS", icon: "", semester: "1st Semester" },
-  { id: "ic", name: "Indian Constitution", short: "IC", icon: "", semester: "1st Semester" },
-  { id: "clab", name: "C Lab", short: "C Lab", icon: "", semester: "1st Semester" },
-  { id: "dbmslab", name: "DBMS Lab", short: "DBMS Lab", icon: "", semester: "1st Semester" },
-  { id: "oalab", name: "OA Lab", short: "OA Lab", icon: "", semester: "1st Semester" },
+  { id: "kannada", name: "Kannada", short: "Kannada", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "hindi", name: "Hindi", short: "Hindi", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "english", name: "English", short: "English", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "maths", name: "Mathematics", short: "Maths", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "accountancy", name: "Accountancy", short: "Acc", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "cprog", name: "C Programming", short: "C Prog", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "dbms", name: "DBMS", short: "DBMS", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "ic", name: "Indian Constitution", short: "IC", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 2 },
+  { id: "clab", name: "C Lab", short: "C Lab", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 2 },
+  { id: "dbmslab", name: "DBMS Lab", short: "DBMS Lab", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 2 },
+  { id: "oalab", name: "OA Lab", short: "OA Lab", icon: "", semester: "1st Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 2 },
 
   // 2nd Sem Core, Languages & Labs
-  { id: "kannada_sem2", name: "Kannada", short: "Kannada", icon: "", semester: "2nd Semester" },
-  { id: "hindi_sem2", name: "Hindi", short: "Hindi", icon: "", semester: "2nd Semester" },
-  { id: "english_sem2", name: "English", short: "English", icon: "", semester: "2nd Semester" },
-  { id: "nsm", name: "Numerical & Statistical Methods", short: "NSM", icon: "", semester: "2nd Semester" },
-  { id: "ds", name: "Data Structure", short: "DS", icon: "", semester: "2nd Semester" },
-  { id: "java", name: "Java", short: "Java", icon: "", semester: "2nd Semester" },
-  { id: "nsmlab", name: "NSM Lab", short: "NSM Lab", icon: "", semester: "2nd Semester" },
-  { id: "dslab", name: "DS Lab", short: "DS Lab", icon: "", semester: "2nd Semester" },
-  { id: "javalab", name: "Java Lab", short: "Java Lab", icon: "", semester: "2nd Semester" },
+  { id: "kannada_sem2", name: "Kannada", short: "Kannada", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "hindi_sem2", name: "Hindi", short: "Hindi", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "english_sem2", name: "English", short: "English", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "nsm", name: "Numerical & Statistical Methods", short: "NSM", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "ds", name: "Data Structure", short: "DS", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "java", name: "Java", short: "Java", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 3 },
+  { id: "nsmlab", name: "NSM Lab", short: "NSM Lab", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 2 },
+  { id: "dslab", name: "DS Lab", short: "DS Lab", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 2 },
+  { id: "javalab", name: "Java Lab", short: "Java Lab", icon: "", semester: "2nd Semester", courseYear: "1st Year", academicYear: "2025–26", credits: 2 },
 
   // 3rd Sem Core, Languages & Labs
-  { id: "kannada_sem3", name: "Kannada", short: "Kannada", icon: "", semester: "3rd Semester" },
-  { id: "hindi_sem3", name: "Hindi", short: "Hindi", icon: "", semester: "3rd Semester" },
-  { id: "english_sem3", name: "English", short: "English", icon: "", semester: "3rd Semester" },
-  { id: "python", name: "Python", short: "Python", icon: "", semester: "3rd Semester" },
-  { id: "os", name: "Operating System", short: "OS", icon: "", semester: "3rd Semester" },
-  { id: "advjava", name: "Advance Java", short: "Adv.Java", icon: "", semester: "3rd Semester" },
-  { id: "ost", name: "Open Source Tool", short: "OST", icon: "", semester: "3rd Semester" },
-  { id: "evs", name: "Environmental Studies", short: "EVS", icon: "", semester: "3rd Semester" },
-  { id: "oslab", name: "OS Lab", short: "OS Lab", icon: "", semester: "3rd Semester" },
-  { id: "pythonlab", name: "Python Lab", short: "Python Lab", icon: "", semester: "3rd Semester" },
-  { id: "advjavalab", name: "Adv.Java Lab", short: "Adv.Java Lab", icon: "", semester: "3rd Semester" },
+  { id: "kannada_sem3", name: "Kannada", short: "Kannada", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "hindi_sem3", name: "Hindi", short: "Hindi", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "english_sem3", name: "English", short: "English", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "python", name: "Python", short: "Python", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "os", name: "Operating System", short: "OS", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "advjava", name: "Advance Java", short: "Adv.Java", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "ost", name: "Open Source Tool", short: "OST", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 2 },
+  { id: "evs", name: "Environmental Studies", short: "EVS", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 2 },
+  { id: "oslab", name: "OS Lab", short: "OS Lab", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 2 },
+  { id: "pythonlab", name: "Python Lab", short: "Python Lab", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 2 },
+  { id: "advjavalab", name: "Adv.Java Lab", short: "Adv.Java Lab", icon: "", semester: "3rd Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 2 },
 
   // 4th Sem Core, Languages & Labs
-  { id: "kannada_sem4", name: "Kannada", short: "Kannada", icon: "", semester: "4th Semester" },
-  { id: "hindi_sem4", name: "Hindi", short: "Hindi", icon: "", semester: "4th Semester" },
-  { id: "english_sem4", name: "English", short: "English", icon: "", semester: "4th Semester" },
-  { id: "cn", name: "Computer Networks", short: "CN", icon: "", semester: "4th Semester" },
-  { id: "se", name: "Software Engineering", short: "SE", icon: "", semester: "4th Semester" },
-  { id: "webtech", name: "Web Technology", short: "Web Tech", icon: "", semester: "4th Semester" },
-  { id: "cnlab", name: "CN Lab", short: "CN Lab", icon: "", semester: "4th Semester" },
-  { id: "weblab", name: "Web Lab", short: "Web Lab", icon: "", semester: "4th Semester" },
+  { id: "kannada_sem4", name: "Kannada", short: "Kannada", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "hindi_sem4", name: "Hindi", short: "Hindi", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "english_sem4", name: "English", short: "English", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "cn", name: "Computer Networks", short: "CN", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "se", name: "Software Engineering", short: "SE", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "webtech", name: "Web Technology", short: "Web Tech", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 3 },
+  { id: "cnlab", name: "CN Lab", short: "CN Lab", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 2 },
+  { id: "weblab", name: "Web Lab", short: "Web Lab", icon: "", semester: "4th Semester", courseYear: "2nd Year", academicYear: "2026–27", credits: 2 },
 
   // 5th Sem Core, Languages & Labs
-  { id: "kannada_sem5", name: "Kannada", short: "Kannada", icon: "", semester: "5th Semester" },
-  { id: "hindi_sem5", name: "Hindi", short: "Hindi", icon: "", semester: "5th Semester" },
-  { id: "english_sem5", name: "English", short: "English", icon: "", semester: "5th Semester" },
-  { id: "ai", name: "Artificial Intelligence", short: "AI", icon: "", semester: "5th Semester" },
-  { id: "cloud", name: "Cloud Computing", short: "Cloud", icon: "", semester: "5th Semester" },
-  { id: "cyber", name: "Cyber Security", short: "Cyber", icon: "", semester: "5th Semester" },
-  { id: "ailab", name: "AI Lab", short: "AI Lab", icon: "", semester: "5th Semester" },
-  { id: "cloudlab", name: "Cloud Lab", short: "Cloud Lab", icon: "", semester: "5th Semester" },
+  { id: "kannada_sem5", name: "Kannada", short: "Kannada", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "hindi_sem5", name: "Hindi", short: "Hindi", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "english_sem5", name: "English", short: "English", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "ai", name: "Artificial Intelligence", short: "AI", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "cloud", name: "Cloud Computing", short: "Cloud", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "cyber", name: "Cyber Security", short: "Cyber", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "ailab", name: "AI Lab", short: "AI Lab", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 2 },
+  { id: "cloudlab", name: "Cloud Lab", short: "Cloud Lab", icon: "", semester: "5th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 2 },
 
   // 6th Sem Core, Languages & Labs
-  { id: "kannada_sem6", name: "Kannada", short: "Kannada", icon: "", semester: "6th Semester" },
-  { id: "hindi_sem6", name: "Hindi", short: "Hindi", icon: "", semester: "6th Semester" },
-  { id: "english_sem6", name: "English", short: "English", icon: "", semester: "6th Semester" },
-  { id: "ml", name: "Machine Learning", short: "ML", icon: "", semester: "6th Semester" },
-  { id: "iot", name: "Internet of Things", short: "IoT", icon: "", semester: "6th Semester" },
-  { id: "majorproject", name: "Major Project", short: "Project", icon: "", semester: "6th Semester" },
-  { id: "mllab", name: "ML Lab", short: "ML Lab", icon: "", semester: "6th Semester" },
-  { id: "iotlab", name: "IoT Lab", short: "IoT Lab", icon: "", semester: "6th Semester" }
+  { id: "kannada_sem6", name: "Kannada", short: "Kannada", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "hindi_sem6", name: "Hindi", short: "Hindi", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "english_sem6", name: "English", short: "English", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "ml", name: "Machine Learning", short: "ML", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "iot", name: "Internet of Things", short: "IoT", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 3 },
+  { id: "majorproject", name: "Major Project", short: "Project", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 4 },
+  { id: "mllab", name: "ML Lab", short: "ML Lab", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 2 },
+  { id: "iotlab", name: "IoT Lab", short: "IoT Lab", icon: "", semester: "6th Semester", courseYear: "3rd Year", academicYear: "2027–28", credits: 2 }
 ];
 
 const subjectById = id => (ACADEMIC && ACADEMIC.subjects && ACADEMIC.subjects.length ? ACADEMIC.subjects : SUBJECTS).find(s => s.id === id);
@@ -88,6 +88,15 @@ function getCourseYearForSemester(sem) {
   if (sem === "3rd Semester" || sem === "4th Semester") return "2nd Year";
   if (sem === "5th Semester" || sem === "6th Semester") return "3rd Year";
   return "1st Year";
+}
+
+function getAcademicYearForSemester(sem) {
+  // A semester number alone does not determine an academic year (Phase 8 Section 3.3.3.3)
+  return window.activeInstitutionalAcademicYear || null;
+}
+
+function getAcademicYearForCourseYear(courseYear) {
+  return window.activeInstitutionalAcademicYear || null;
 }
 
 function getSemestersForCourseYear(courseYear) {
@@ -1227,6 +1236,7 @@ let selectedTimetableCells = [];
 let timetableActiveViewMode = "grid"; // "grid" | "faculty-subject"
 let facultySubjectViewData = [];
 let isTimetableLoading = false;
+let activeTimetableDayFilter = "all";
 
 function resetAttendanceFilters() {
   if (currentUser && currentUser.role === "faculty") {
@@ -1412,16 +1422,29 @@ function getSubjectClassesSummary(username, subjectId) {
 
   const record = getStudentRecord(username);
   let overallPct = 0;
+  let hasData = false;
 
   if (classesTaken > 0) {
+    hasData = true;
     overallPct = Math.round((classesAttended / classesTaken) * 100);
   } else if (record && typeof record.attendance[subjectId] === "number") {
+    hasData = true;
     overallPct = record.attendance[subjectId];
     classesTaken = 20;
     classesAttended = Math.round((overallPct / 100) * 20);
   }
 
-  return { classesTaken, classesAttended, overallPct };
+  let neededFor75 = 0;
+  let canMiss = 0;
+  if (hasData && classesTaken > 0) {
+    if (overallPct < 75) {
+      neededFor75 = Math.max(0, Math.ceil(3 * classesTaken - 4 * classesAttended));
+    } else {
+      canMiss = Math.max(0, Math.floor((4 * classesAttended - 3 * classesTaken) / 3));
+    }
+  }
+
+  return { classesTaken, classesAttended, overallPct, hasData, neededFor75, canMiss };
 }
 
 function ensureStudentRecord(username) {
@@ -3611,10 +3634,15 @@ function openPortal() {
     $("publicHome").classList.add("hidden");
     $("publicHome").style.setProperty("display", "none", "important");
   }
-  if ($("app")) $("app").classList.remove("hidden");
-  if (window.AnimatedBackground) {
-    try { window.AnimatedBackground.ensure(); } catch (e) { console.warn("AnimatedBackground.ensure error:", e); }
+  if ($("app")) {
+    $("app").classList.remove("hidden");
+    if (currentUser && currentUser.role) {
+      $("app").setAttribute("data-portal-role", currentUser.role);
+    }
   }
+  window.scrollTo(0, 0);
+  const sidebarEl = document.querySelector(".sidebar");
+  if (sidebarEl) sidebarEl.scrollTop = 0;
   if ($("userName")) $("userName").textContent = currentUser ? currentUser.name : "";
   if ($("userRole")) $("userRole").textContent = roleLabel(currentUser ? currentUser.role : "", currentUser ? currentUser.subject : "");
   try { updateUserAvatarUI(); } catch (e) { console.warn("updateUserAvatarUI error:", e); }
@@ -3634,7 +3662,7 @@ function openPortal() {
 }
 
 function roleLabel(role, subject) {
-  if (role === "admin") return "Administrator";
+  if (role === "admin") return "Portal Admin";
   if (role === "faculty") {
     const s = subjectById(subject);
     return `${s ? (s.short || s.name) : "BCA"} Faculty`;
@@ -4167,7 +4195,7 @@ function buildNav() {
   const isStudentOrFaculty = currentUser && (currentUser.role === "student" || currentUser.role === "faculty");
   const items = isStudentOrFaculty
     ? [["dashboard", "home", "Dashboard"], ["profile", "user", "Profile"], ["attendance", "bar-chart-3", "Attendance"], ["marks", "trending-up", "Marks"], ["assignments", "file-edit", "Assignments"], ["notes", "book-open", "Notes"], ["timetable", "calendar-days", "Timetable"], ["notices", "megaphone", "Notices"]]
-    : [["dashboard", "home", "Dashboard"], ["profile", "user", "Admin Profile"], ["divisions", "school", "Divisions"], ["subjects", "book-open", "Semester Subjects"], ["students", "users", "Students"], ["faculty", "graduation-cap", "Faculty"], ["timetable", "calendar-days", "Timetable"], ["notices", "megaphone", "Notices"], ["syllabus", "book-open", "Courses & Syllabus"]];
+    : [["dashboard", "home", "Dashboard"], ["profile", "user", "Admin Profile"], ["divisions", "school", "Divisions"], ["subjects", "book-open", "Semester Subjects"], ["academicYears", "calendar-range", "Academic Years & Cycles"], ["students", "users", "Students"], ["faculty", "graduation-cap", "Faculty"], ["timetable", "calendar-days", "Timetable"], ["notices", "megaphone", "Notices"], ["syllabus", "book-open", "Courses & Syllabus"]];
 
   const unreadNoticeCount = getUnreadNoticeCount();
   const unreadNotesCount = getUnreadNotesCount();
@@ -4269,14 +4297,12 @@ function navigate(page, updateHash = true) {
     dashboard: "Dashboard", profile: (currentUser && currentUser.role === "admin") ? "Admin Profile & Credentials" : "My Profile", attendance: "Attendance", marks: "Marks",
     assignments: "Assignments", notes: "Subject Notes", timetable: "Timetable", notices: "Notices",
     students: "Students", faculty: "Faculty", subjects: "Semester-wise Subjects", divisions: "Class Divisions Management",
+    academicYears: "Academic Years & Institutional Cycles",
     syllabus: (currentUser && currentUser.role === "admin") ? "Courses & Syllabus Management" : "Courses & Syllabus"
   };
   $("pageEyebrow").textContent = roleLabel(currentUser ? currentUser.role : "", currentUser ? currentUser.subject : "");
   $("pageTitle").textContent = titles[page] || "Dashboard";
   $("content").innerHTML = pages[page] ? pages[page]() : pages.dashboard();
-  if (window.AnimatedBackground) {
-    try { window.AnimatedBackground.ensure(); } catch (e) { console.warn("AnimatedBackground.ensure error:", e); }
-  }
   updateFacultySubjectSwitcher();
   initPage(page);
 
@@ -4327,6 +4353,7 @@ function initPage(page) {
   if (page === "timetable") initTimetablePage();
   if (page === "subjects") initAdminSubjectsPage();
   if (page === "divisions") initAdminDivisionsPage();
+  if (page === "academicYears") initAcademicYearsPage();
   if (page === "students") {
     initAdminUserManagement("student");
     hydrateUsersFromServer().then(() => {
@@ -5269,6 +5296,7 @@ function bindEditProfileEvents() {
           email,
           course,
           courseYear,
+          academicYear: currentUser.academicYear || "",
           semester,
           division,
           languageChoice,
@@ -6064,23 +6092,81 @@ function initAttendancePage() {
     });
   }
 
-  // Handle P & A button clicks
+  // Live summary recalculation helper
+  const updateLiveAttendanceCounters = () => {
+    let p = 0;
+    let a = 0;
+    let u = 0;
+    document.querySelectorAll("tr.att-student-row[data-username]").forEach(row => {
+      const uName = row.dataset.username;
+      const st = activeAttendanceMap[uName];
+      if (st === "P") p++;
+      else if (st === "A") a++;
+      else u++;
+    });
+    const pEl = $("attSummaryPresent");
+    const aEl = $("attSummaryAbsent");
+    const uEl = $("attSummaryUnmarked");
+    if (pEl) pEl.textContent = p;
+    if (aEl) aEl.textContent = a;
+    if (uEl) uEl.textContent = u;
+  };
+
+  // Handle 3-state attendance button clicks (Present, Absent, Not Marked)
   document.querySelectorAll(".btn-pa").forEach(btn => {
     btn.addEventListener("click", () => {
       if (isAttendanceReadOnly) return;
       const username = btn.dataset.username;
-      const status = btn.dataset.status; // "P" or "A"
-      activeAttendanceMap[username] = status;
+      const clickedStatus = btn.dataset.status || ""; // "P", "A", or ""
+      
+      // If clicking the currently active status, toggle back to neutral ""
+      let nextStatus = clickedStatus;
+      if (activeAttendanceMap[username] === clickedStatus && clickedStatus !== "") {
+        nextStatus = "";
+      }
+      activeAttendanceMap[username] = nextStatus;
 
+      // Update button active classes within this student's toggle group
       const parent = btn.closest(".pa-toggle-group");
       if (parent) {
-        parent.querySelectorAll(".btn-pa").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+        parent.querySelectorAll(".btn-pa").forEach(b => {
+          b.classList.remove("active");
+          const bStatus = b.dataset.status || "";
+          if (bStatus === nextStatus) {
+            b.classList.add("active");
+          }
+        });
+      }
+
+      // Update row status pill badge
+      const statusBadge = document.getElementById(`att-status-badge-${username}`);
+      if (statusBadge) {
+        statusBadge.className = `att-status-pill ${nextStatus === "P" ? "badge-p" : (nextStatus === "A" ? "badge-a" : "badge-unmarked")}`;
+        statusBadge.innerHTML = nextStatus === "P"
+          ? `${renderIcon("check", 13)} Present`
+          : (nextStatus === "A" ? `${renderIcon("x", 13)} Absent` : "Not Marked");
+      }
+
+      // Update student table row styling and clear warning highlight
+      const row = document.querySelector(`tr[data-username="${username}"]`);
+      if (row) {
+        row.classList.remove("att-row-present", "att-row-absent", "att-row-unmarked", "att-row-unmarked-warning");
+        row.classList.add(nextStatus === "P" ? "att-row-present" : (nextStatus === "A" ? "att-row-absent" : "att-row-unmarked"));
+      }
+
+      // Recalculate live summary counters immediately
+      updateLiveAttendanceCounters();
+
+      // Clear any previous incomplete save warning message
+      const msg = $("attSaveMessage");
+      if (msg && msg.className.includes("error")) {
+        msg.textContent = "";
+        msg.className = "message";
       }
     });
   });
 
-  // Save Daily Attendance
+  // Save Daily Attendance with Incomplete Protection & Live Validation
   const saveBtn = $("saveDailyAttendanceBtn");
   if (saveBtn) {
     saveBtn.addEventListener("click", async () => {
@@ -6096,13 +6182,32 @@ function initAttendancePage() {
         return !attendanceFilterDivision || studentDiv === attendanceFilterDivision;
       });
 
-      const hasUnselected = currentStudents.some(s => !activeAttendanceMap[s.username] || (activeAttendanceMap[s.username] !== "P" && activeAttendanceMap[s.username] !== "A"));
+      // Find all students who remain in neutral "Not Marked" state
+      const unmarkedStudents = currentStudents.filter(s => {
+        const st = activeAttendanceMap[s.username];
+        return !st || (st !== "P" && st !== "A");
+      });
+
       const msg = $("attSaveMessage");
-      if (hasUnselected) {
+
+      // Incomplete attendance protection: Block saving and show exact unmarked count
+      if (unmarkedStudents.length > 0) {
+        unmarkedStudents.forEach(s => {
+          const row = document.querySelector(`tr[data-username="${s.username}"]`);
+          if (row) row.classList.add("att-row-unmarked-warning");
+        });
+
+        const firstUnmarked = document.querySelector(".att-row-unmarked-warning");
+        if (firstUnmarked) {
+          firstUnmarked.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+
+        const warnText = `Attendance Incomplete: ${unmarkedStudents.length} student${unmarkedStudents.length === 1 ? '' : 's'} remain Not Marked. Please mark each student individually as Present or Absent before saving.`;
         if (msg) {
-          msg.textContent = "Please select attendance status (P or A) for all students before saving.";
+          msg.textContent = warnText;
           msg.className = "message error";
         }
+        showToast(warnText, "error");
         return;
       }
 
@@ -6155,7 +6260,7 @@ function initAttendancePage() {
           return;
         }
 
-        const successMsg = `Daily attendance for ${formattedDate} saved successfully!`;
+        const successMsg = `Daily attendance for ${formattedDate} (${attendanceFilterDivision}) saved successfully!`;
         showToast("Daily attendance saved successfully!", "success");
         resetAttendanceFilters();
         attendanceSaveSuccessMessage = successMsg;
@@ -6292,11 +6397,45 @@ function initMarksPage() {
     });
   }
 
-  // Live total calculation when typing marks in table
+  // Division Filter change handler
+  const divFilter = $("marksDivisionFilter");
+  if (divFilter) {
+    divFilter.addEventListener("change", e => {
+      window.facultyMarksDivisionFilter = e.target.value;
+      navigate("marks");
+    });
+  }
+
+  // Live total calculation, independent component validation and unsaved warning
   document.querySelectorAll(".marks-input-field").forEach(input => {
     input.addEventListener("input", () => {
       const username = input.dataset.username;
+      const field = input.dataset.field; // "internal1", "internal2", "assignment"
       if (!username) return;
+
+      const config = getSubjectMarksConfig(currentUser.subject);
+      const maxI1 = config.maxInternal1 || 20;
+      const maxI2 = config.maxInternal2 || 20;
+      const maxVal = field === "internal1" ? maxI1 : (field === "internal2" ? maxI2 : 10);
+      const maxTotal = maxI1 + maxI2 + 10;
+
+      const valStr = input.value.trim();
+      const valNum = parseFloat(valStr);
+
+      // Validate bounds: non-negative and <= maxVal
+      if (valStr !== "" && (isNaN(valNum) || valNum < 0 || valNum > maxVal)) {
+        input.classList.add("is-invalid");
+        input.title = valNum < 0 ? "Marks cannot be negative" : `Maximum allowed mark is ${maxVal}`;
+      } else {
+        input.classList.remove("is-invalid");
+        input.title = "";
+      }
+
+      // Reveal Unsaved Changes Bar
+      const unsavedBar = $("marksUnsavedWarning");
+      if (unsavedBar) unsavedBar.style.display = "flex";
+
+      // Recalculate row total and status
       const row = document.querySelector(`tr[data-student-row="${username}"]`);
       if (!row) return;
 
@@ -6304,22 +6443,25 @@ function initMarksPage() {
       const i2Inp = row.querySelector(`input[data-field="internal2"]`);
       const assignInp = row.querySelector(`input[data-field="assignment"]`);
 
-      const config = getSubjectMarksConfig(currentUser.subject);
-      const maxI1 = config.maxInternal1 || 20;
-      const maxI2 = config.maxInternal2 || 20;
-      const maxTotal = maxI1 + maxI2 + 10;
-
       const i1 = i1Inp && i1Inp.value.trim() !== "" ? parseFloat(i1Inp.value) : NaN;
       const i2 = i2Inp && i2Inp.value.trim() !== "" ? parseFloat(i2Inp.value) : NaN;
       const assign = assignInp && assignInp.value.trim() !== "" ? parseFloat(assignInp.value) : NaN;
 
+      const countEntered = (!isNaN(i1) ? 1 : 0) + (!isNaN(i2) ? 1 : 0) + (!isNaN(assign) ? 1 : 0);
       const badge = document.getElementById(`total-badge-${username}`);
       if (badge) {
-        if (!isNaN(i1) || !isNaN(i2) || !isNaN(assign)) {
-          const tot = (isNaN(i1) ? 0 : i1) + (isNaN(i2) ? 0 : i2) + (isNaN(assign) ? 0 : assign);
-          badge.innerHTML = `<strong>${tot}</strong> / ${maxTotal}`;
+        if (countEntered === 0) {
+          badge.className = "att-status-pill badge-unmarked";
+          badge.innerHTML = "Awaiting Marks";
         } else {
-          badge.textContent = "Not set";
+          const tot = (isNaN(i1) ? 0 : i1) + (isNaN(i2) ? 0 : i2) + (isNaN(assign) ? 0 : assign);
+          if (countEntered === 3) {
+            badge.className = "att-status-pill badge-p";
+            badge.innerHTML = `<strong>${tot}</strong> / ${maxTotal} (Completed)`;
+          } else {
+            badge.className = "att-status-pill badge-amber";
+            badge.innerHTML = `<strong>${tot}</strong> / ${maxTotal} (Incomplete)`;
+          }
         }
       }
     });
@@ -6337,9 +6479,13 @@ function initMarksPage() {
       const facultySem = getSemesterForSubject(currentUser.subject);
       const facultyYear = getCourseYearForSemester(facultySem);
 
-      const filteredStudents = getStudentsForSubject(currentUser.subject, currentUser.division);
+      const activeClassDivision = getFacultySubjectDivision(currentUser, currentUser.subject);
+      const currentMarksDiv = window.facultyMarksDivisionFilter || activeClassDivision;
+      const targetDiv = (currentMarksDiv === "All Divisions" || currentMarksDiv === "Both Divisions") ? activeClassDivision : currentMarksDiv;
+      const filteredStudents = getStudentsForSubject(currentUser.subject, targetDiv);
 
       let hasError = false;
+      let firstInvalidEl = null;
       const msg = $("marksBatchMessage");
 
       filteredStudents.forEach(s => {
@@ -6360,6 +6506,10 @@ function initMarksPage() {
         const assign = assignVal !== "" ? parseFloat(assignVal) : null;
 
         if (i1 !== null && (isNaN(i1) || i1 < 0 || i1 > maxI1)) {
+          if (i1Inp) {
+            i1Inp.classList.add("is-invalid");
+            if (!firstInvalidEl) firstInvalidEl = i1Inp;
+          }
           if (msg) {
             msg.textContent = `1st Internal mark for ${s.name} must be between 0 and ${maxI1}.`;
             msg.className = "message error";
@@ -6369,6 +6519,10 @@ function initMarksPage() {
         }
 
         if (i2 !== null && (isNaN(i2) || i2 < 0 || i2 > maxI2)) {
+          if (i2Inp) {
+            i2Inp.classList.add("is-invalid");
+            if (!firstInvalidEl) firstInvalidEl = i2Inp;
+          }
           if (msg) {
             msg.textContent = `2nd Internal mark for ${s.name} must be between 0 and ${maxI2}.`;
             msg.className = "message error";
@@ -6378,6 +6532,10 @@ function initMarksPage() {
         }
 
         if (assign !== null && (isNaN(assign) || assign < 0 || assign > 10)) {
+          if (assignInp) {
+            assignInp.classList.add("is-invalid");
+            if (!firstInvalidEl) firstInvalidEl = assignInp;
+          }
           if (msg) {
             msg.textContent = `Assignment mark for ${s.name} must be between 0 and 10.`;
             msg.className = "message error";
@@ -6387,7 +6545,14 @@ function initMarksPage() {
         }
       });
 
-      if (hasError) return;
+      if (hasError) {
+        if (firstInvalidEl) {
+          firstInvalidEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          firstInvalidEl.focus();
+        }
+        showToast("Please correct invalid marks before saving.", "error");
+        return;
+      }
 
       const submitBtn = batchForm.querySelector('button[type="submit"]');
       await withActionLock(submitBtn, async () => {
@@ -6434,6 +6599,9 @@ function initMarksPage() {
           showToast(errMsg, "error");
           return;
         }
+
+        const unsavedBar = $("marksUnsavedWarning");
+        if (unsavedBar) unsavedBar.style.display = "none";
 
         if (msg) {
           msg.textContent = "All student marks saved successfully!";
@@ -6779,6 +6947,8 @@ function initNoticesPage() {
         const text = $("noticeText").value.trim();
         const date = $("noticeDate").value;
         const targetAudienceInput = $("noticeTargetAudience");
+        const categoryInput = $("noticeCategory");
+        const category = categoryInput ? categoryInput.value : "General Academic";
 
         const fileInput = $("noticeFile");
 
@@ -6803,6 +6973,7 @@ function initNoticesPage() {
               title,
               text,
               date,
+              category,
               target,
               authorRole: currentUser.role,
               authorName: currentUser.name || (currentUser.role === "admin" ? "Admin" : "Faculty"),
@@ -7040,7 +7211,7 @@ function printColorTimetablePDF(division) {
                   const rSpan = (cell && cell.rowSpan) || 1;
                   const cSpan = (cell && cell.colSpan) || 1;
                   const isBold = cell && cell.bold;
-                  const fFamily = (cell && cell.fontFamily) || "Inter";
+                  const fFamily = (cell && cell.fontFamily) || "DM Sans";
                   const fSize = (cell && cell.fontSize) || "13px";
                   const tAlign = (cell && cell.textAlign) || "center";
                   const subText = (cell && cell.subject) ? cell.subject : "-";
@@ -7191,7 +7362,7 @@ function createDefaultTimetableDoc(semester, division) {
         slotIndex: s,
         subject: "",
         bold: false,
-        fontFamily: "Inter",
+        fontFamily: "DM Sans",
         fontSize: "13px",
         textAlign: "center",
         rowSpan: 1,
@@ -7229,7 +7400,7 @@ function normalizeTimetableDoc(rawDoc, semester, division) {
     slotIndex: Number(c.slotIndex),
     subject: String(c.subject || "").trim(),
     bold: Boolean(c.bold),
-    fontFamily: String(c.fontFamily || "Inter"),
+    fontFamily: String(c.fontFamily || "DM Sans"),
     fontSize: String(c.fontSize || "13px"),
     textAlign: "center",
     rowSpan: Math.max(1, Number(c.rowSpan) || 1),
@@ -7246,7 +7417,7 @@ function normalizeTimetableDoc(rawDoc, semester, division) {
           slotIndex: s,
           subject: "",
           bold: false,
-          fontFamily: "Inter",
+          fontFamily: "DM Sans",
           fontSize: "13px",
           textAlign: "center",
           rowSpan: 1,
@@ -7276,7 +7447,7 @@ function getTimetableCell(doc, dayIdx, slotIdx) {
       slotIndex: slotIdx,
       subject: "",
       bold: false,
-      fontFamily: "Inter",
+      fontFamily: "DM Sans",
       fontSize: "13px",
       textAlign: "center",
       rowSpan: 1,
@@ -7479,7 +7650,7 @@ function toggleBoldSelected() {
 
 function setFontFamilySelected(fontFamily) {
   if (!currentTimetableDoc || !selectedTimetableCells.length) return;
-  const allowed = ["Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New"];
+  const allowed = ["DM Sans", "Sora", "Arial", "Inter", "Roboto", "Times New Roman", "Georgia", "Courier New"];
   if (!allowed.includes(fontFamily)) return;
   for (const sel of selectedTimetableCells) {
     const c = getTimetableCell(currentTimetableDoc, sel.dayIndex, sel.slotIndex);
@@ -7675,7 +7846,7 @@ async function saveTimetableDoc(e) {
         slotIndex: Number(c.slotIndex),
         subject: String(c.subject || "").trim(),
         bold: Boolean(c.bold),
-        fontFamily: c.fontFamily || "Inter",
+        fontFamily: c.fontFamily || "DM Sans",
         fontSize: c.fontSize || "13px",
         textAlign: "center",
         rowSpan: Math.max(1, Math.min(20, Number(c.rowSpan) || 1)),
@@ -7802,6 +7973,15 @@ function initTimetablePage() {
     });
   }
 
+  // Day filter tabs
+  const dayTabButtons = document.querySelectorAll(".btn-day-tab");
+  dayTabButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeTimetableDayFilter = btn.getAttribute("data-day") || "all";
+      render();
+    });
+  });
+
   // Edit / Cancel / Save controls
   const editModeBtn = $("btnEditTimetableMode");
   if (editModeBtn) {
@@ -7922,25 +8102,159 @@ const pages = {
     const attendance = Math.round(recordAverage(record.attendance, visibleSubjects.map(s => s.id)));
     const assignmentCount = getStudentAssignments(currentUser.username).length;
     const noticeCount = getNoticeList().length;
-    return `<div class="welcome">
-      <div>
-        <p class="eyebrow">Welcome back</p>
-        <h1>${escapeHtml(currentUser.name)} ${renderIcon("hand-metal", 20)}</h1>
-        <p>Your academic overview is ready.</p>
+    return `<div class="welcome student-welcome">
+      <div class="welcome-copy">
+        <p class="eyebrow">Academic Overview • Student Portal</p>
+        <h1>${escapeHtml(currentUser.name)}</h1>
+        <p class="welcome-meta">${escapeHtml(currentUser.course || "Bachelor of Computer Applications (BCA)")} • ${escapeHtml(currentUser.semester || "4th Semester")}${currentUser.division ? ` • ${escapeHtml(currentUser.division)}` : ""} • Academic Year: ${escapeHtml(window.activeInstitutionalAcademicYear || "Not configured")}</p>
       </div>
-      <div class="welcome-icon">${renderIcon("graduation-cap", 25)}</div>
+      <div class="student-status-badge" title="Academic Status: Active Enrollment">
+        <span class="status-indicator-dot" aria-hidden="true"></span>
+        <span class="status-indicator-text">Active Enrollment</span>
+      </div>
     </div>
-    <div class="stat-grid"><div class="stat"><span>${renderIcon("book-open", 18)}</span><b>${visibleSubjects.length}</b><small>Subjects</small></div>
-      <div class="stat"><span>${renderIcon("bar-chart-3", 18)}</span><b>${attendance}%</b><small>Average Attendance</small></div>
-      <div class="stat"><span>${renderIcon("megaphone", 18)}</span><b>${noticeCount}</b><small>Notices</small></div></div>
-      <section class="panel">
-        <div class="panel-head">
-          <h3>Subject Overview</h3>
+    <div class="stat-grid">
+      <div class="stat" data-navigate="attendance" style="cursor: pointer;"><span>${renderIcon("book-open", 18)}</span><b>${visibleSubjects.length}</b><small>Enrolled Subjects</small></div>
+      <div class="stat" data-navigate="attendance" style="cursor: pointer;"><span>${renderIcon("bar-chart-3", 18)}</span><b>${attendance}%</b><small>Average Attendance</small></div>
+      <div class="stat" data-navigate="notices" style="cursor: pointer;"><span>${renderIcon("megaphone", 18)}</span><b>${noticeCount}</b><small>Active Notices</small></div>
+    </div>
+    <section class="panel academic-services-panel" style="margin-top: 18px; margin-bottom: 22px;">
+      <div class="panel-head">
+        <div>
+          <h3>Academic Services &amp; Portal Modules</h3>
+          <span class="panel-subtitle">Direct access to attendance, internal evaluations, curriculum, and notices</span>
         </div>
+        <span class="badge">Student Services</span>
+      </div>
+      <div class="academic-services-grid">
+        <div class="service-card service-card-emerald" data-navigate="attendance" role="button" tabindex="0" aria-label="Attendance Ledger: Monitor lecture logs and 75% margin">
+          <div class="service-card-body">
+            <div class="service-card-top">
+              <span class="service-pill">ATTENDANCE • 75% MARGIN</span>
+            </div>
+            <h4 class="service-card-title">Attendance Ledger</h4>
+            <p class="service-card-desc">Real-time attendance logs, subject tracking, and consecutive class calculations.</p>
+            <div class="service-card-action">
+              <span>View Attendance</span>
+              <span class="service-action-arrow" aria-hidden="true">→</span>
+            </div>
+          </div>
+          <div class="academic-illust-pod" aria-hidden="true">
+            ${renderAcademicIllustration("attendance", 52)}
+          </div>
+        </div>
+
+        <div class="service-card service-card-violet" data-navigate="marks" role="button" tabindex="0" aria-label="Internal Evaluation: View continuous assessment and IA tests">
+          <div class="service-card-body">
+            <div class="service-card-top">
+              <span class="service-pill">CIE • INTERNAL MARKS</span>
+            </div>
+            <h4 class="service-card-title">Continuous Evaluation</h4>
+            <p class="service-card-desc">Review 1st Internal, 2nd Internal, and Assignment assessment scores.</p>
+            <div class="service-card-action">
+              <span>View CIE Ledger</span>
+              <span class="service-action-arrow" aria-hidden="true">→</span>
+            </div>
+          </div>
+          <div class="academic-illust-pod" aria-hidden="true">
+            ${renderAcademicIllustration("assignments", 52)}
+          </div>
+        </div>
+
+        <div class="service-card service-card-rose" data-navigate="timetable" role="button" tabindex="0" aria-label="Weekly Timetable: Class schedule and daily lecture slots">
+          <div class="service-card-body">
+            <div class="service-card-top">
+              <span class="service-pill">SCHEDULE • TIMETABLE</span>
+            </div>
+            <h4 class="service-card-title">Class Schedule</h4>
+            <p class="service-card-desc">Weekly lecture timetable, lab sessions, and classroom timings.</p>
+            <div class="service-card-action">
+              <span>Open Timetable</span>
+              <span class="service-action-arrow" aria-hidden="true">→</span>
+            </div>
+          </div>
+          <div class="academic-illust-pod" aria-hidden="true">
+            ${renderAcademicIllustration("calendar", 52)}
+          </div>
+        </div>
+
+        <div class="service-card service-card-teal" data-navigate="notes" role="button" tabindex="0" aria-label="Study Notes: Verified syllabus materials and PDFs">
+          <div class="service-card-body">
+            <div class="service-card-top">
+              <span class="service-pill">MATERIALS • PDFS</span>
+            </div>
+            <h4 class="service-card-title">Study Materials &amp; Notes</h4>
+            <p class="service-card-desc">Subject study materials, lab manuals, and faculty notes repository.</p>
+            <div class="service-card-action">
+              <span>Access Notes</span>
+              <span class="service-action-arrow" aria-hidden="true">→</span>
+            </div>
+          </div>
+          <div class="academic-illust-pod" aria-hidden="true">
+            ${renderAcademicIllustration("notes", 52)}
+          </div>
+        </div>
+
+        <div class="service-card service-card-blue" data-navigate="subjects" role="button" tabindex="0" aria-label="Curriculum & Syllabus: 55 BCA subjects catalog and credits">
+          <div class="service-card-body">
+            <div class="service-card-top">
+              <span class="service-pill">CURRICULUM • NEP 2020</span>
+            </div>
+            <h4 class="service-card-title">Course Curriculum</h4>
+            <p class="service-card-desc">Institutional syllabus outlines, subject credit allocations, and course units.</p>
+            <div class="service-card-action">
+              <span>Explore Syllabus</span>
+              <span class="service-action-arrow" aria-hidden="true">→</span>
+            </div>
+          </div>
+          <div class="academic-illust-pod" aria-hidden="true">
+            ${renderAcademicIllustration("resources", 52)}
+          </div>
+        </div>
+
+        <div class="service-card service-card-cyan" data-navigate="notices" role="button" tabindex="0" aria-label="Notices: Institutional announcements and circulars">
+          <div class="service-card-body">
+            <div class="service-card-top">
+              <span class="service-pill">CIRCULARS • NOTICES</span>
+            </div>
+            <h4 class="service-card-title">College Notices</h4>
+            <p class="service-card-desc">Official departmental announcements, university updates, and circulars.</p>
+            <div class="service-card-action">
+              <span>Read Notices</span>
+              <span class="service-action-arrow" aria-hidden="true">→</span>
+            </div>
+          </div>
+          <div class="academic-illust-pod" aria-hidden="true">
+            ${renderAcademicIllustration("notices", 52)}
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Subject Overview</h3>
+          <span class="panel-subtitle">Continuous internal evaluation &amp; verified course list</span>
+        </div>
+        <span class="badge">BCA • NEP Curriculum</span>
+      </div>
       <div class="subject-grid">${visibleSubjects.map(s => {
       const markValue = typeof record.marks[s.id] === "number" ? `${record.marks[s.id]}/100` : "--";
-      return `<div class="subject-card">${s.icon ? `<div class="subject-icon">${s.icon}</div>` : ''}<div><b>${escapeHtml(s.short)}</b><small>${escapeHtml(s.name)}</small></div><strong>${markValue}</strong></div>`;
-    }).join("")}</div></section>`;
+      return `<div class="subject-card">
+        <div class="subject-card-lead">
+          <span class="subject-code-badge">${escapeHtml(s.short)}</span>
+          <div class="subject-meta">
+            <b>${escapeHtml(s.short)}</b>
+            <small>${escapeHtml(s.name)}</small>
+          </div>
+        </div>
+        <div class="subject-card-tail">
+          <span class="subject-eval-label">CIE Score</span>
+          <strong class="subject-score-pill">${markValue}</strong>
+        </div>
+      </div>`;
+    }).join("")}</div>
+    </section>`;
   },
   profile() {
     if (currentUser.role === "student") {
@@ -7971,7 +8285,8 @@ const pages = {
         const color = isLab ? "#075985" : "#3730a3";
         const border = isLab ? "#bae6fd" : "#c7d2fe";
         const icon = isLab ? "flask-conical" : "book-open";
-        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${renderIcon(icon, 16)} ${escapeHtml(s.name)}</span>`;
+        const creditsBadge = s.credits ? ` <span style="font-size:11px; opacity:0.85; font-weight:500;">(${escapeHtml(s.credits)} cr)</span>` : "";
+        return `<span class="subject-tag ${isLab ? 'lab-tag' : 'theory-tag'}" style="background:${bg}; color:${color}; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid ${border};">${renderIcon(icon, 16)} ${escapeHtml(s.name)}${creditsBadge}</span>`;
       };
 
       const theorySubjectsMarkup = theorySubjects.length
@@ -8015,6 +8330,8 @@ const pages = {
           <div><small>Division</small><b>${escapeHtml(div)}</b></div>
           <div><small>Semester</small><b>${escapeHtml(sem)}</b></div>
           <div><small>Course Year</small><b>${escapeHtml(year)}</b></div>
+          <div><small>Admission Year</small><b>${escapeHtml(currentUser.admissionYear || "Not recorded")}</b></div>
+          <div><small>Operational Academic Year</small><b>${escapeHtml(window.activeInstitutionalAcademicYear || "Not configured")}</b></div>
           <div><small>Course</small><b>${escapeHtml(course)}</b></div>
           <div><small>Email Address</small><b>${escapeHtml(email)}</b></div>
           <div><small>Account Role</small><b>Student</b></div>
@@ -8207,6 +8524,7 @@ const pages = {
           <div><small>Department</small><b>${escapeHtml(currentUser.department || "Department of Computer Science & Applications")}</b></div>
           <div><small>Assigned Subject</small><b>${escapeHtml(subjectObj ? subjectObj.name : "N/A")}</b></div>
           <div><small>Assigned Division</small><b>${escapeHtml((!currentUser.division || currentUser.division === "Both Divisions" || currentUser.division === "All Divisions") ? "Both Divisions (Div A & Div B)" : currentUser.division)}</b></div>
+          <div><small>Academic Cycle</small><b>${escapeHtml(window.activeInstitutionalAcademicYear || "Not active")}</b></div>
         </div>
       </section>
 
@@ -8616,12 +8934,19 @@ const pages = {
 
       // Sync activeAttendanceMap (defaults to unselected "")
       activeAttendanceMap = {};
+      let presentCount = 0;
+      let absentCount = 0;
+      let unmarkedCount = 0;
       filteredStudents.forEach(s => {
         if (existingLog && existingLog.records && existingLog.records[s.username]) {
           activeAttendanceMap[s.username] = existingLog.records[s.username];
         } else {
           activeAttendanceMap[s.username] = "";
         }
+        const st = activeAttendanceMap[s.username];
+        if (st === "P") presentCount++;
+        else if (st === "A") absentCount++;
+        else unmarkedCount++;
       });
 
       // Get stored logs for this subject
@@ -8730,7 +9055,27 @@ const pages = {
             <div class="attendance-header-banner">
               <div class="att-title-info">
                 <h4>Attendance Sheet: <span>${escapeHtml(attendanceFilterCourseYear)}</span> • <span>${escapeHtml(attendanceFilterSemester)}</span> • <span>${escapeHtml(attendanceFilterDivision)}</span></h4>
-                <p>Date: <strong class="date-highlight">${escapeHtml(displayDate)}</strong> | Subject: <strong>${escapeHtml(subjectObj.name)}</strong> ${existingLog ? `<span class="badge-p" style="margin-left:8px;">Saved Record Loaded</span>` : ''}</p>
+                <p>Date: <strong class="date-highlight">${escapeHtml(displayDate)}</strong> | Subject: <strong>${escapeHtml(subjectObj.name)}</strong> ${existingLog ? `<span class="badge-p" style="margin-left:8px;">Saved Record Loaded</span>` : '<span class="badge-slate" style="background:#f1f5f9; color:#475569; margin-left:8px; font-weight:700;">New Session (All Students Not Marked)</span>'}</p>
+              </div>
+            </div>
+
+            <!-- Real-Time Dynamic Attendance Summary Counters -->
+            <div class="att-live-summary-bar" aria-live="polite">
+              <div class="att-summary-item enrolled">
+                <span class="summary-label">Total Enrolled</span>
+                <strong class="summary-count" id="attSummaryEnrolled">${filteredStudents.length}</strong>
+              </div>
+              <div class="att-summary-item present">
+                <span class="summary-label">Present</span>
+                <strong class="summary-count" id="attSummaryPresent">${presentCount}</strong>
+              </div>
+              <div class="att-summary-item absent">
+                <span class="summary-label">Absent</span>
+                <strong class="summary-count" id="attSummaryAbsent">${absentCount}</strong>
+              </div>
+              <div class="att-summary-item unmarked">
+                <span class="summary-label">Not Marked</span>
+                <strong class="summary-count" id="attSummaryUnmarked">${unmarkedCount}</strong>
               </div>
             </div>
 
@@ -8743,23 +9088,31 @@ const pages = {
                       <th>Student Name</th>
                       <th>Username</th>
                       <th>Course Year, Semester & Division</th>
-                      <th style="text-align:center;">Attendance Status</th>
+                      <th style="text-align:center;">Individual Attendance</th>
+                      <th style="text-align:center;">Current Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${filteredStudents.map((s, idx) => {
         const status = activeAttendanceMap[s.username] || "";
+        const rowClass = status === "P" ? "att-row-present" : (status === "A" ? "att-row-absent" : "att-row-unmarked");
         return `
-                        <tr data-username="${escapeHtml(s.username)}">
+                        <tr data-username="${escapeHtml(s.username)}" class="att-student-row ${rowClass}">
                           <td>${idx + 1}</td>
                           <td><strong class="student-name">${escapeHtml(s.name)}</strong></td>
                           <td><code class="uucms-code">${escapeHtml(s.username)}</code></td>
                           <td><span class="chip-sm">${escapeHtml(s.courseYear || "2nd Year")} • ${escapeHtml(s.semester || "3rd Sem")} • ${escapeHtml(s.division || "Sec A")}</span></td>
                           <td style="text-align:center;">
-                            <div class="pa-toggle-group">
-                              <button type="button" class="btn-pa btn-p ${status === "P" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="P" title="Present" aria-label="Mark ${escapeHtml(s.name)} Present">P</button>
-                              <button type="button" class="btn-pa btn-a ${status === "A" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="A" title="Absent" aria-label="Mark ${escapeHtml(s.name)} Absent">A</button>
+                            <div class="pa-toggle-group" role="group" aria-label="Attendance selection for ${escapeHtml(s.name)}">
+                              <button type="button" class="btn-pa btn-p ${status === "P" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="P" title="Mark Present" aria-label="Mark ${escapeHtml(s.name)} Present">P</button>
+                              <button type="button" class="btn-pa btn-a ${status === "A" ? "active" : ""}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="A" title="Mark Absent" aria-label="Mark ${escapeHtml(s.name)} Absent">A</button>
+                              <button type="button" class="btn-pa btn-unmark ${!status ? 'active' : ''}" ${isAttendanceReadOnly ? 'disabled style="pointer-events:none; opacity:0.85;"' : ''} data-username="${escapeHtml(s.username)}" data-status="" title="Clear / Not Marked" aria-label="Clear attendance for ${escapeHtml(s.name)}">${renderIcon("rotate-ccw", 13)}</button>
                             </div>
+                          </td>
+                          <td style="text-align:center;">
+                            <span id="att-status-badge-${escapeHtml(s.username)}" class="att-status-pill ${status === "P" ? "badge-p" : (status === "A" ? "badge-a" : "badge-unmarked")}">
+                              ${status === "P" ? `${renderIcon("check", 13)} Present` : (status === "A" ? `${renderIcon("x", 13)} Absent` : "Not Marked")}
+                            </span>
                           </td>
                         </tr>
                       `;
@@ -8769,12 +9122,12 @@ const pages = {
               </div>
 
               ${!isAttendanceReadOnly ? `
-                <div class="att-submit-bar">
+                <div class="att-submit-bar" style="flex-direction:column; align-items:flex-start; gap:10px;">
                   <button type="button" id="saveDailyAttendanceBtn" class="primary-btn save-att-btn">
                     <span>${renderIcon("save", 18)} Save Daily Attendance (${escapeHtml(displayDate)})</span>
                     <span class="arrow">→</span>
                   </button>
-                  <p id="attSaveMessage" class="message"></p>
+                  <p id="attSaveMessage" class="message" style="margin:0;"></p>
                 </div>
               ` : ''}
             ` : `
@@ -8914,7 +9267,10 @@ const pages = {
     return `
       <section class="panel">
         <div class="panel-head">
-          <h3>Subject Attendance Summary</h3>
+          <div>
+            <h3>Subject Attendance Summary</h3>
+            <small style="color:#64748b;">Institutional course-wise attendance tracking & examination eligibility criteria (75% minimum)</small>
+          </div>
           <div style="display:flex; gap:10px; align-items:center;">
             <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" data-action="open-ai-analysis" data-username="${encodeURIComponent(currentUser.username)}" data-analysis-type="attendance">
               <span>${renderIcon("bar-chart-3", 18)} AI Attendance Analysis</span>
@@ -8922,34 +9278,79 @@ const pages = {
             <span class="badge">Overall Progress</span>
           </div>
         </div>
+
+        <div class="attendance-criteria-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h4 style="margin:0 0 4px 0; font-size:13.5px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:6px;">
+              <span>${renderIcon("shield-alert", 17)}</span> Institutional Eligibility Standard: Minimum 75% Attendance
+            </h4>
+            <p style="margin:0; font-size:12px; color:#64748b;">
+              Continuous tracking per course. Minimum 75% aggregate attendance is mandatory for university examination hall ticket eligibility.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <span class="attendance-status-chip status-eligible">✓ &gt;= 75% Eligible</span>
+            <span class="attendance-status-chip status-warning">⚠ 65–74% Warning</span>
+            <span class="attendance-status-chip status-critical">✕ &lt; 65% Shortage</span>
+          </div>
+        </div>
+
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Subject</th>
-                <th style="text-align:center;">No. Of Classes Taken</th>
-                <th style="text-align:center;">No. of Classes Attended</th>
-                <th style="text-align:center;">Overall Attendance (%)</th>
+                <th>Subject Name & Code</th>
+                <th style="text-align:center;">Conducted</th>
+                <th style="text-align:center;">Attended</th>
+                <th style="text-align:center;">Attendance %</th>
+                <th style="text-align:center;">Eligibility Status</th>
+                <th style="text-align:center;">Criteria Margin</th>
               </tr>
             </thead>
             <tbody>
               ${ids.map(id => {
-      const s = subjectById(id);
-      const stats = getSubjectClassesSummary(currentUser.username, id);
-      const isGood = stats.overallPct >= 75;
-      return `
+                const s = subjectById(id);
+                const stats = getSubjectClassesSummary(currentUser.username, id);
+                const hasConducted = stats.hasData && stats.classesTaken > 0;
+
+                let statusBadge = "";
+                let marginText = "";
+                let pctBadge = "";
+
+                if (!hasConducted) {
+                  pctBadge = `<span class="chip-sm" style="background:#f1f5f9; color:#94a3b8; font-weight:600;">—</span>`;
+                  statusBadge = `<span class="attendance-status-chip status-neutral">Classes not commenced</span>`;
+                  marginText = `<span style="color:#94a3b8; font-size:12px;">No sessions logged</span>`;
+                } else if (stats.overallPct >= 75) {
+                  pctBadge = `<div class="att-circle-badge good">${stats.overallPct}%</div>`;
+                  statusBadge = `<span class="attendance-status-chip status-eligible">✓ Eligible</span>`;
+                  marginText = `<span style="color:#15803d; font-size:12px; font-weight:600;">+${stats.canMiss} ${stats.canMiss === 1 ? 'class' : 'classes'} buffer</span>`;
+                } else if (stats.overallPct >= 65) {
+                  pctBadge = `<div class="att-circle-badge warn">${stats.overallPct}%</div>`;
+                  statusBadge = `<span class="attendance-status-chip status-warning">⚠ Shortage Warning</span>`;
+                  marginText = `<span style="color:#b45309; font-size:12px; font-weight:600;">Needs ${stats.neededFor75} ${stats.neededFor75 === 1 ? 'class' : 'classes'} to reach 75%</span>`;
+                } else {
+                  pctBadge = `<div class="att-circle-badge warn" style="background:#fee2e2; color:#b91c1c; border-color:#fecaca;">${stats.overallPct}%</div>`;
+                  statusBadge = `<span class="attendance-status-chip status-critical">✕ Critical Shortage</span>`;
+                  marginText = `<span style="color:#b91c1c; font-size:12px; font-weight:600;">Needs ${stats.neededFor75} ${stats.neededFor75 === 1 ? 'class' : 'classes'} to reach 75%</span>`;
+                }
+
+                return `
                   <tr>
-                    <td>${s.icon ? renderIcon(s.icon, 16) + ' ' : ''}<b>${s.name}</b></td>
-                    <td style="text-align:center; font-weight:700; color:#334155; font-size:15px;">${stats.classesTaken}</td>
-                    <td style="text-align:center; font-weight:700; color:#334155; font-size:15px;">${stats.classesAttended}</td>
-                    <td style="text-align:center; vertical-align:middle;">
-                      <div class="att-circle-badge ${isGood ? 'good' : 'warn'}">
-                        ${stats.overallPct}%
+                    <td>
+                      <div style="display:flex; flex-direction:column; gap:2px;">
+                        <strong style="color:#0A2540; font-size:13.5px;">${s.icon ? renderIcon(s.icon, 16) + ' ' : ''}${escapeHtml(s.name)}</strong>
+                        <small style="color:#64748b; font-size:11.5px;">${escapeHtml(s.short)} • ${escapeHtml(s.credits || 3)} Credits</small>
                       </div>
                     </td>
+                    <td style="text-align:center; font-weight:700; color:#334155; font-size:14px;">${stats.classesTaken}</td>
+                    <td style="text-align:center; font-weight:700; color:#334155; font-size:14px;">${stats.classesAttended}</td>
+                    <td style="text-align:center; vertical-align:middle;">${pctBadge}</td>
+                    <td style="text-align:center; vertical-align:middle;">${statusBadge}</td>
+                    <td style="text-align:center; vertical-align:middle;">${marginText}</td>
                   </tr>
                 `;
-    }).join("")}
+              }).join("")}
             </tbody>
           </table>
         </div>
@@ -8992,7 +9393,13 @@ const pages = {
       const facultyYear = getCourseYearForSemester(facultySem);
 
       const activeClassDivision = getFacultySubjectDivision(currentUser, currentUser.subject);
-      const filteredStudents = getStudentsForSubject(currentUser.subject, activeClassDivision);
+      const isBothDivisions = !activeClassDivision || activeClassDivision === "Both Divisions" || activeClassDivision === "All Divisions";
+      if (!window.facultyMarksDivisionFilter || (!isBothDivisions && window.facultyMarksDivisionFilter !== activeClassDivision)) {
+        window.facultyMarksDivisionFilter = isBothDivisions ? "All Divisions" : activeClassDivision;
+      }
+      const currentMarksDiv = window.facultyMarksDivisionFilter;
+      const targetQueryDiv = (currentMarksDiv === "All Divisions" || currentMarksDiv === "Both Divisions") ? activeClassDivision : currentMarksDiv;
+      const filteredStudents = getStudentsForSubject(currentUser.subject, targetQueryDiv);
 
       const config = getSubjectMarksConfig(currentUser.subject);
       const maxI1 = config.maxInternal1 || 20;
@@ -9023,10 +9430,15 @@ const pages = {
         const i2Num = parseFloat(i2Val);
         const assignNum = parseFloat(assignVal);
 
-        let totalText = "Not set";
-        if (!isNaN(i1Num) || !isNaN(i2Num) || !isNaN(assignNum)) {
+        const countEntered = (!isNaN(i1Num) ? 1 : 0) + (!isNaN(i2Num) ? 1 : 0) + (!isNaN(assignNum) ? 1 : 0);
+        let totalPill = `<span id="total-badge-${escapeHtml(s.username)}" class="att-status-pill badge-unmarked">Awaiting Marks</span>`;
+        if (countEntered > 0) {
           const tot = (isNaN(i1Num) ? 0 : i1Num) + (isNaN(i2Num) ? 0 : i2Num) + (isNaN(assignNum) ? 0 : assignNum);
-          totalText = `<strong>${tot}</strong> / ${maxTotal}`;
+          if (countEntered === 3) {
+            totalPill = `<span id="total-badge-${escapeHtml(s.username)}" class="att-status-pill badge-p"><strong>${tot}</strong> / ${maxTotal} (Completed)</span>`;
+          } else {
+            totalPill = `<span id="total-badge-${escapeHtml(s.username)}" class="att-status-pill badge-amber"><strong>${tot}</strong> / ${maxTotal} (Incomplete)</span>`;
+          }
         }
 
         return `
@@ -9042,7 +9454,8 @@ const pages = {
                 data-field="internal1" 
                 min="0" max="${maxI1}" step="0.5" 
                 value="${i1Val}" 
-                placeholder="0"
+                placeholder="--"
+                aria-label="1st Internal Marks for ${escapeHtml(s.name)}"
                 style="width: 100px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 600;">
             </td>
             <td>
@@ -9052,7 +9465,8 @@ const pages = {
                 data-field="internal2" 
                 min="0" max="${maxI2}" step="0.5" 
                 value="${i2Val}" 
-                placeholder="0"
+                placeholder="--"
+                aria-label="2nd Internal Marks for ${escapeHtml(s.name)}"
                 style="width: 100px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 600;">
             </td>
             <td>
@@ -9062,11 +9476,12 @@ const pages = {
                 data-field="assignment" 
                 min="0" max="10" step="0.5" 
                 value="${assignVal}" 
-                placeholder="0"
+                placeholder="--"
+                aria-label="Assignment Marks for ${escapeHtml(s.name)}"
                 style="width: 90px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 600;">
             </td>
             <td>
-              <span id="total-badge-${escapeHtml(s.username)}" class="badge-p">${totalText}</span>
+              ${totalPill}
             </td>
           </tr>
         `;
@@ -9109,12 +9524,32 @@ const pages = {
         </section>
 
         <section class="panel" style="margin-top:20px;">
-          <div class="panel-head">
+          <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
               <h3>Student Marks Entry Table (${escapeHtml(subjectObj.name)})</h3>
               <small style="color:#64748b; font-weight:600;">${escapeHtml(facultySem)} (${escapeHtml(facultyYear)}) • Enter marks directly in the table below</small>
             </div>
-            <span class="badge">Faculty Table Entry</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+              ${isBothDivisions ? `
+                <div style="display:inline-flex; align-items:center; gap:6px;">
+                  <label for="marksDivisionFilter" style="font-size:12px; font-weight:700; color:#475569;">Division:</label>
+                  <select id="marksDivisionFilter" class="filter-select" style="width:130px; padding:4px 8px; font-size:12px;">
+                    <option value="All Divisions" ${currentMarksDiv === "All Divisions" ? "selected" : ""}>All Divisions</option>
+                    <option value="Div A" ${currentMarksDiv === "Div A" ? "selected" : ""}>Div A</option>
+                    <option value="Div B" ${currentMarksDiv === "Div B" ? "selected" : ""}>Div B</option>
+                  </select>
+                </div>
+              ` : `
+                <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;">Division: ${escapeHtml(activeClassDivision)}</span>
+              `}
+              <span class="badge">Faculty Table Entry</span>
+            </div>
+          </div>
+
+          <!-- Unsaved Marks Changes Indicator -->
+          <div id="marksUnsavedWarning" class="marks-unsaved-bar" style="display:none;" role="alert">
+            <span>${renderIcon("alert-triangle", 16)}</span>
+            <span><strong>Unsaved Changes:</strong> You have modified marks in this sheet. Click "Save Marks Batch" below to record.</span>
           </div>
 
           ${filteredStudents.length ? `
@@ -9140,12 +9575,12 @@ const pages = {
               </div>
               <div style="margin-top:14px; display:flex; gap:12px; align-items:center;">
                 <button class="primary-btn" type="submit"><span>${renderIcon("save", 18)} Save Marks Batch</span><span class="arrow">→</span></button>
-                <p id="marksMessage" class="message"></p>
+                <p id="marksBatchMessage" class="message"></p>
               </div>
             </form>
           ` : `
             <div class="empty-state" style="text-align:center; padding: 40px 20px;">
-              <p style="font-size:15px; color:#64748b; margin:0;">No students enrolled for ${escapeHtml(subjectObj.name)}.</p>
+              <p style="font-size:15px; color:#64748b; margin:0;">No students enrolled for ${escapeHtml(subjectObj.name)} in ${escapeHtml(currentMarksDiv)}.</p>
             </div>
           `}
         </section>
@@ -9158,39 +9593,63 @@ const pages = {
 
     const studentRows = studentSubjects.map((s, idx) => {
       const m = record.marks[s.id];
-      let i1Text = "Not set";
-      let i2Text = "Not set";
-      let assignText = "Not set";
-      let totalText = "Not set";
+      const cfg = getSubjectMarksConfig(s.id);
+      const m1Max = (m && typeof m.maxInternal1 === "number") ? m.maxInternal1 : (cfg.maxInternal1 || 20);
+      const m2Max = (m && typeof m.maxInternal2 === "number") ? m.maxInternal2 : (cfg.maxInternal2 || 20);
+      const assignMax = 10;
+      const totMax = m1Max + m2Max + assignMax;
+
+      let i1Val = null;
+      let i2Val = null;
+      let assignVal = null;
+      let hasMarks = false;
 
       if (m && typeof m === "object") {
-        const i1 = typeof m.internal1 === "number" ? m.internal1 : null;
-        const i2 = typeof m.internal2 === "number" ? m.internal2 : null;
-        const assign = typeof m.assignment === "number" ? m.assignment : null;
-        const m1Max = m.maxInternal1 || 20;
-        const m2Max = m.maxInternal2 || 20;
-
-        i1Text = i1 !== null ? `${i1}` : "Not set";
-        i2Text = i2 !== null ? `${i2}` : "Not set";
-        assignText = assign !== null ? `${assign}` : "Not set";
-
-        if (i1 !== null || i2 !== null || assign !== null) {
-          const tot = (i1 || 0) + (i2 || 0) + (assign || 0);
-          const totMax = m1Max + m2Max + 10;
-          totalText = `<strong>${tot}</strong> / ${totMax}`;
-        }
+        if (typeof m.internal1 === "number") { i1Val = m.internal1; hasMarks = true; }
+        if (typeof m.internal2 === "number") { i2Val = m.internal2; hasMarks = true; }
+        if (typeof m.assignment === "number") { assignVal = m.assignment; hasMarks = true; }
       } else if (typeof m === "number") {
-        totalText = `${m} / 100`;
+        i1Val = m;
+        hasMarks = true;
+      }
+
+      const i1Text = i1Val !== null ? `${i1Val} / ${m1Max}` : `<span class="marks-pending">Not posted</span>`;
+      const i2Text = i2Val !== null ? `${i2Val} / ${m2Max}` : `<span class="marks-pending">Not posted</span>`;
+      const assignText = assignVal !== null ? `${assignVal} / ${assignMax}` : `<span class="marks-pending">Not posted</span>`;
+
+      let totalMarkup = `<span class="chip-sm" style="background:#f1f5f9; color:#94a3b8;">Pending Evaluation</span>`;
+      let tierBadge = `<span class="badge" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0;">Awaiting Marks</span>`;
+
+      if (hasMarks) {
+        const tot = (i1Val || 0) + (i2Val || 0) + (assignVal || 0);
+        const pct = Math.round((tot / totMax) * 100);
+        totalMarkup = `<strong style="font-size:14px; color:#0A2540;">${tot}</strong> <span style="color:#64748b; font-size:12px;">/ ${totMax}</span>`;
+
+        if (pct >= 85) {
+          tierBadge = `<span class="marks-tier-badge tier-excellent">Outstanding (${pct}%)</span>`;
+        } else if (pct >= 70) {
+          tierBadge = `<span class="marks-tier-badge tier-good">Good (${pct}%)</span>`;
+        } else if (pct >= 50) {
+          tierBadge = `<span class="marks-tier-badge tier-satisfactory">Satisfactory (${pct}%)</span>`;
+        } else {
+          tierBadge = `<span class="marks-tier-badge tier-warning">Needs Focus (${pct}%)</span>`;
+        }
       }
 
       return `
         <tr>
-          <td>${idx + 1}</td>
-          <td><strong class="student-name">${escapeHtml(s.name)}</strong></td>
+          <td style="color:#64748b; font-weight:600;">${idx + 1}</td>
+          <td>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <strong class="student-name" style="font-size:13.5px; color:#0A2540;">${escapeHtml(s.name)}</strong>
+              <small style="color:#64748b; font-size:11.5px;">${escapeHtml(s.short)} • ${escapeHtml(s.credits || 3)} Credits</small>
+            </div>
+          </td>
           <td><span class="chip-sm">${i1Text}</span></td>
           <td><span class="chip-sm">${i2Text}</span></td>
           <td><span class="chip-sm">${assignText}</span></td>
-          <td><span class="badge-p">${totalText}</span></td>
+          <td><span class="badge-p" style="font-size:13px; padding:4px 10px;">${totalMarkup}</span></td>
+          <td>${tierBadge}</td>
         </tr>
       `;
     }).join("");
@@ -9200,7 +9659,7 @@ const pages = {
         <div class="panel-head">
           <div>
             <h3>Academic Marks Statement</h3>
-            <small style="color:#64748b;">Detailed breakdown of Internal Exams & Assignment Marks • ${escapeHtml(currentUser.semester || '1st Semester')} (${escapeHtml(currentUser.division || 'Div A')})</small>
+            <small style="color:#64748b;">Continuous Internal Evaluation (CIE) Ledger • ${escapeHtml(currentUser.semester || '1st Semester')} (${escapeHtml(currentUser.division || 'Div A')})</small>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
             <button type="button" class="ai-analysis-btn ai-analysis-btn-sm" data-action="open-ai-analysis" data-username="${encodeURIComponent(currentUser.username)}" data-analysis-type="marks">
@@ -9208,6 +9667,14 @@ const pages = {
             </button>
             <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;">${escapeHtml(currentUser.division || 'Div A')} • Student Statement</span>
           </div>
+        </div>
+
+        <div class="marks-info-banner" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <p style="margin:0; font-size:12.5px; color:#475569; display:flex; align-items:center; gap:6px;">
+            <span>${renderIcon("info", 16)}</span>
+            <strong>Continuous Internal Evaluation (CIE):</strong> Reflects verified classroom assessments and assignments. Semester-end university examinations are conducted separately as per Rani Channamma University schedules.
+          </p>
+          <span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">Internal Assessment Only</span>
         </div>
 
         <div class="table-wrap">
@@ -9219,11 +9686,12 @@ const pages = {
                 <th>1st Internal</th>
                 <th>2nd Internal</th>
                 <th>Assignment</th>
-                <th>Total Marks</th>
+                <th>Total CIE Marks</th>
+                <th>Evaluation Status</th>
               </tr>
             </thead>
             <tbody>
-              ${studentRows.length ? studentRows : `<tr><td colspan="6" style="text-align:center;">No marks available.</td></tr>`}
+              ${studentRows.length ? studentRows : `<tr><td colspan="7" style="text-align:center;">No marks available.</td></tr>`}
             </tbody>
           </table>
         </div>
@@ -9404,7 +9872,8 @@ const pages = {
       const hasAttachments = !!a.fileData;
       const formattedDue = formatDateDDOrdinalMonth(a.due);
       const isSub = a.status === "Submitted";
-      return `<article class="assignment"><div class="assignment-icon">${renderIcon(s && s.icon ? s.icon : 'file-edit', 21)}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${escapeHtml(a.title)}</b>${a.description ? `<p class="assignment-desc">${escapeHtml(a.description)}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${sanitizeDownloadUrl(a.fileData)}" download="${escapeHtml(a.fileName || 'Assignment_Document')}" class="btn-doc-download"><span style="font-size:14px;">${renderIcon("file-text", 18)}</span> ${escapeHtml(a.fileName || 'Download Document')}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? escapeHtml(s.name) : ''} • <strong>Submission Date:</strong> ${formattedDue}${isSub && formattedSubmitted ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formattedSubmitted}</span>` : ''}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><span class="status ${isSub ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${isSub ? "✓ Submitted" : renderIcon("hourglass", 18) + " Pending"}</span><button type="button" class="btn-student-toggle-status" data-student="${escapeHtml(currentUser.username)}" data-title="${encodeURIComponent(a.title || '')}" data-subject="${escapeHtml(a.subject || '')}" data-due="${escapeHtml(a.due || '')}" data-next-status="${isSub ? 'Pending' : 'Submitted'}" style="margin:0; padding:6px 12px; font-size:11.5px; font-weight:700; border-radius:6px; cursor:pointer; background:${isSub ? '#f8fafc' : '#0A2540'}; color:${isSub ? '#64748b' : '#ffffff'}; border:1px solid ${isSub ? '#cbd5e1' : '#0A2540'};"><span>${isSub ? renderIcon("corner-down-left", 16) + " Revert to Pending" : "✓ Mark as Submitted"}</span></button></div></article>`;
+      const submittedTag = (isSub && a.submittedDate) ? ` • <span style="color:#16a34a; font-weight:600;">Submitted on ${formatDateDDOrdinalMonth(a.submittedDate)}</span>` : "";
+      return `<article class="assignment"><div class="assignment-icon">${renderIcon(s && s.icon ? s.icon : 'file-edit', 21)}</div><div class="assignment-main"><b style="font-size:15px; color:#1e293b;">${escapeHtml(a.title)}</b>${a.description ? `<p class="assignment-desc">${escapeHtml(a.description)}</p>` : ''}${hasAttachments ? `<div class="assignment-attachments">${a.fileData ? `<a href="${sanitizeDownloadUrl(a.fileData)}" download="${escapeHtml(a.fileName || 'Assignment_Document')}" class="btn-doc-download"><span style="font-size:14px;">${renderIcon("file-text", 18)}</span> ${escapeHtml(a.fileName || 'Download Document')}</a>` : ''}</div>` : ''}<small style="margin-top:6px; color:#64748b;">${s ? escapeHtml(s.name) : ''} • <strong>Submission Date:</strong> ${formattedDue}${submittedTag}</small></div><div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;"><span class="status ${isSub ? "good" : "warn"}" style="padding:6px 14px; font-size:13px; font-weight:600; border-radius:20px; text-transform:uppercase;">${isSub ? "✓ Submitted" : renderIcon("hourglass", 18) + " Pending"}</span><button type="button" class="btn-student-toggle-status" data-student="${escapeHtml(currentUser.username)}" data-title="${encodeURIComponent(a.title || '')}" data-subject="${escapeHtml(a.subject || '')}" data-due="${escapeHtml(a.due || '')}" data-next-status="${isSub ? 'Pending' : 'Submitted'}" style="margin:0; padding:6px 12px; font-size:11.5px; font-weight:700; border-radius:6px; cursor:pointer; background:${isSub ? '#f8fafc' : '#0A2540'}; color:${isSub ? '#64748b' : '#ffffff'}; border:1px solid ${isSub ? '#cbd5e1' : '#0A2540'};"><span>${isSub ? renderIcon("corner-down-left", 16) + " Revert to Pending" : "✓ Mark as Submitted"}</span></button></div></article>`;
     }).join("") : `<div class="empty-state">No assignments assigned to you yet.</div>`}</div></section>`;
   },
   notes() {
@@ -9760,7 +10229,39 @@ const pages = {
         </div>
       ` : ''}
 
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const currentDayName = dayNames[new Date().getDay()];
+      const todayTargetLabel = currentDayName === "Sunday" ? "Monday" : currentDayName;
+
+      const activeFilter = activeTimetableDayFilter || "all";
+      let visibleDays = doc.days || [];
+      if (!canEdit && activeFilter !== "all") {
+        if (activeFilter === "today") {
+          visibleDays = (doc.days || []).filter(d => d.label.toLowerCase() === todayTargetLabel.toLowerCase());
+        } else {
+          visibleDays = (doc.days || []).filter(d => d.label.toLowerCase() === activeFilter.toLowerCase());
+        }
+        if (!visibleDays.length) visibleDays = doc.days || [];
+      }
+
       <div class="timetable-builder-container" style="margin-top:14px;">
+        ${!canEdit ? `
+          <div class="timetable-day-filter-bar">
+            <span class="day-filter-label">${renderIcon("calendar", 16)} Schedule Filter:</span>
+            <div class="day-filter-buttons">
+              <button type="button" class="btn-day-tab ${activeFilter === 'all' ? 'active' : ''}" data-day="all">Full Week</button>
+              <button type="button" class="btn-day-tab ${activeFilter === 'today' ? 'active' : ''}" data-day="today">
+                Today (${currentDayName === 'Sunday' ? 'Sun • Mon View' : currentDayName.slice(0, 3)})
+              </button>
+              ${(doc.days || []).map(d => `
+                <button type="button" class="btn-day-tab ${activeFilter === d.label ? 'active' : ''}" data-day="${escapeAttr(d.label)}">
+                  ${escapeHtml(d.label.slice(0, 3))}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        ` : ''}
+
         ${canEdit ? `
           <div class="timetable-toolbar-wrapper">
             <!-- 1. Merge Cells -->
@@ -9776,8 +10277,10 @@ const pages = {
             <!-- 3. Font Family (allowlist) -->
             <div class="timetable-tb-group">
               <select id="tbSelectFontFamily" class="timetable-select" title="Font Family" aria-label="Font Family">
+                <option value="DM Sans" selected>DM Sans</option>
+                <option value="Sora">Sora</option>
                 <option value="Arial">Arial</option>
-                <option value="Inter" selected>Inter</option>
+                <option value="Inter">Inter</option>
                 <option value="Roboto">Roboto</option>
                 <option value="Times New Roman">Times New Roman</option>
                 <option value="Georgia">Georgia</option>
@@ -9816,10 +10319,11 @@ const pages = {
             <thead>
               <tr>
                 <th class="time-col-header" style="width:130px; text-align:center;">Timing</th>
-                ${(doc.days || []).map(d => {
+                ${visibleDays.map(d => {
+                  const isTodayCol = d.label.toLowerCase() === currentDayName.toLowerCase();
                   return `
-                    <th style="min-width:130px; text-align:center;">
-                      ${escapeHtml(d.label)}
+                    <th class="${isTodayCol ? 'timetable-today-header' : ''}" style="min-width:130px; text-align:center;">
+                      ${escapeHtml(d.label)}${isTodayCol ? `<span class="timetable-today-badge">Today</span>` : ''}
                     </th>
                   `;
                 }).join("")}
@@ -9839,16 +10343,17 @@ const pages = {
                         <span class="matrix-time-chip">${escapeHtml(slot.label)}</span>
                       `}
                     </td>
-                    ${(doc.days || []).map(d => {
+                    ${visibleDays.map(d => {
                       const cell = getTimetableCell(doc, d.dayIndex, slot.slotIndex);
                       if (cell && cell.mergedInto) {
                         return ''; // Spanned by origin
                       }
                       const isSelected = selectedTimetableCells.some(c => c.dayIndex === d.dayIndex && c.slotIndex === slot.slotIndex);
+                      const isTodayCol = d.label.toLowerCase() === currentDayName.toLowerCase();
                       const rSpan = (cell && cell.rowSpan) || 1;
                       const cSpan = (cell && cell.colSpan) || 1;
                       const isBold = cell && cell.bold;
-                      const fFam = (cell && cell.fontFamily) || "Inter";
+                      const fFam = (cell && cell.fontFamily) || "DM Sans";
                       const fSz = (cell && cell.fontSize) || "13px";
                       const tAl = (cell && cell.textAlign) || "center";
                       const subText = (cell && cell.subject) || "";
@@ -9860,9 +10365,22 @@ const pages = {
                           </td>
                         `;
                       } else {
+                        const sObj = subText ? (subjectById(subText) || (ACADEMIC && ACADEMIC.subjects ? ACADEMIC.subjects.find(s => s.name.toLowerCase() === subText.toLowerCase() || s.short.toLowerCase() === subText.toLowerCase()) : null)) : null;
+                        const isLab = sObj ? (sObj.name.toLowerCase().includes("lab") || sObj.id.toLowerCase().includes("lab")) : subText.toLowerCase().includes("lab");
+                        const facList = sObj ? getFacultyForSubject(sObj.id, displayDivision) : [];
+                        const facNames = facList.map(f => f.name).join(", ");
+
                         return `
-                          <td rowspan="${rSpan}" colspan="${cSpan}" class="grid-cell" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)}; padding:8px 6px; vertical-align:middle;">
-                            ${subText ? `<span class="matrix-subject-chip" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)};">${escapeHtml(subText)}</span>` : '<span style="color:#94a3b8;">-</span>'}
+                          <td rowspan="${rSpan}" colspan="${cSpan}" class="grid-cell ${isTodayCol ? 'timetable-today-cell' : ''}" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)}; padding:8px 6px; vertical-align:middle;">
+                            ${subText ? `
+                              <div class="timetable-cell-content">
+                                <span class="matrix-subject-chip" style="font-weight:${isBold ? 'bold' : 'normal'}; font-family:${escapeHtml(fFam)}; font-size:${escapeHtml(fSz)}; text-align:${escapeHtml(tAl)};">
+                                  ${escapeHtml(subText)}
+                                </span>
+                                ${isLab ? `<span class="timetable-slot-type lab" title="Practical Laboratory Session">Lab</span>` : ''}
+                                ${facNames ? `<span class="timetable-slot-faculty" title="Faculty: ${escapeHtml(facNames)}">${renderIcon("user", 12)} ${escapeHtml(facNames)}</span>` : ''}
+                              </div>
+                            ` : '<span style="color:#94a3b8;">-</span>'}
                           </td>
                         `;
                       }
@@ -9892,6 +10410,16 @@ const pages = {
     const countLabel = `${count} ${count === 1 ? 'Notice' : 'Notices'}`;
 
     if (canPublish) {
+      let facultyScopeSummary = "";
+      if (isFaculty) {
+        const facSubs = getFacultyEligibleSubjects(currentUser);
+        facultyScopeSummary = facSubs.map(s => {
+          const div = getFacultySubjectDivision(currentUser, s.id);
+          const divStr = (!div || div === "Both Divisions" || div === "All Divisions") ? "Div A & B" : div;
+          return `${s.name || s.id} (${divStr})`;
+        }).join(", ");
+      }
+
       const audienceBadge = isAdmin
         ? ""
         : `<span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">Audience: Students Only</span>`;
@@ -9906,6 +10434,18 @@ const pages = {
         </div>
         <form id="noticeForm" class="entry-form">
           <label>Title</label><div class="input-wrap"><input id="noticeTitle" type="text" required placeholder="Notice title"></div>
+          
+          <label for="noticeCategory">Category / Topic</label>
+          <div class="input-wrap">
+            <select id="noticeCategory" style="padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-weight:600; font-size:13px; width:100%; box-sizing:border-box;">
+              <option value="General Academic" selected>General Academic Announcement</option>
+              <option value="Internal Assessment">Internal Assessment / Exam Notification</option>
+              <option value="Assignment & Projects">Assignment & Project Submission</option>
+              <option value="Class Schedule">Class Schedule & Timetable Circular</option>
+              <option value="Urgent Notice">Urgent Campus Notice</option>
+            </select>
+          </div>
+
           <label>Message</label><div class="input-wrap"><textarea id="noticeText" rows="4" required placeholder="Write notice text"></textarea></div>
           <label>Date</label><div class="input-wrap"><input id="noticeDate" type="date" value="${new Date().toISOString().slice(0, 10)}" required></div>
           <label>Attach Document (Optional)</label>
@@ -9921,7 +10461,16 @@ const pages = {
                 <option value="faculty">Faculty Only</option>
               </select>
             </div>
-          ` : ''}
+          ` : `
+            <div class="notice-preview-scope" role="region" aria-label="Notice distribution scope">
+              <span>${renderIcon("info", 16)}</span>
+              <div>
+                <strong>Notice Distribution Scope:</strong>
+                This notice will be published to Students enrolled in your assigned classes:
+                <span>${escapeHtml(facultyScopeSummary || "Assigned Courses")}</span>
+              </div>
+            </div>
+          `}
           <button class="primary-btn" type="submit" style="margin-top:12px;"><span>Publish Notice</span><span class="arrow">→</span></button>
           <p id="noticeMessage" class="message"></p>
         </form>
@@ -9944,6 +10493,7 @@ const pages = {
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
                 <small>${escapeHtml(n.date)}</small>
                 ${targetTag}
+                ${n.category ? `<span class="chip-sm" style="background:#f1f5f9; color:#475569; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${escapeHtml(n.category)}</span>` : ''}
                 ${n.authorRole ? `<small style="color:#64748b; font-style:italic;">By ${escapeHtml(n.authorName || (n.authorRole === 'admin' ? 'Admin' : 'Faculty'))}</small>` : ''}
               </div>
               <h3>${escapeHtml(n.title)}</h3>
@@ -10069,6 +10619,9 @@ const pages = {
   divisions() {
     return adminDivisions();
   },
+  academicYears() {
+    return adminAcademicYears();
+  },
   syllabus() {
     return renderSyllabusPageHtml();
   }
@@ -10155,20 +10708,31 @@ function facultyDashboard() {
   const email = (currentUser && currentUser.email) ? currentUser.email : (currentUser ? `${currentUser.username}@campussphere.edu` : "");
   const facultyName = (currentUser && currentUser.name) ? currentUser.name : "Faculty Member";
 
+  const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const todayDayName = daysOfWeek[new Date().getDay()];
+  const allTimetableEntries = (ACADEMIC && Array.isArray(ACADEMIC.timetable)) ? ACADEMIC.timetable : [];
+  const facultySubjectIds = allFacultySubjects.map(s => s.id);
+  const todayClasses = allTimetableEntries.filter(t => 
+    t.day === todayDayName && facultySubjectIds.includes(t.subject)
+  ).sort((a, b) => parseTimeStartMinutes(a.time) - parseTimeStartMinutes(b.time));
+
   return `<div class="welcome">
     <div>
-      <p class="eyebrow">Faculty Portal</p>
+      <p class="eyebrow">Faculty Portal • Academic Year: ${escapeHtml(window.activeInstitutionalAcademicYear || "Not active")}</p>
       <h1>Welcome back, ${escapeHtml(facultyName)} ${renderIcon("hand-metal", 20)}</h1>
     </div>
     <div class="welcome-icon">${renderIcon("graduation-cap", 25)}</div>
   </div>
 
-  <div class="stat-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:17px;">
+  <div class="stat-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:14px; margin-bottom:17px;">
     <div class="stat" style="cursor: pointer;" data-action="scroll-faculty-classes">
       <span>${renderIcon("book-open", 18)}</span><b>${allFacultySubjects.length}</b><small>Assigned Classes</small>
     </div>
     <div class="stat" style="cursor: pointer;" data-navigate="attendance">
       <span>${renderIcon("users", 18)}</span><b>${totalEnrolledAcrossClasses}</b><small>Total Enrolled Students</small>
+    </div>
+    <div class="stat" style="cursor: pointer;" data-action="scroll-faculty-today">
+      <span>${renderIcon("calendar-days", 18)}</span><b>${todayClasses.length}</b><small>Lectures Today (${todayDayName.slice(0, 3)})</small>
     </div>
     <div class="stat" style="cursor: pointer;" data-navigate="assignments">
       <span>${renderIcon("file-edit", 18)}</span><b>${assignmentCount}</b><small>Total Assignments</small>
@@ -10180,6 +10744,55 @@ function facultyDashboard() {
       <span>${renderIcon("megaphone", 18)}</span><b>${noticeCount}</b><small>Notices</small>
     </div>
   </div>
+
+  <!-- Today's Teaching Schedule Section -->
+  <section class="panel faculty-today-schedule-panel" style="margin-top: 18px;">
+    <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h3 style="display:flex; align-items:center; gap:8px;"><span>${renderIcon("calendar-days", 18)}</span> Today's Teaching Schedule (${escapeHtml(todayDayName)})</h3>
+        <small style="color:#64748b; font-weight:600;">Lectures and lab sessions scheduled for today across your assigned classes</small>
+      </div>
+      <button type="button" data-navigate="timetable" class="secondary-btn" style="padding:6px 14px; font-size:12.5px; font-weight:700; border-radius:8px; margin:0; cursor:pointer;">
+        <span>${renderIcon("calendar", 16)} Full Timetable</span>
+      </button>
+    </div>
+
+    ${todayClasses.length === 0 ? `
+      <div class="empty-state" style="padding: 24px 20px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1.5px dashed #cbd5e1; margin-top:14px;">
+        <p style="font-size: 14.5px; font-weight: 700; color: #334155; margin: 0 0 4px;">No Lectures Scheduled for Today (${escapeHtml(todayDayName)})</p>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 14px;">You have no timetable classes scheduled for today. Check your full weekly timetable to view all upcoming sessions.</p>
+        <button type="button" data-navigate="timetable" class="secondary-btn" style="width: auto !important; margin: 0 auto; padding: 6px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer;">
+          <span>View Weekly Timetable Matrix</span>
+        </button>
+      </div>
+    ` : `
+      <div class="faculty-today-schedule">
+        ${todayClasses.map(slot => {
+          const sObj = subjectById(slot.subject) || { name: slot.subject, short: slot.subject };
+          const sem = slot.semester || getSemesterForSubject(slot.subject) || "Semester";
+          const divText = slot.division || "Div A";
+          return `
+            <div class="faculty-today-card">
+              <div class="faculty-today-time">
+                <span>${renderIcon("clock", 15)}</span>
+                <span style="margin-top:2px; font-weight:800; font-size:11.5px;">${escapeHtml(slot.time)}</span>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <h4 style="margin:0; font-size:14px; font-weight:800; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(sObj.name)}</h4>
+                <div style="display:flex; gap:6px; margin:4px 0 8px; flex-wrap:wrap;">
+                  <span class="chip-sm" style="background:#e0f2fe; color:#0369a1; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${escapeHtml(sem)}</span>
+                  <span class="chip-sm" style="background:#fef3c7; color:#92400e; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px;">${escapeHtml(divText)}</span>
+                </div>
+                <button type="button" class="btn-sm" data-action="switch-and-attend" data-subject-id="${escapeHtml(slot.subject)}" data-division="${escapeHtml(divText)}" style="padding:6px 12px; font-weight:700; font-size:11.5px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer;">
+                  ${renderIcon("check-circle-2", 14)} Take Attendance
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `}
+  </section>
 
   <!-- All Managed Classes & Subjects Across Different Years -->
   <section class="panel faculty-classes-panel" style="margin-top: 18px;">
@@ -10212,7 +10825,7 @@ function facultyDashboard() {
         const sAssigns = (ACADEMIC && Array.isArray(ACADEMIC.assignments)) ? ACADEMIC.assignments.filter(a => a.subject === s.id).length : 0;
         const sNotes = (ACADEMIC && Array.isArray(ACADEMIC.notes)) ? ACADEMIC.notes.filter(n => n.subject === s.id).length : 0;
         return `
-          <div class="class-card-item ${isActive ? 'active-class active-class-card' : ''}" style="background:${isActive ? '#f0fdf4' : '#ffffff'}; border:2px solid ${isActive ? '#22c55e' : '#e2e8f0'}; border-radius:14px; padding:16px; box-shadow:0 2px 5px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between; position:relative;">
+          <div class="class-card-item ${isActive ? 'active-class active-class-card' : ''}" style="background:${isActive ? '#f0fdf4' : '#ffffff'}; border:2px solid ${isActive ? '#22c55e' : '#e2e8f0'}; border-radius:16px; padding:16px; box-shadow:0 2px 5px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between; position:relative;">
             ${isActive ? `<span style="position:absolute; top:12px; right:12px; background:#22c55e; color:white; font-size:10px; font-weight:800; padding:2px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:0.3px;">Active Now</span>` : ''}
             <div>
               <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;">
@@ -10324,11 +10937,11 @@ function facultyDashboard() {
       </div>
 
       <div class="course-actions-row" style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button type="button" class="action-btn-secondary" data-navigate="attendance" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("bar-chart-3", 18)} Manage Attendance</button>
-        <button type="button" class="action-btn-secondary" data-navigate="marks" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("trending-up", 18)} Manage Marks</button>
-        <button type="button" class="action-btn-secondary" data-navigate="assignments" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("file-edit", 18)} View Assignments</button>
-        <button type="button" class="action-btn-secondary" data-navigate="notes" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("book-open", 18)} Upload Notes</button>
-        <button type="button" class="action-btn-secondary" data-navigate="timetable" style="padding:8px 14px; border-radius:8px; font-weight:600; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1;">${renderIcon("calendar-days", 18)} Timetable</button>
+        <button type="button" class="action-btn-secondary" data-navigate="attendance" style="padding:8px 14px; border-radius:10px; font-weight:600; cursor:pointer; background:var(--service-emerald-pod, #ECFDF5); border:1px solid var(--service-emerald-border, #A7F3D0); color:var(--service-emerald-accent, #059669);">${renderIcon("bar-chart-3", 18)} Manage Attendance</button>
+        <button type="button" class="action-btn-secondary" data-navigate="marks" style="padding:8px 14px; border-radius:10px; font-weight:600; cursor:pointer; background:var(--service-violet-pod, #F5F3FF); border:1px solid var(--service-violet-border, #DDD6FE); color:var(--service-violet-accent, #7C3AED);">${renderIcon("trending-up", 18)} Manage Marks</button>
+        <button type="button" class="action-btn-secondary" data-navigate="assignments" style="padding:8px 14px; border-radius:10px; font-weight:600; cursor:pointer; background:var(--service-blue-pod, #EFF6FF); border:1px solid var(--service-blue-border, #DBEAFE); color:var(--service-blue-accent, #1D4ED8);">${renderIcon("file-edit", 18)} View Assignments</button>
+        <button type="button" class="action-btn-secondary" data-navigate="notes" style="padding:8px 14px; border-radius:10px; font-weight:600; cursor:pointer; background:var(--service-teal-pod, #F0FDFA); border:1px solid var(--service-teal-border, #99F6E4); color:var(--service-teal-accent, #0D9488);">${renderIcon("book-open", 18)} Upload Notes</button>
+        <button type="button" class="action-btn-secondary" data-navigate="timetable" style="padding:8px 14px; border-radius:10px; font-weight:600; cursor:pointer; background:var(--service-rose-pod, #FFF1F2); border:1px solid var(--service-rose-border, #FFE4E6); color:var(--service-rose-accent, #E11D48);">${renderIcon("calendar-days", 18)} Timetable</button>
       </div>
     </section>
   `}
@@ -10394,17 +11007,23 @@ function adminDashboard() {
 
   const semesters = ["1st Semester", "2nd Semester", "3rd Semester", "4th Semester", "5th Semester", "6th Semester"];
 
-  return `<div class="welcome">
-    <div>
-      <p class="eyebrow">Administrator</p>
-      <h1>Portal Control Center ${renderIcon("settings", 18)}</h1>
-      <p>Manage students, faculty, timetables, and academic semester subjects.</p>
+  return `<div class="welcome admin-welcome">
+    <div class="admin-welcome-copy">
+      <p class="eyebrow">Institutional Administration • System Overview</p>
+      <h1>Portal Control Center</h1>
+      <p class="welcome-meta">Manage academic divisions, curriculum subjects, student records, and schedules.</p>
     </div>
-    <div class="welcome-icon">${renderIcon("shield", 25)}</div>
+    <div class="admin-identity-badge" data-navigate="profile" style="cursor: pointer;" title="View Admin Profile & Security">
+      <div class="admin-identity-avatar">${escapeHtml((adminName || "A").charAt(0).toUpperCase())}</div>
+      <div class="admin-identity-info">
+        <span class="admin-identity-role">Portal Administrator</span>
+        <strong class="admin-identity-name">${escapeHtml(adminName)}</strong>
+        <span class="admin-identity-handle">@${escapeHtml(adminUsername)}</span>
+      </div>
+    </div>
   </div>
 
-  <div class="stat-grid">
-    <div class="stat" style="cursor: pointer;" data-navigate="profile"><span>${renderIcon("user", 17)}</span><b>${escapeHtml(adminName)}</b><small>Admin (@${escapeHtml(adminUsername)})</small></div>
+  <div class="stat-grid admin-dashboard-stats">
     <div class="stat" style="cursor: pointer;" data-navigate="divisions"><span>${renderIcon("school", 18)}</span><b>${totalDivisions}</b><small>Class Divisions</small></div>
     <div class="stat" style="cursor: pointer;" data-navigate="subjects"><span>${renderIcon("book-open", 18)}</span><b>${totalSubjects}</b><small>Semester Subjects</small></div>
     <div class="stat" style="cursor: pointer;" data-navigate="students"><span>${renderIcon("users", 18)}</span><b>${USERS.student.length}</b><small>Students</small></div>
@@ -10416,30 +11035,66 @@ function adminDashboard() {
     <div class="panel-head">
       <div>
         <h3>${renderIcon("zap", 18)} Quick Operations</h3>
-        <span class="badge">Direct Shortcuts</span>
+        <span class="panel-subtitle">Administrative Command Console &amp; Direct Shortcuts</span>
       </div>
+      <span class="badge">System Actions</span>
     </div>
     <div class="admin-quick-actions-bar">
-      <button type="button" class="admin-quick-btn" data-navigate="profile">
-        <span>${renderIcon("user", 17)}</span> Admin Profile & Security
+      <button type="button" class="admin-quick-btn admin-quick-blue" data-navigate="divisions">
+        <span class="quick-icon-wrap">${renderIcon("school", 18)}</span>
+        <div class="quick-content">
+          <span class="quick-title">Class Divisions</span>
+          <span class="quick-desc">Manage sections, batches &amp; intake</span>
+        </div>
+        <span class="quick-arrow" aria-hidden="true">→</span>
       </button>
-      <button type="button" class="admin-quick-btn" data-navigate="divisions">
-        <span>${renderIcon("school", 18)}</span> Manage Class Divisions
+      <button type="button" class="admin-quick-btn admin-quick-teal" data-navigate="subjects">
+        <span class="quick-icon-wrap">${renderIcon("book-open", 18)}</span>
+        <div class="quick-content">
+          <span class="quick-title">Semester Subjects</span>
+          <span class="quick-desc">Curriculum &amp; syllabus credits</span>
+        </div>
+        <span class="quick-arrow" aria-hidden="true">→</span>
       </button>
-      <button type="button" class="admin-quick-btn" data-navigate="subjects">
-        <span>${renderIcon("book-open", 18)}</span> Manage Semester-wise Subjects
+      <button type="button" class="admin-quick-btn admin-quick-emerald" data-navigate="students">
+        <span class="quick-icon-wrap">${renderIcon("users", 18)}</span>
+        <div class="quick-content">
+          <span class="quick-title">Student Records</span>
+          <span class="quick-desc">Accounts, enrollment &amp; status</span>
+        </div>
+        <span class="quick-arrow" aria-hidden="true">→</span>
       </button>
-      <button type="button" class="admin-quick-btn" data-navigate="students">
-        <span>${renderIcon("users", 18)}</span> Manage Students
+      <button type="button" class="admin-quick-btn admin-quick-violet" data-navigate="faculty">
+        <span class="quick-icon-wrap">${renderIcon("presentation", 18)}</span>
+        <div class="quick-content">
+          <span class="quick-title">Faculty Allocations</span>
+          <span class="quick-desc">Staff directory &amp; assignments</span>
+        </div>
+        <span class="quick-arrow" aria-hidden="true">→</span>
       </button>
-      <button type="button" class="admin-quick-btn" data-navigate="faculty">
-        <span>${renderIcon("presentation", 18)}</span> Manage Faculty
+      <button type="button" class="admin-quick-btn admin-quick-rose" data-navigate="timetable">
+        <span class="quick-icon-wrap">${renderIcon("calendar-days", 18)}</span>
+        <div class="quick-content">
+          <span class="quick-title">Timetable Matrix</span>
+          <span class="quick-desc">Lecture scheduling &amp; time slots</span>
+        </div>
+        <span class="quick-arrow" aria-hidden="true">→</span>
       </button>
-      <button type="button" class="admin-quick-btn" data-navigate="timetable">
-        <span>${renderIcon("calendar-days", 18)}</span> Manage Timetable
+      <button type="button" class="admin-quick-btn admin-quick-cyan" data-navigate="notices">
+        <span class="quick-icon-wrap">${renderIcon("megaphone", 18)}</span>
+        <div class="quick-content">
+          <span class="quick-title">Publish Notices</span>
+          <span class="quick-desc">Campus announcements &amp; alerts</span>
+        </div>
+        <span class="quick-arrow" aria-hidden="true">→</span>
       </button>
-      <button type="button" class="admin-quick-btn" data-navigate="notices">
-        <span>${renderIcon("megaphone", 18)}</span> Publish Notices
+      <button type="button" class="admin-quick-btn admin-quick-indigo" data-navigate="profile">
+        <span class="quick-icon-wrap">${renderIcon("user", 18)}</span>
+        <div class="quick-content">
+          <span class="quick-title">Admin Profile &amp; Security</span>
+          <span class="quick-desc">Credentials &amp; portal settings</span>
+        </div>
+        <span class="quick-arrow" aria-hidden="true">→</span>
       </button>
     </div>
   </section>
@@ -10696,7 +11351,10 @@ function logout() {
   const loginEl = $("loginPage");
   const signupEl = $("signupPage");
   const homeEl = $("publicHome");
-  if (appEl) appEl.classList.add("hidden");
+  if (appEl) {
+    appEl.classList.add("hidden");
+    appEl.removeAttribute("data-portal-role");
+  }
   if (loginEl) {
     loginEl.classList.add("hidden");
     loginEl.style.setProperty("display", "none", "important");
@@ -10804,6 +11462,10 @@ async function hydrateAcademicDataFromServer() {
       }
       serverAcademic.divisions = normalizeAcademicDivisions(serverAcademic.divisions);
       ACADEMIC = serverAcademic;
+      if (json.data.activeAcademicYear) {
+        window.activeInstitutionalAcademicYear = json.data.activeAcademicYear;
+      }
+      fetchAcademicYearsData().catch(() => {});
       window.dispatchEvent(new CustomEvent("academicDataUpdated"));
       updateNoticeBadges();
       updateNotesBadges();
@@ -11328,18 +11990,20 @@ function adminDivisions() {
   }).join("");
 
   return `
-    <div class="welcome">
-      <div>
+    <div class="welcome admin-divisions-welcome">
+      <div class="admin-divisions-welcome-inner">
         <p class="eyebrow">Academic Structure Control</p>
-        <h1 style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <span>Class Divisions Management ${renderIcon("school", 18)}</span>
-          <span style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,0.2);"></span>
+        <div class="division-welcome-row">
+          <div class="division-title-group">
+            <span class="division-icon-pod" aria-hidden="true">${renderIcon("school", 20)}</span>
+            <h1 class="division-welcome-title">Class Divisions Management</h1>
+          </div>
+          <span class="division-sync-pill" title="Real-time multi-system automatic sync active">
+            <span class="status-indicator-dot auto-sync-dot" aria-hidden="true"></span>
             <span>Automatic Sync: ALWAYS ON</span>
           </span>
-        </h1>
+        </div>
       </div>
-      <div class="welcome-icon">${renderIcon("school", 25)}</div>
     </div>
 
     <div class="stat-grid">
@@ -11874,6 +12538,511 @@ function bindDivisionEvents() {
   }
 }
 
+// ============================================================================
+// CAMPUSSPHERE — DYNAMIC ACADEMIC YEARS & CYCLES MANAGEMENT MODULE
+// ============================================================================
+
+let cachedAcademicYears = [];
+let activeAcademicYearCache = null;
+
+async function fetchAcademicYearsData() {
+  try {
+    const res = await authenticatedFetch(`${API_BASE_URL}/api/academic-years`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.academicYears)) {
+        cachedAcademicYears = data.academicYears;
+        activeAcademicYearCache = cachedAcademicYears.find(y => y.status === "active") || null;
+        if (activeAcademicYearCache) {
+          window.activeInstitutionalAcademicYear = activeAcademicYearCache.yearCode;
+        } else {
+          window.activeInstitutionalAcademicYear = null;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to fetch academic years:", err.message);
+  }
+  return cachedAcademicYears;
+}
+
+function adminAcademicYears() {
+  const years = Array.isArray(cachedAcademicYears) ? cachedAcademicYears : [];
+
+  if (!years.length) {
+    return `
+      <div class="welcome" style="margin-bottom: 20px;">
+        <div class="welcome-copy">
+          <p class="eyebrow">Academic Administration • Institutional Lifecycle</p>
+          <h1>Academic Years &amp; Cycles</h1>
+          <p class="welcome-meta">Evolving Multi-Year Structure • Independent Semester Configurations • Zero Data Overwrites</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="primary-btn" data-action="open-create-ay-modal" style="margin: 0; padding: 9px 18px; font-size: 13.5px; font-weight: 700; background: #0A2540;">
+            <span>+ Create Academic Year</span>
+          </button>
+        </div>
+      </div>
+
+      <section class="panel" style="margin-top: 20px; text-align: center; padding: 48px 24px;">
+        <div style="max-width: 500px; margin: 0 auto;">
+          <span style="font-size: 40px; display: block; margin-bottom: 12px;">📅</span>
+          <h3 style="font-size: 18px; color: #0A2540; margin-bottom: 8px;">No Academic Cycles Configured</h3>
+          <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
+            No institutional academic cycles have been configured or loaded yet. Configure the first academic cycle to begin academic operations.
+          </p>
+          <button type="button" class="primary-btn" data-action="open-create-ay-modal" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; background: #0A2540;">
+            <span>+ Create Academic Year</span>
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  const activeYear = years.find(y => y.status === "active") || null;
+  const upcomingCount = years.filter(y => y.status === "upcoming").length;
+  const completedCount = years.filter(y => y.status === "completed").length;
+
+  const operationalSemesters = (activeYear && Array.isArray(activeYear.semesterConfiguration))
+    ? activeYear.semesterConfiguration.filter(s => s.isOperational)
+    : [];
+
+  const formatDate = d => {
+    if (!d) return "—";
+    try {
+      const dt = new Date(d);
+      return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch (_) { return String(d).slice(0, 10); }
+  };
+
+  const getStatusBadge = status => {
+    switch (status) {
+      case "active":
+        return `<span class="badge" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-weight:700;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; margin-right:5px; box-shadow:0 0 0 2px rgba(16,185,129,0.3);"></span>Active Cycle</span>`;
+      case "upcoming":
+        return `<span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:700;">Upcoming</span>`;
+      case "completed":
+        return `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:600;">Completed (Archive)</span>`;
+      case "archived":
+        return `<span class="badge" style="background:#f8fafc; color:#94a3b8; border:1px solid #e2e8f0; font-weight:600;">Archived</span>`;
+      default:
+        return `<span class="badge">${escapeHtml(status)}</span>`;
+    }
+  };
+
+  return `
+    <div class="welcome" style="margin-bottom: 20px;">
+      <div class="welcome-copy">
+        <p class="eyebrow">Academic Administration • Institutional Lifecycle</p>
+        <h1>Academic Years &amp; Cycles</h1>
+        <p class="welcome-meta">Evolving Multi-Year Structure • Independent Semester Configurations • Zero Data Overwrites</p>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="secondary-btn" data-action="open-activate-year-modal" style="margin: 0; padding: 9px 16px; font-size: 13.5px; font-weight: 700;">
+          <span>${renderIcon("arrow-right-circle", 17)} Transition / Activate Year</span>
+        </button>
+        <button type="button" class="primary-btn" data-action="open-create-ay-modal" style="margin: 0; padding: 9px 18px; font-size: 13.5px; font-weight: 700; background: #0A2540;">
+          <span>+ Create Academic Year</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat">
+        <span>${renderIcon("calendar", 18)}</span>
+        <b>${escapeHtml(activeYear ? activeYear.yearCode : "None")}</b>
+        <small>Active Institutional Year</small>
+      </div>
+      <div class="stat">
+        <span>${renderIcon("sliders", 18)}</span>
+        <b>${operationalSemesters.length} Semesters</b>
+        <small>Active Operational Count</small>
+      </div>
+      <div class="stat">
+        <span>${renderIcon("clock", 18)}</span>
+        <b>${upcomingCount}</b>
+        <small>Upcoming Cycles</small>
+      </div>
+      <div class="stat">
+        <span>${renderIcon("archive", 18)}</span>
+        <b>${completedCount}</b>
+        <small>Historical Years (Archived)</small>
+      </div>
+    </div>
+
+    <!-- Active Year Hero Panel -->
+    ${activeYear ? `
+      <section class="panel" style="margin-top: 20px; border-left: 4px solid #10b981; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 60%);">
+        <div class="panel-head" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+              <h3 style="font-size: 18px; font-weight: 800; color: #065f46; margin: 0;">${escapeHtml(activeYear.title || `Academic Year ${activeYear.yearCode}`)}</h3>
+              <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; border:1px solid #86efac;">
+                <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#16a34a; margin-right:5px; box-shadow:0 0 0 2px rgba(22,163,74,0.3);"></span>CURRENT OPERATING YEAR
+              </span>
+            </div>
+            <span style="font-size: 13px; color: #047857; font-weight: 600;">
+              Duration: ${formatDate(activeYear.startDate)} – ${formatDate(activeYear.endDate)} • Cycle: <span style="text-transform: capitalize;">${escapeHtml(activeYear.activeCycle || "odd")}</span> Semesters
+            </span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="secondary-btn" data-action="configure-semesters" data-year-id="${escapeHtml(activeYear.yearCode)}" style="margin: 0; padding: 7px 14px; font-size: 13px; font-weight: 600;">
+              <span>${renderIcon("sliders", 16)} Configure Semesters</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-top: 10px;">
+          <small style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 11px; display: block; margin-bottom: 10px; letter-spacing: 0.5px;">
+            Configured Operational Semesters for this Cycle:
+          </small>
+          ${operationalSemesters.length > 0 ? `
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${operationalSemesters.map(s => `
+                <span class="chip-sm" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; font-weight:700; padding:6px 12px; border-radius:8px;">
+                  ✓ ${escapeHtml(s.semester)} (${escapeHtml(s.courseYear || "")})
+                </span>
+              `).join("")}
+            </div>
+          ` : `
+            <p style="color: #64748b; font-size: 13px; margin: 0;">No operational semesters configured for this cycle. Click "Configure Semesters" above to set active semesters.</p>
+          `}
+        </div>
+      </section>
+    ` : `
+      <section class="panel" style="margin-top: 20px; border-left: 4px solid #f59e0b; background: linear-gradient(180deg, #fffbeb 0%, #ffffff 60%);">
+        <div class="panel-head" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+              <h3 style="font-size: 18px; font-weight: 800; color: #92400e; margin: 0;">No Active Academic Cycle</h3>
+              <span class="badge" style="background:#fef3c7; color:#b45309; font-weight:700; border:1px solid #fde68a;">AWAITING ACTIVATION</span>
+            </div>
+            <span style="font-size: 13px; color: #78350f;">
+              There is currently no active academic cycle set for the institution. You can transition or activate an upcoming year.
+            </span>
+          </div>
+          <button type="button" class="secondary-btn" data-action="open-activate-year-modal" style="margin: 0; padding: 7px 14px; font-size: 13px; font-weight: 600;">
+            <span>${renderIcon("arrow-right-circle", 16)} Activate an Academic Cycle</span>
+          </button>
+        </div>
+      </section>
+    `}
+
+    <!-- All Academic Years Table -->
+    <section class="panel" style="margin-top: 24px;">
+      <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <h3>All Institutional Academic Cycles</h3>
+          <span class="badge" style="background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe;">NEP Curriculum Catalog</span>
+        </div>
+        <div style="font-size: 13px; color: #64748b;">
+          Total Years: <strong>${years.length}</strong>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Year Code</th>
+              <th>Title / Description</th>
+              <th>Period Duration</th>
+              <th>Cycle</th>
+              <th>Status</th>
+              <th>Operational Semesters</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${years.map(y => {
+              const opSems = Array.isArray(y.semesterConfiguration) ? y.semesterConfiguration.filter(s => s.isOperational) : [];
+              return `
+                <tr>
+                  <td><code class="uucms-code" style="font-size:13.5px; font-weight:700;">${escapeHtml(y.yearCode)}</code></td>
+                  <td>
+                    <strong style="color:#0A2540; font-size:13.5px;">${escapeHtml(y.title || y.yearCode)}</strong>
+                    ${y.notes ? `<p style="margin:2px 0 0; font-size:11.5px; color:#64748b;">${escapeHtml(y.notes)}</p>` : ''}
+                  </td>
+                  <td><span style="font-size:12.5px; color:#475569;">${formatDate(y.startDate)} – ${formatDate(y.endDate)}</span></td>
+                  <td><span class="chip-sm" style="text-transform:capitalize;">${escapeHtml(y.activeCycle || "odd")}</span></td>
+                  <td>${getStatusBadge(y.status)}</td>
+                  <td><span class="chip-sm">${opSems.length} Active Semesters</span></td>
+                  <td style="text-align: right;">
+                    <div style="display: inline-flex; gap: 6px; align-items: center;">
+                      ${y.status === "upcoming" ? `
+                        <button type="button" class="primary-btn" data-action="quick-activate-year" data-year-code="${escapeHtml(y.yearCode)}" style="margin:0; padding:5px 12px; font-size:12px; background:#047857; border-color:#047857;">
+                          <span>Activate</span>
+                        </button>
+                      ` : ''}
+                      <button type="button" class="secondary-btn" data-action="configure-semesters" data-year-id="${escapeHtml(y.yearCode)}" style="margin:0; padding:5px 12px; font-size:12px;">
+                        <span>Semesters</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function initAcademicYearsPage() {
+  fetchAcademicYearsData().then(() => {
+    const content = $("content");
+    if (currentPage === "academicYears" && content) {
+      content.innerHTML = pages.academicYears();
+      bindAcademicYearsEvents();
+    }
+  }).catch(() => bindAcademicYearsEvents());
+}
+
+function bindAcademicYearsEvents() {
+  // 1. Create Academic Year Modal triggers
+  document.querySelectorAll('[data-action="open-create-ay-modal"]').forEach(btn => {
+    btn.onclick = () => {
+      const modal = $("academicYearModal");
+      if (modal) {
+        $("createAcademicYearForm").reset();
+        modal.classList.remove("hidden");
+        const codeInput = $("ayYearCodeInput");
+        if (codeInput) setTimeout(() => codeInput.focus(), 50);
+      }
+    };
+  });
+
+  const closeAyBtn = $("closeAyModalBtn");
+  const cancelAyBtn = $("cancelAyModalBtn");
+  const ayOverlay = $("ayModalOverlay");
+  [closeAyBtn, cancelAyBtn, ayOverlay].forEach(el => {
+    if (el) el.onclick = () => $("academicYearModal")?.classList.add("hidden");
+  });
+
+  // Handle Create Form Submit
+  const createForm = $("createAcademicYearForm");
+  if (createForm && !createForm.dataset.bound) {
+    createForm.dataset.bound = "1";
+    createForm.onsubmit = async e => {
+      e.preventDefault();
+      const yearCode = String($("ayYearCodeInput")?.value || "").trim();
+      const title = String($("ayTitleInput")?.value || "").trim();
+      const startDate = $("ayStartDateInput")?.value;
+      const endDate = $("ayEndDateInput")?.value;
+      const activeCycle = $("ayActiveCycleSelect")?.value || "odd";
+      const notes = String($("ayNotesInput")?.value || "").trim();
+
+      if (!yearCode || !startDate || !endDate) {
+        showToast("Year code, start date, and end date are required.", "warning");
+        return;
+      }
+
+      const submitBtn = createForm.querySelector('button[type="submit"]');
+      await withActionLock(submitBtn, async () => {
+        try {
+          const res = await authenticatedFetch(`${API_BASE_URL}/api/academic-years`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ yearCode, title, startDate, endDate, activeCycle, notes })
+          });
+          const json = await res.json();
+          if (!res.ok || !json.success) {
+            showToast(json.message || "Failed to create academic year.", "error");
+            return;
+          }
+          showToast(`Academic Year "${yearCode}" created successfully.`, "success");
+          $("academicYearModal")?.classList.add("hidden");
+          await fetchAcademicYearsData();
+          render();
+        } catch (err) {
+          showToast(err.message || "Network error creating academic year.", "error");
+        }
+      }, { loadingText: "Creating..." });
+    };
+  }
+
+  // 2. Configure Semesters Modal triggers
+  document.querySelectorAll('[data-action="configure-semesters"]').forEach(btn => {
+    btn.onclick = () => {
+      const yearId = btn.dataset.yearId;
+      openConfigureSemestersModal(yearId);
+    };
+  });
+
+  const closeCfgBtn = $("closeCfgSemModalBtn");
+  const cancelCfgBtn = $("cancelCfgSemModalBtn");
+  const cfgOverlay = $("cfgSemModalOverlay");
+  [closeCfgBtn, cancelCfgBtn, cfgOverlay].forEach(el => {
+    if (el) el.onclick = () => $("configureSemestersModal")?.classList.add("hidden");
+  });
+
+  // Quick cycle selection buttons in modal
+  $("btnSelectOddCycle")?.addEventListener("click", () => {
+    ["cfgSem1", "cfgSem3", "cfgSem5"].forEach(id => { if ($(id)) $(id).checked = true; });
+    ["cfgSem2", "cfgSem4", "cfgSem6"].forEach(id => { if ($(id)) $(id).checked = false; });
+  });
+  $("btnSelectEvenCycle")?.addEventListener("click", () => {
+    ["cfgSem1", "cfgSem3", "cfgSem5"].forEach(id => { if ($(id)) $(id).checked = false; });
+    ["cfgSem2", "cfgSem4", "cfgSem6"].forEach(id => { if ($(id)) $(id).checked = true; });
+  });
+  $("btnSelectAllSemesters")?.addEventListener("click", () => {
+    ["cfgSem1", "cfgSem2", "cfgSem3", "cfgSem4", "cfgSem5", "cfgSem6"].forEach(id => { if ($(id)) $(id).checked = true; });
+  });
+
+  // Handle Configure Semesters Form Submit
+  const cfgForm = $("configureSemestersForm");
+  if (cfgForm && !cfgForm.dataset.bound) {
+    cfgForm.dataset.bound = "1";
+    cfgForm.onsubmit = async e => {
+      e.preventDefault();
+      const yearId = $("cfgSemYearId")?.value;
+      if (!yearId) return;
+
+      const semesterConfiguration = [
+        { semester: "1st Semester", isOperational: Boolean($("cfgSem1")?.checked), cycle: "odd", courseYear: "1st Year" },
+        { semester: "2nd Semester", isOperational: Boolean($("cfgSem2")?.checked), cycle: "even", courseYear: "1st Year" },
+        { semester: "3rd Semester", isOperational: Boolean($("cfgSem3")?.checked), cycle: "odd", courseYear: "2nd Year" },
+        { semester: "4th Semester", isOperational: Boolean($("cfgSem4")?.checked), cycle: "even", courseYear: "2nd Year" },
+        { semester: "5th Semester", isOperational: Boolean($("cfgSem5")?.checked), cycle: "odd", courseYear: "3rd Year" },
+        { semester: "6th Semester", isOperational: Boolean($("cfgSem6")?.checked), cycle: "even", courseYear: "3rd Year" }
+      ];
+
+      const submitBtn = cfgForm.querySelector('button[type="submit"]');
+      await withActionLock(submitBtn, async () => {
+        try {
+          const res = await authenticatedFetch(`${API_BASE_URL}/api/academic-years/${encodeURIComponent(yearId)}/semesters`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ semesterConfiguration })
+          });
+          const json = await res.json();
+          if (!res.ok || !json.success) {
+            showToast(json.message || "Failed to update semester configuration.", "error");
+            return;
+          }
+          showToast("Operational semesters updated successfully.", "success");
+          $("configureSemestersModal")?.classList.add("hidden");
+          await fetchAcademicYearsData();
+          render();
+        } catch (err) {
+          showToast(err.message || "Network error updating semesters.", "error");
+        }
+      }, { loadingText: "Saving..." });
+    };
+  }
+
+  // 3. Transition / Activate Academic Year Modal triggers
+  document.querySelectorAll('[data-action="open-activate-year-modal"]').forEach(btn => {
+    btn.onclick = () => openActivateYearModal();
+  });
+
+  document.querySelectorAll('[data-action="quick-activate-year"]').forEach(btn => {
+    btn.onclick = () => {
+      const code = btn.dataset.yearCode;
+      openActivateYearModal(code);
+    };
+  });
+
+  const closeActBtn = $("closeActYrModalBtn");
+  const cancelActBtn = $("cancelActYrModalBtn");
+  const actOverlay = $("actYrModalOverlay");
+  [closeActBtn, cancelActBtn, actOverlay].forEach(el => {
+    if (el) el.onclick = () => $("activateYearModal")?.classList.add("hidden");
+  });
+
+  // Handle Activate Form Submit
+  const actForm = $("activateAcademicYearForm");
+  if (actForm && !actForm.dataset.bound) {
+    actForm.dataset.bound = "1";
+    actForm.onsubmit = async e => {
+      e.preventDefault();
+      const targetYear = $("actYrSelect")?.value;
+      const confirmed = $("actYrConfirmCheck")?.checked;
+
+      if (!targetYear) {
+        showToast("Please select an academic year to activate.", "warning");
+        return;
+      }
+      if (!confirmed) {
+        showToast("Please check the confirmation box to proceed.", "warning");
+        return;
+      }
+
+      const submitBtn = actForm.querySelector('button[type="submit"]');
+      await withActionLock(submitBtn, async () => {
+        try {
+          const res = await authenticatedFetch(`${API_BASE_URL}/api/academic-years/${encodeURIComponent(targetYear)}/activate`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" }
+          });
+          const json = await res.json();
+          if (!res.ok || !json.success) {
+            showToast(json.message || "Failed to activate academic year.", "error");
+            return;
+          }
+          showToast(`Academic Year "${targetYear}" is now Active!`, "success");
+          window.activeInstitutionalAcademicYear = targetYear;
+          $("activateYearModal")?.classList.add("hidden");
+          await fetchAcademicYearsData();
+          render();
+        } catch (err) {
+          showToast(err.message || "Network error activating academic year.", "error");
+        }
+      }, { loadingText: "Activating..." });
+    };
+  }
+}
+
+function openConfigureSemestersModal(yearId) {
+  const modal = $("configureSemestersModal");
+  if (!modal) return;
+  const targetYear = (cachedAcademicYears || []).find(y => y.yearCode === yearId || y._id === yearId);
+  if (!targetYear) {
+    showToast("Academic year not found.", "warning");
+    return;
+  }
+
+  $("cfgSemYearId").value = targetYear.yearCode;
+  const titleEl = $("cfgSemYearTitle");
+  if (titleEl) titleEl.textContent = targetYear.title || targetYear.yearCode;
+
+  const config = Array.isArray(targetYear.semesterConfiguration) ? targetYear.semesterConfiguration : [];
+  const semMap = {};
+  config.forEach(s => { semMap[s.semester] = s.isOperational; });
+
+  $("cfgSem1").checked = semMap["1st Semester"] !== undefined ? semMap["1st Semester"] : true;
+  $("cfgSem2").checked = semMap["2nd Semester"] !== undefined ? semMap["2nd Semester"] : false;
+  $("cfgSem3").checked = semMap["3rd Semester"] !== undefined ? semMap["3rd Semester"] : true;
+  $("cfgSem4").checked = semMap["4th Semester"] !== undefined ? semMap["4th Semester"] : false;
+  $("cfgSem5").checked = semMap["5th Semester"] !== undefined ? semMap["5th Semester"] : true;
+  $("cfgSem6").checked = semMap["6th Semester"] !== undefined ? semMap["6th Semester"] : false;
+
+  modal.classList.remove("hidden");
+}
+
+function openActivateYearModal(preselectedYearCode = "") {
+  const modal = $("activateYearModal");
+  if (!modal) return;
+  const select = $("actYrSelect");
+  if (!select) return;
+
+  const nonActiveYears = (cachedAcademicYears || []).filter(y => y.status !== "active" && y.status !== "archived");
+  if (!nonActiveYears.length) {
+    showToast("No upcoming or eligible academic years available to activate. Please create a new year first.", "warning");
+    return;
+  }
+
+  select.innerHTML = nonActiveYears.map(y => `
+    <option value="${escapeHtml(y.yearCode)}" ${y.yearCode === preselectedYearCode ? "selected" : ""}>
+      ${escapeHtml(y.yearCode)} — ${escapeHtml(y.title || y.yearCode)} (${escapeHtml(y.status)})
+    </option>
+  `).join("");
+
+  $("actYrConfirmCheck").checked = false;
+  modal.classList.remove("hidden");
+}
+
 function getFacultyEligibleSubjects(faculty) {
   if (!faculty || faculty.role !== "faculty") return [];
   const subjectsSource = (ACADEMIC && ACADEMIC.subjects && ACADEMIC.subjects.length) ? ACADEMIC.subjects : SUBJECTS;
@@ -12096,6 +13265,7 @@ executeUniversalAutoSync();
   const home = document.getElementById("publicHome");
   const login = document.getElementById("loginPage");
   const signup = document.getElementById("signupPage");
+  const app = document.getElementById("app");
   if (!home) return;
 
   const loadHomeStatsCount = async (force = false) => {
@@ -12158,6 +13328,9 @@ executeUniversalAutoSync();
   };
 
   const showHome = () => {
+    if (app) {
+      app.classList.add("hidden");
+    }
     if (login) {
       login.classList.add("hidden");
       login.style.setProperty("display", "none", "important");
@@ -12184,6 +13357,9 @@ executeUniversalAutoSync();
   };
 
   const showLogin = (updateHash = true, prefillUser = null) => {
+    if (app) {
+      app.classList.add("hidden");
+    }
     if (home) {
       home.classList.add("hidden");
       home.style.setProperty("display", "none", "important");
@@ -12211,6 +13387,9 @@ executeUniversalAutoSync();
   };
 
   const showSignup = (role = "student", updateHash = true) => {
+    if (app) {
+      app.classList.add("hidden");
+    }
     if (home) {
       home.classList.add("hidden");
       home.style.setProperty("display", "none", "important");
@@ -12819,7 +13998,6 @@ executeUniversalAutoSync();
 
   const sections = [
     { id: "publicHome", links: ["Home"] },
-    { id: "students-faculty-count", links: ["Students", "Faculty"] },
     { id: "why-campussphere", links: ["Why CampusSphere", "Features"] },
     { id: "campus-announcements", links: ["Announcements"] },
     { id: "academic-resources", links: ["Resources"] },
@@ -13075,11 +14253,11 @@ executeUniversalAutoSync();
      Third Year BCA (2027–28): Semester 5, Semester 6
    ============================================================================ */
 
-const SYLLABUS_ACADEMIC_YEARS = [
+const SYLLABUS_COURSE_LEVELS = [
   {
     yearLevel: 1,
     yearTitle: "First Year BCA",
-    academicYear: "2025–26",
+    semesterLabel: "Semester I & II",
     semesters: [
       { semester: 1, title: "Semester 1", roman: "Semester I" },
       { semester: 2, title: "Semester 2", roman: "Semester II" }
@@ -13088,7 +14266,7 @@ const SYLLABUS_ACADEMIC_YEARS = [
   {
     yearLevel: 2,
     yearTitle: "Second Year BCA",
-    academicYear: "2026–27",
+    semesterLabel: "Semester III & IV",
     semesters: [
       { semester: 3, title: "Semester 3", roman: "Semester III" },
       { semester: 4, title: "Semester 4", roman: "Semester IV" }
@@ -13097,13 +14275,15 @@ const SYLLABUS_ACADEMIC_YEARS = [
   {
     yearLevel: 3,
     yearTitle: "Third Year BCA",
-    academicYear: "2027–28",
+    semesterLabel: "Semester V & VI",
     semesters: [
       { semester: 5, title: "Semester 5", roman: "Semester V" },
       { semester: 6, title: "Semester 6", roman: "Semester VI" }
     ]
   }
 ];
+
+const SYLLABUS_ACADEMIC_YEARS = SYLLABUS_COURSE_LEVELS;
 
 window.__cachedSyllabi = [];
 window.__syllabusMaxFileSizeMb = 100;
@@ -13192,9 +14372,10 @@ function renderSyllabusCards(syllabi, maxMb) {
     // ADMIN LANDING VIEW: Exactly THREE cards, 1 PDF per Year Card
     let html = `<div class="syllabus-grid admin-syllabus-grid">`;
 
-    SYLLABUS_ACADEMIC_YEARS.forEach(yearGroup => {
+    SYLLABUS_COURSE_LEVELS.forEach(yearGroup => {
       const doc = syllabiMap.get(yearGroup.yearLevel);
       const isUp = Boolean(doc && doc.isUploaded && doc.storedFilename);
+      const cardYear = (doc && doc.academicYear) || window.__selectedSyllabusAcademicYear || window.activeInstitutionalAcademicYear || "";
 
       html += `
         <article class="syllabus-card admin-year-card" data-year-level="${yearGroup.yearLevel}">
@@ -13207,7 +14388,7 @@ function renderSyllabusCards(syllabi, maxMb) {
               </svg>
               <div>
                 <h2 class="syllabus-card-title">${escapeHtml(yearGroup.yearTitle)}</h2>
-                <small class="admin-year-sub">Academic Year: ${escapeHtml(yearGroup.academicYear)}</small>
+                <small class="admin-year-sub">${cardYear ? `Academic Year: ${escapeHtml(cardYear)}` : "NEP BCA Curriculum"}</small>
               </div>
             </div>
 
@@ -13317,18 +14498,19 @@ function renderAdminModalContent() {
   const container = $("adminModalDynamicContent");
   if (!container) return;
 
-  const yearGroup = SYLLABUS_ACADEMIC_YEARS.find(y => y.yearLevel === currentAdminModalYearLevel) || SYLLABUS_ACADEMIC_YEARS[0];
+  const yearGroup = SYLLABUS_COURSE_LEVELS.find(y => y.yearLevel === currentAdminModalYearLevel) || SYLLABUS_COURSE_LEVELS[0];
   const titleEl = $("syllabusUploadModalTitle");
   const subEl = $("syllabusUploadModalSubtitle");
-
-  if (titleEl) titleEl.textContent = `Upload & Manage Syllabus`;
-  if (subEl) subEl.textContent = `${yearGroup.yearTitle} • ${yearGroup.semesterLabel} (Academic Year: ${yearGroup.academicYear})`;
 
   const syllabiMap = new Map();
   (window.__cachedSyllabi || []).forEach(s => syllabiMap.set(Number(s.yearLevel || s.semester), s));
 
   const currentDoc = syllabiMap.get(currentAdminModalYearLevel);
   const isUploaded = Boolean(currentDoc && currentDoc.isUploaded && currentDoc.storedFilename);
+  const targetYear = (currentDoc && currentDoc.academicYear) || window.__selectedSyllabusAcademicYear || window.activeInstitutionalAcademicYear || "";
+
+  if (titleEl) titleEl.textContent = `Upload & Manage Syllabus`;
+  if (subEl) subEl.textContent = `${yearGroup.yearTitle} • ${yearGroup.semesterLabel}${targetYear ? ` (Academic Year: ${targetYear})` : ""}`;
 
   let html = "";
 
@@ -13348,7 +14530,7 @@ function renderAdminModalContent() {
         <div class="current-syl-file-details">
           <div class="syl-meta-row">
             <span class="meta-label">Academic Year:</span>
-            <strong class="meta-value">${escapeHtml(yearGroup.academicYear)} (${escapeHtml(yearGroup.semesterLabel)})</strong>
+            <strong class="meta-value">${escapeHtml(targetYear || "NEP BCA Curriculum")} (${escapeHtml(yearGroup.semesterLabel)})</strong>
           </div>
           <div class="syl-meta-row">
             <span class="meta-label">File:</span>
@@ -13399,7 +14581,7 @@ function renderAdminModalContent() {
         <div class="admin-upload-prompt-text" style="margin-bottom: 14px; font-size: 13.5px; color: #334155;">
           ${isSyllabusReplaceMode 
             ? `<strong>Replace Syllabus:</strong> Select a new genuine PDF file to replace the existing syllabus for <em>${escapeHtml(yearGroup.yearTitle)} (${escapeHtml(yearGroup.semesterLabel)})</em>.` 
-            : `<strong>Upload Syllabus:</strong> Select the official curriculum PDF for <em>${escapeHtml(yearGroup.yearTitle)} (${escapeHtml(yearGroup.semesterLabel)} • ${escapeHtml(yearGroup.academicYear)})</em>.`}
+            : `<strong>Upload Syllabus:</strong> Select the official curriculum PDF for <em>${escapeHtml(yearGroup.yearTitle)} (${escapeHtml(yearGroup.semesterLabel)}${targetYear ? ` • ${escapeHtml(targetYear)}` : ""})</em>.`}
         </div>
 
         <div class="form-group">
@@ -13497,7 +14679,7 @@ function ensureSyllabusModalsInDom() {
         <div class="modal-header">
           <div>
             <h3 id="syllabusUploadModalTitle">Upload &amp; Manage Syllabus</h3>
-            <p id="syllabusUploadModalSubtitle" class="modal-sub">First Year BCA • Academic Year: 2025–26</p>
+            <p id="syllabusUploadModalSubtitle" class="modal-sub">First Year BCA • NEP BCA Curriculum</p>
           </div>
           <button type="button" class="modal-close" data-action="close-syllabus-modal" aria-label="Close dialog">&times;</button>
         </div>
@@ -13651,6 +14833,10 @@ function handleSyllabusUploadSubmit(e) {
 
   const formData = new FormData();
   formData.append("yearLevel", String(yearLevel));
+  const activeYear = (window.__selectedSyllabusAcademicYear || window.activeInstitutionalAcademicYear || (window.currentActiveAcademicYear ? window.currentActiveAcademicYear.yearCode : "") || "").trim();
+  if (activeYear) {
+    formData.append("academicYear", activeYear);
+  }
   formData.append("file", file);
 
   const endpoint = isSyllabusReplaceMode
@@ -13902,6 +15088,27 @@ document.addEventListener("click", (e) => {
       e.preventDefault();
       document.querySelector(".faculty-classes-panel")?.scrollIntoView({ behavior: "smooth" });
       break;
+
+    case "scroll-faculty-today":
+      e.preventDefault();
+      document.querySelector(".faculty-today-schedule-panel")?.scrollIntoView({ behavior: "smooth" });
+      break;
+
+    case "switch-and-attend": {
+      e.preventDefault();
+      const sid = actEl.getAttribute("data-subject-id");
+      const div = actEl.getAttribute("data-division");
+      if (sid && typeof switchFacultyActiveSubject === "function") {
+        switchFacultyActiveSubject(sid);
+      }
+      if (div) {
+        attendanceFilterDivision = div;
+        isAttendanceDetailsEntered = false;
+      }
+      attendanceFilterDate = getTodayISODate();
+      if (typeof navigate === "function") navigate("attendance");
+      break;
+    }
 
     case "add-faculty-subject-direct": {
       e.preventDefault();

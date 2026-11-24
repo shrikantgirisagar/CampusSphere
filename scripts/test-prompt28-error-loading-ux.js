@@ -211,14 +211,16 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
     const server = http.createServer((req, res) => {
       let reqPath = req.url.split('?')[0];
       if (reqPath === '/' || reqPath === '/index.html') reqPath = '/index.html';
-      const filePath = path.join(rootDir, reqPath.replace(/^\//, ''));
+      const safePath = path.normalize(reqPath).replace(/^(\.\.[\/\\])+/, '');
+      const filePath = path.resolve(assetDir, safePath.replace(/^[\\\/]+/, ''));
 
-      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      if (filePath.startsWith(assetDir) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath);
         const mimeTypes = {
           '.html': 'text/html',
           '.css': 'text/css',
           '.js': 'application/javascript',
+          '.json': 'application/json',
           '.png': 'image/png'
         };
         res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
@@ -261,11 +263,13 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
       server.close();
       try { fs.rmSync(tmpDataDir, { recursive: true, force: true }); } catch (_) {}
     } else {
-      const listRes = await fetch('http://127.0.0.1:9454/json/list');
-      const targets = await listRes.json();
-      const pageTarget = targets.find(t => t.type === 'page');
-      const ws = new WebSocket(pageTarget.webSocketDebuggerUrl);
-      await new Promise(resolve => ws.onopen = resolve);
+      let ws = null;
+      try {
+        const listRes = await fetch('http://127.0.0.1:9454/json/list');
+        const targets = await listRes.json();
+        const pageTarget = targets.find(t => t.type === 'page');
+        ws = new WebSocket(pageTarget.webSocketDebuggerUrl);
+        await new Promise(resolve => ws.onopen = resolve);
 
       let msgId = 1;
       const pending = new Map();
@@ -382,17 +386,17 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
       `);
 
       logTest('CDP: withActionLock blocks concurrent double-clicks (executed exactly 1 time)',
-        actionLockExecutionResult.afterState.executionCount === 1
+        Boolean(actionLockExecutionResult?.afterState?.executionCount === 1)
       );
       logTest('CDP: withActionLock displays loading spinner and disables button during execution',
-        actionLockExecutionResult.insideLockState.disabled === true &&
-        actionLockExecutionResult.insideLockState.hasSpinner === true &&
-        actionLockExecutionResult.insideLockState.isLoadingClass === true
+        Boolean(actionLockExecutionResult?.insideLockState?.disabled === true &&
+        actionLockExecutionResult?.insideLockState?.hasSpinner === true &&
+        actionLockExecutionResult?.insideLockState?.isLoadingClass === true)
       );
       logTest('CDP: withActionLock restores button state, enables it, and removes spinner upon completion',
-        actionLockExecutionResult.afterState.disabled === false &&
-        actionLockExecutionResult.afterState.hasSpinner === false &&
-        actionLockExecutionResult.afterState.isLoadingClass === false
+        Boolean(actionLockExecutionResult?.afterState?.disabled === false &&
+        actionLockExecutionResult?.afterState?.hasSpinner === false &&
+        actionLockExecutionResult?.afterState?.isLoadingClass === false)
       );
 
       // 3. In-browser Toast notification rendering & ARIA role test
@@ -507,11 +511,14 @@ const assetDir = fs.existsSync(path.join(rootDir, 'public')) ? path.join(rootDir
         darkEmulationColors.toastBg === 'rgb(255, 255, 255)'
       );
 
-      // Clean up browser
-      ws.close();
-      browserProc.kill();
-      server.close();
-      try { fs.rmSync(tmpDataDir, { recursive: true, force: true }); } catch (_) {}
+      } finally {
+        if (ws) {
+          try { ws.close(); } catch (_) {}
+        }
+        try { browserProc.kill(); } catch (_) {}
+        try { server.close(); } catch (_) {}
+        try { fs.rmSync(tmpDataDir, { recursive: true, force: true }); } catch (_) {}
+      }
     }
   }
 

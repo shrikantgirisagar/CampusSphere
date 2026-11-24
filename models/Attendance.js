@@ -50,6 +50,18 @@ const attendanceSchema = new mongoose.Schema(
       trim: true,
       maxlength: 50
     },
+    academicYear: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50,
+      index: true
+    },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null
+    },
     date: {
       type: String,
       default: "",
@@ -87,6 +99,8 @@ const attendanceSchema = new mongoose.Schema(
 );
 
 // Compound index for student attendance lookups
+attendanceSchema.index({ academicYear: 1, subject: 1, division: 1, date: -1 });
+attendanceSchema.index({ academicYear: 1, studentUsername: 1, date: -1 });
 attendanceSchema.index({ studentUsername: 1, date: -1 });
 attendanceSchema.index({ subject: 1, division: 1, date: -1 });
 attendanceSchema.index({ subject: 1, date: -1 });

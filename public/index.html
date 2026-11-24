@@ -9,7 +9,7 @@
   <title>CampusSphere</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Sora:wght@600..800&display=swap" rel="stylesheet">
   <script src="/js/icons.js"></script>
   <link rel="stylesheet" href="style.css?v=20261105_05">
   <script src="animated-background.js?v=20260916_24"></script>
@@ -22,20 +22,8 @@
 </head>
 
 <body>
-  <!-- CampusSphere Ambient Animated Background (Shared Global Component) -->
-  <animated-background class="campus-ambient-bg" aria-hidden="true">
-    <div class="ambient-blob blob-blue"></div>
-    <div class="ambient-blob blob-indigo"></div>
-    <div class="ambient-blob blob-cyan"></div>
-    <div class="ambient-blob blob-emerald"></div>
-    <div class="ambient-blob blob-violet"></div>
-    <div class="ambient-grid-overlay"></div>
-    <div class="ambient-shapes">
-      <span class="ambient-ring ring-1"></span>
-      <span class="ambient-ring ring-2"></span>
-      <span class="ambient-ring ring-3"></span>
-    </div>
-  </animated-background>
+  <!-- CampusSphere Ambient Background Foundation (Shared Global Component) -->
+  <animated-background class="campus-ambient-bg" aria-hidden="true"></animated-background>
 
 
   <!-- =========================================================
@@ -43,13 +31,9 @@
        ========================================================= -->
   <main id="publicHome" class="public-home">
     <header class="institution-header">
-      <!-- Ambient Animated Glassmorphic Backdrop Layers -->
+      <!-- Header Backdrop Layers -->
       <div class="header-ambient-layers" aria-hidden="true">
         <div class="header-ambient-gradient"></div>
-        <div class="header-blob header-blob-1"></div>
-        <div class="header-blob header-blob-2"></div>
-        <div class="header-blob header-blob-3"></div>
-        <div class="header-shimmer"></div>
       </div>
 
       <div class="institution-header-inner">
@@ -83,23 +67,18 @@
     </nav>
 
     <section class="home-hero" aria-labelledby="homeHeroTitle">
-      <div class="hero-ambient-glow glow-1" aria-hidden="true"></div>
-      <div class="hero-ambient-glow glow-2" aria-hidden="true"></div>
-      <div class="hero-ambient-glow glow-3" aria-hidden="true"></div>
       <div class="home-hero-inner">
         <div class="home-hero-copy reveal-item">
           <span class="home-eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>BHARATESH BCA • NEXT-GEN ACADEMIC SUITE</span>
           <h1 id="homeHeroTitle" class="hero-title">Campus<span>Sphere</span></h1>
-          <p class="home-hero-subtitle">Your Digital Academic Campus</p>
+          <p class="home-hero-subtitle">The Digital Academic Campus of Bharatesh BCA</p>
           <p class="home-hero-description">A unified, high-performance platform for students, faculty, and administrators to access verified academic records, real-time attendance, semester marks, notices, and institutional resources.</p>
           <div class="home-hero-actions">
             <button type="button" class="hero-primary-btn" data-open-signup aria-label="Get Started with CampusSphere">
               <span>Get Started</span>
-              <span class="arrow" aria-hidden="true">→</span>
             </button>
             <button type="button" class="hero-secondary-btn" data-open-login aria-label="Student and Faculty Portal Login">
               <span>Student Login</span>
-              <span class="arrow" aria-hidden="true">→</span>
             </button>
           </div>
           <div class="hero-trust-indicators" aria-label="Campus trust metrics">
@@ -109,90 +88,85 @@
             <div class="trust-pill"><span class="trust-icon" aria-hidden="true"><cs-icon name="globe" size="15"></cs-icon></span><span>Digital Campus</span></div>
           </div>
         </div>
+
+        <!-- Integrated Academic Metrics & Curriculum Structure Deck -->
+        <section id="students-faculty-count" class="hero-stats-panel-wrap reveal-item" aria-labelledby="statsCountTitle">
+          <h2 id="statsCountTitle" class="hero-stats-heading-sr">Our Students &amp; Faculty Count</h2>
+          <div class="hero-stats-panel">
+            <div class="hero-deck-header">
+              <span class="deck-eyebrow">Institutional Overview</span>
+            </div>
+            <div class="hero-deck-grid">
+              <!-- Student Statistics Card (Live Verified Database Count) -->
+              <article class="hero-stat-card student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: 3">
+                <div class="student-stat-icon-wrap" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="student-stat-tag">Active Enrollment</span>
+                  <div class="student-stat-number" id="homeStudentCountVal">3</div>
+                  <h3 class="student-stat-label">Registered Students</h3>
+                </div>
+              </article>
+
+              <!-- Faculty Statistics Card (Live Verified Database Count) -->
+              <article class="hero-stat-card student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Registered Faculty Members: 4">
+                <div class="student-stat-icon-wrap icon-indigo" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 2h15a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9"></path>
+                    <path d="M10 6.5h6"></path>
+                    <circle cx="4" cy="6.5" r="2"></circle>
+                    <path d="M2 22v-9a2 2 0 0 1 2-2h8"></path>
+                    <path d="M6 11v11"></path>
+                    <path d="M2 17h4"></path>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="student-stat-tag tag-indigo">Academic Mentors</span>
+                  <div class="student-stat-number" id="homeFacultyCountVal">4</div>
+                  <h3 class="student-stat-label">Registered Faculty</h3>
+                </div>
+              </article>
+
+              <!-- Academic Programme Information Card -->
+              <article class="hero-stat-card" tabindex="0" role="region" aria-label="BCA Academic Programme Information">
+                <div class="student-stat-icon-wrap icon-cyan" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="student-stat-tag">Bharatesh BCA</span>
+                  <div class="student-stat-highlight">3-Year Degree</div>
+                  <h3 class="student-stat-label">BCA Programme</h3>
+                </div>
+              </article>
+
+              <!-- Six BCA Semesters Card -->
+              <article class="hero-stat-card" tabindex="0" role="region" aria-label="Six BCA Semesters Academic Curriculum">
+                <div class="student-stat-icon-wrap icon-emerald" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                  </svg>
+                </div>
+                <div class="stat-info">
+                  <span class="student-stat-tag tag-emerald">Curriculum Structure</span>
+                  <div class="student-stat-number stat-sem-count">6 Semesters</div>
+                  <h3 class="student-stat-label">Full BCA Syllabus</h3>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <!-- Translucent Statistics Panel below Hero -->
-      <section id="students-faculty-count" class="hero-stats-panel-wrap reveal-item" aria-labelledby="statsCountTitle">
-        <h2 id="statsCountTitle" class="hero-stats-heading-sr">Our Students &amp; Faculty Count</h2>
-        <div class="hero-stats-panel">
-          <!-- Student Statistics Card (Live Verified Database Count) -->
-          <article class="hero-stat-card student-stat-card" id="studentStatCard" tabindex="0" role="status" aria-label="Registered Students: 3">
-            <div class="student-stat-icon-wrap" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="student-stat-tag">ACTIVE ENROLLMENT</span>
-              <div class="student-stat-number" id="homeStudentCountVal">3</div>
-              <h3 class="student-stat-label">Registered Students</h3>
-              <p class="student-stat-subtext">Live verified student accounts</p>
-            </div>
-          </article>
-
-          <div class="hero-stat-divider" aria-hidden="true"></div>
-
-          <!-- Faculty Statistics Card (Live Verified Database Count) -->
-          <article class="hero-stat-card student-stat-card" id="facultyStatCard" tabindex="0" role="status" aria-label="Registered Faculty Members: 4">
-            <div class="student-stat-icon-wrap icon-indigo" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 2h15a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9"></path>
-                <path d="M10 6.5h6"></path>
-                <circle cx="4" cy="6.5" r="2"></circle>
-                <path d="M2 22v-9a2 2 0 0 1 2-2h8"></path>
-                <path d="M6 11v11"></path>
-                <path d="M2 17h4"></path>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="student-stat-tag tag-indigo">ACADEMIC MENTORS</span>
-              <div class="student-stat-number" id="homeFacultyCountVal">4</div>
-              <h3 class="student-stat-label">Registered Faculty</h3>
-              <p class="student-stat-subtext">Department mentors &amp; professors</p>
-            </div>
-          </article>
-
-          <div class="hero-stat-divider" aria-hidden="true"></div>
-
-          <!-- Academic Programme Information Card -->
-          <article class="hero-stat-card" tabindex="0" role="region" aria-label="BCA Academic Programme Information">
-            <div class="student-stat-icon-wrap icon-cyan" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="student-stat-tag">BHARATESH BCA</span>
-              <div class="student-stat-highlight">3-Year Degree</div>
-              <h3 class="student-stat-label">BCA Programme</h3>
-              <p class="student-stat-subtext">RCU affiliated NEP curriculum</p>
-            </div>
-          </article>
-
-          <div class="hero-stat-divider" aria-hidden="true"></div>
-
-          <!-- Six BCA Semesters Card -->
-          <article class="hero-stat-card" tabindex="0" role="region" aria-label="Six BCA Semesters Academic Curriculum">
-            <div class="student-stat-icon-wrap icon-emerald" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                <polyline points="2 17 12 22 22 17"></polyline>
-                <polyline points="2 12 12 17 22 12"></polyline>
-              </svg>
-            </div>
-            <div class="stat-info">
-              <span class="student-stat-tag tag-emerald">CURRICULUM STRUCTURE</span>
-              <div class="student-stat-number stat-sem-count">6 Semesters</div>
-              <h3 class="student-stat-label">Full BCA Syllabus</h3>
-              <p class="student-stat-subtext">Sem I to VI core, labs &amp; projects</p>
-            </div>
-          </article>
-        </div>
-      </section>
       <script src="/js/home-stats.js"></script>
     </section>
 
@@ -208,10 +182,10 @@
         <!-- Card 1: Access Resources -->
         <a href="courses.html" class="quick-access-card card-resources reveal-item" aria-label="Access Resources: Course materials, syllabus and laboratory guides">
           <div class="quick-access-top">
-            <div class="quick-3d-pod pod-blue" aria-hidden="true">
-              <cs-icon name="book-open" size="24"></cs-icon>
-            </div>
             <span class="quick-access-pill pill-blue">SYLLABUS &amp; LABS</span>
+            <div class="academic-illust-pod pod-blue" aria-hidden="true">
+              <cs-illustration name="resources" size="48"></cs-illustration>
+            </div>
           </div>
           <div class="quick-access-content">
             <h3 class="quick-access-title">Access Resources</h3>
@@ -226,10 +200,10 @@
         <!-- Card 2: Stay Updated -->
         <a href="#login" data-open-login class="quick-access-card card-updates reveal-item" aria-label="Stay Updated: Log in to view live circulars, announcements, and notices">
           <div class="quick-access-top">
-            <div class="quick-3d-pod pod-indigo" aria-hidden="true">
-              <cs-icon name="bell" size="24"></cs-icon>
+            <span class="quick-access-pill pill-cyan">REAL-TIME PORTAL</span>
+            <div class="academic-illust-pod pod-cyan" aria-hidden="true">
+              <cs-illustration name="notices" size="48"></cs-illustration>
             </div>
-            <span class="quick-access-pill pill-indigo">REAL-TIME PORTAL</span>
           </div>
           <div class="quick-access-content">
             <h3 class="quick-access-title">Stay Updated</h3>
@@ -244,10 +218,10 @@
         <!-- Card 3: Be Connected -->
         <a href="#student-community" class="quick-access-card card-community reveal-item" aria-label="Be Connected: Department faculty mentors, student community, and college helpline">
           <div class="quick-access-top">
-            <div class="quick-3d-pod pod-cyan" aria-hidden="true">
-              <cs-icon name="users" size="24"></cs-icon>
+            <span class="quick-access-pill pill-indigo">CAMPUS COMMUNITY</span>
+            <div class="academic-illust-pod pod-indigo" aria-hidden="true">
+              <cs-illustration name="admin" size="48"></cs-illustration>
             </div>
-            <span class="quick-access-pill pill-cyan">CAMPUS COMMUNITY</span>
           </div>
           <div class="quick-access-content">
             <h3 class="quick-access-title">Be Connected</h3>
@@ -262,10 +236,10 @@
         <!-- Card 4: Explore Courses -->
         <a href="courses.html" class="quick-access-card card-courses reveal-item" aria-label="Explore Courses: Complete BCA degree structure across 6 semesters">
           <div class="quick-access-top">
-            <div class="quick-3d-pod pod-emerald" aria-hidden="true">
-              <cs-icon name="graduation-cap" size="24"></cs-icon>
-            </div>
             <span class="quick-access-pill pill-emerald">BCA PROGRAMME</span>
+            <div class="academic-illust-pod pod-emerald" aria-hidden="true">
+              <cs-illustration name="calendar" size="48"></cs-illustration>
+            </div>
           </div>
           <div class="quick-access-content">
             <h3 class="quick-access-title">Explore Courses</h3>
@@ -1496,6 +1470,189 @@
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- Academic Year Creation Modal -->
+  <div id="academicYearModal" class="ai-modal hidden" role="dialog" aria-labelledby="ayModalTitle" aria-modal="true">
+    <div class="ai-modal-overlay" id="ayModalOverlay"></div>
+    <div class="ai-modal-container" style="max-width: 520px;">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-wrap">
+          <cs-icon name="calendar-plus" size="20" class="ai-badge-icon" aria-hidden="true"></cs-icon>
+          <h3 id="ayModalTitle" style="font-size: 16px; font-weight: 700; color: #0A2540; margin: 0;">Create New Academic Year</h3>
+        </div>
+        <button type="button" class="ai-modal-close" id="closeAyModalBtn" aria-label="Close dialog">✕</button>
+      </div>
+      <form id="createAcademicYearForm">
+        <div class="ai-modal-body" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="ayYearCodeInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Academic Year Code *</label>
+            <input type="text" id="ayYearCodeInput" required placeholder="e.g. 2028–29 or 2028-29"
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box;">
+            <span style="font-size: 11.5px; color: #64748b;">Standard format: YYYY–YY (e.g. 2028–29, 2029–30).</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="ayTitleInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Title / Label</label>
+            <input type="text" id="ayTitleInput" placeholder="e.g. Academic Year 2028–29"
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label for="ayStartDateInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Start Date *</label>
+              <input type="date" id="ayStartDateInput" required
+                style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box; background: white;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label for="ayEndDateInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">End Date *</label>
+              <input type="date" id="ayEndDateInput" required
+                style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box; background: white;">
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="ayActiveCycleSelect" style="font-size: 12.5px; font-weight: 700; color: #475569;">Operational Semester Cycle</label>
+            <select id="ayActiveCycleSelect"
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 100%; box-sizing: border-box; background: white;">
+              <option value="odd" selected>Odd Semester Cycle (Semesters 1, 3, 5)</option>
+              <option value="even">Even Semester Cycle (Semesters 2, 4, 6)</option>
+              <option value="both">Both Cycles (Full Academic Year)</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="ayNotesInput" style="font-size: 12.5px; font-weight: 700; color: #475569;">Administrative Notes</label>
+            <textarea id="ayNotesInput" rows="2" placeholder="Optional notes, university circular reference, etc."
+              style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; width: 100%; box-sizing: border-box; resize: vertical;"></textarea>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px;">
+            <span style="font-size: 16px;">ℹ️</span>
+            <div style="font-size: 12px; color: #1e40af; line-height: 1.4;">
+              <strong>Lifecycle Rule:</strong> New academic years start in <b>Upcoming</b> status. You can configure semesters now and activate when ready.
+            </div>
+          </div>
+        </div>
+        <div class="ai-modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="cancelAyModalBtn" class="secondary-btn" style="margin: 0; padding: 8px 16px;">Cancel</button>
+          <button type="submit" class="primary-btn" style="margin: 0; padding: 8px 16px;"><span>Save Academic Year</span></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Configure Semesters Modal -->
+  <div id="configureSemestersModal" class="ai-modal hidden" role="dialog" aria-labelledby="cfgSemModalTitle" aria-modal="true">
+    <div class="ai-modal-overlay" id="cfgSemModalOverlay"></div>
+    <div class="ai-modal-container" style="max-width: 540px;">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-wrap">
+          <cs-icon name="sliders" size="20" class="ai-badge-icon" aria-hidden="true"></cs-icon>
+          <h3 id="cfgSemModalTitle" style="font-size: 16px; font-weight: 700; color: #0A2540; margin: 0;">Configure Operational Semesters</h3>
+        </div>
+        <button type="button" class="ai-modal-close" id="closeCfgSemModalBtn" aria-label="Close dialog">✕</button>
+      </div>
+      <form id="configureSemestersForm">
+        <input type="hidden" id="cfgSemYearId">
+        <div class="ai-modal-body" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="font-size: 13px; color: #475569;">
+            Select which semesters are operational for <strong id="cfgSemYearTitle">Academic Year</strong>. Inactive semesters will be marked as in-reserve/upcoming.
+          </div>
+          <div style="display: flex; gap: 10px; margin-bottom: 4px;">
+            <button type="button" id="btnSelectOddCycle" class="secondary-btn" style="padding: 4px 10px; font-size: 12px;">Select Odd Cycle (1, 3, 5)</button>
+            <button type="button" id="btnSelectEvenCycle" class="secondary-btn" style="padding: 4px 10px; font-size: 12px;">Select Even Cycle (2, 4, 6)</button>
+            <button type="button" id="btnSelectAllSemesters" class="secondary-btn" style="padding: 4px 10px; font-size: 12px;">Select All (1–6)</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+              <div>
+                <strong style="color: #0A2540; font-size: 13.5px;">1st Semester</strong>
+                <span class="chip-sm" style="margin-left: 8px;">1st Year BCA • Odd Cycle</span>
+              </div>
+              <input type="checkbox" id="cfgSem1" value="1st Semester" style="width: 18px; height: 18px; cursor: pointer;">
+            </label>
+            <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+              <div>
+                <strong style="color: #0A2540; font-size: 13.5px;">2nd Semester</strong>
+                <span class="chip-sm" style="margin-left: 8px;">1st Year BCA • Even Cycle</span>
+              </div>
+              <input type="checkbox" id="cfgSem2" value="2nd Semester" style="width: 18px; height: 18px; cursor: pointer;">
+            </label>
+            <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+              <div>
+                <strong style="color: #0A2540; font-size: 13.5px;">3rd Semester</strong>
+                <span class="chip-sm" style="margin-left: 8px;">2nd Year BCA • Odd Cycle</span>
+              </div>
+              <input type="checkbox" id="cfgSem3" value="3rd Semester" style="width: 18px; height: 18px; cursor: pointer;">
+            </label>
+            <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+              <div>
+                <strong style="color: #0A2540; font-size: 13.5px;">4th Semester</strong>
+                <span class="chip-sm" style="margin-left: 8px;">2nd Year BCA • Even Cycle</span>
+              </div>
+              <input type="checkbox" id="cfgSem4" value="4th Semester" style="width: 18px; height: 18px; cursor: pointer;">
+            </label>
+            <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+              <div>
+                <strong style="color: #0A2540; font-size: 13.5px;">5th Semester</strong>
+                <span class="chip-sm" style="margin-left: 8px;">3rd Year BCA • Odd Cycle</span>
+              </div>
+              <input type="checkbox" id="cfgSem5" value="5th Semester" style="width: 18px; height: 18px; cursor: pointer;">
+            </label>
+            <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+              <div>
+                <strong style="color: #0A2540; font-size: 13.5px;">6th Semester</strong>
+                <span class="chip-sm" style="margin-left: 8px;">3rd Year BCA • Even Cycle</span>
+              </div>
+              <input type="checkbox" id="cfgSem6" value="6th Semester" style="width: 18px; height: 18px; cursor: pointer;">
+            </label>
+          </div>
+        </div>
+        <div class="ai-modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="cancelCfgSemModalBtn" class="secondary-btn" style="margin: 0; padding: 8px 16px;">Cancel</button>
+          <button type="submit" class="primary-btn" style="margin: 0; padding: 8px 16px;"><span>Save Semester Settings</span></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Activate Academic Year Modal (Controlled Transition Wizard) -->
+  <div id="activateYearModal" class="ai-modal hidden" role="dialog" aria-labelledby="actYrModalTitle" aria-modal="true">
+    <div class="ai-modal-overlay" id="actYrModalOverlay"></div>
+    <div class="ai-modal-container" style="max-width: 520px;">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-wrap">
+          <cs-icon name="arrow-right-circle" size="20" class="ai-badge-icon" aria-hidden="true"></cs-icon>
+          <h3 id="actYrModalTitle" style="font-size: 16px; font-weight: 700; color: #0A2540; margin: 0;">Academic Year Transition Wizard</h3>
+        </div>
+        <button type="button" class="ai-modal-close" id="closeActYrModalBtn" aria-label="Close dialog">✕</button>
+      </div>
+      <form id="activateAcademicYearForm">
+        <div class="ai-modal-body" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start;">
+            <span style="font-size: 20px;">⚠️</span>
+            <div style="font-size: 12.5px; color: #92400e; line-height: 1.5;">
+              <strong>Important Institutional Invariant:</strong>
+              Activating a new academic year will atomically set the target year as <b>Active</b> and mark the currently active year as <b>Completed</b>. All previous attendance, marks, timetables, and notes remain preserved and accessible in read-only archive mode.
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="actYrSelect" style="font-size: 12.5px; font-weight: 700; color: #475569;">Target Academic Year to Activate *</label>
+            <select id="actYrSelect" required
+              style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; background: white; font-weight: 600;">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 8px 4px;">
+            <input type="checkbox" id="actYrConfirmCheck" required style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
+            <span style="font-size: 12.5px; color: #334155; line-height: 1.4;">
+              I confirm that I want to switch the active institutional academic cycle to this year. Historical records will be retained without modification.
+            </span>
+          </label>
+        </div>
+        <div class="ai-modal-footer" style="padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="cancelActYrModalBtn" class="secondary-btn" style="margin: 0; padding: 8px 16px;">Cancel</button>
+          <button type="submit" class="primary-btn" style="margin: 0; padding: 8px 16px; background: #047857; border-color: #047857;"><span>Confirm &amp; Activate Year</span></button>
+        </div>
+      </form>
+    </div>
+  </div>
   <script src="/js/utils.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>

@@ -1,7 +1,7 @@
 {
   "system": "CampusSphere",
   "version": "2.0.0",
-  "lastSyncedAt": "2026-11-05T17:25:09.199Z",
+  "lastSyncedAt": "2026-11-24T09:20:38.446Z",
   "counts": {
     "totalUsers": 61,
     "students": 30,
@@ -17,6 +17,8 @@
       "name": "Demo Administrator 1",
       "username": "admin",
       "email": "admin@demo.campussphere.local",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -26,6 +28,7 @@
       "name": "Demo Administrator 2",
       "username": "admin_sync_1791095311815",
       "email": "admin_sync_1791095311815@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -35,6 +38,7 @@
       "name": "Demo Administrator 3",
       "username": "admin_sync_1791095416981",
       "email": "admin_sync_1791095416981@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -44,6 +48,7 @@
       "name": "Demo Administrator 4",
       "username": "admin_sync_1791095555074",
       "email": "admin_sync_1791095555074@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -53,6 +58,7 @@
       "name": "Demo Administrator 5",
       "username": "admin_sync_1791097367637",
       "email": "admin_sync_1791097367637@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -62,6 +68,7 @@
       "name": "Demo Administrator 6",
       "username": "admin_sync_1791097787451",
       "email": "admin_sync_1791097787451@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -71,6 +78,7 @@
       "name": "Demo Administrator 7",
       "username": "admin_xss_1789893059299",
       "email": "admin_xss_1789893059299@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -80,6 +88,7 @@
       "name": "Demo Administrator 8",
       "username": "t_adm_1789672613422",
       "email": "t_adm_1789672613422@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -89,6 +98,7 @@
       "name": "Demo Administrator 9",
       "username": "t_adm_1789673409411",
       "email": "t_adm_1789673409411@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -98,6 +108,7 @@
       "name": "Demo Administrator 10",
       "username": "test_admin_1790017881152",
       "email": "test_admin_1790017881152@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -107,6 +118,7 @@
       "name": "Demo Administrator 11",
       "username": "test_syl_admin_1790686346922",
       "email": "test_syl_admin_1790686346922@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -116,6 +128,7 @@
       "name": "Demo Administrator 12",
       "username": "test_syl_admin_1793205349143",
       "email": "test_syl_admin_1793205349143@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -125,6 +138,7 @@
       "name": "Demo Administrator 13",
       "username": "test_syl_admin_1793426151834",
       "email": "test_syl_admin_1793426151834@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -134,6 +148,7 @@
       "name": "Demo Administrator 14",
       "username": "test_syl_admin_1793628638292",
       "email": "test_syl_admin_1793628638292@demo.campussphere.local",
+      "academicYear": "2026–27",
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -146,6 +161,8 @@
       "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "java",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "java",
         "advjava"
@@ -161,6 +178,8 @@
       "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "python",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "python",
         "os"
@@ -176,6 +195,8 @@
       "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "kannada",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "kannada"
       ],
@@ -190,6 +211,8 @@
       "department": "Department of Computer Science & Applications",
       "division": "Div B",
       "subject": "java",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "java",
         "advjava"
@@ -202,8 +225,11 @@
       "name": "Demo Faculty 19",
       "username": "fac_sync_1791095311815",
       "email": "fac_sync_1791095311815@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -215,8 +241,11 @@
       "name": "Demo Faculty 20",
       "username": "fac_sync_1791095416981",
       "email": "fac_sync_1791095416981@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -228,8 +257,11 @@
       "name": "Demo Faculty 21",
       "username": "fac_sync_1791095555074",
       "email": "fac_sync_1791095555074@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -241,8 +273,11 @@
       "name": "Demo Faculty 22",
       "username": "fac_sync_1791097367637",
       "email": "fac_sync_1791097367637@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -254,8 +289,11 @@
       "name": "Demo Faculty 23",
       "username": "fac_sync_1791097787451",
       "email": "fac_sync_1791097787451@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -269,6 +307,8 @@
       "email": "p11_fac_mu9i2pty@demo.campussphere.local",
       "department": "Computer Applications",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog",
         "python"
@@ -283,6 +323,8 @@
       "email": "t_fac_1789672613422@demo.campussphere.local",
       "department": "Computer Science",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -296,6 +338,8 @@
       "email": "t_fac_1789673409411@demo.campussphere.local",
       "department": "Computer Science",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -310,6 +354,8 @@
       "department": "Department of Computer Science & Applications",
       "division": "Div A",
       "subject": "cprog",
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [
         "cprog"
       ],
@@ -321,9 +367,14 @@
       "name": "Demo Faculty 28",
       "username": "test_syl_faculty_1790686346922",
       "email": "test_syl_faculty_1790686346922@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "Data Structures",
-      "subjects": [],
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
+      "subjects": [
+        "Data Structures"
+      ],
       "subjectDivisions": {}
     },
     {
@@ -332,9 +383,14 @@
       "name": "Demo Faculty 29",
       "username": "test_syl_faculty_1793205349143",
       "email": "test_syl_faculty_1793205349143@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "Data Structures",
-      "subjects": [],
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
+      "subjects": [
+        "Data Structures"
+      ],
       "subjectDivisions": {}
     },
     {
@@ -343,9 +399,14 @@
       "name": "Demo Faculty 30",
       "username": "test_syl_faculty_1793426151834",
       "email": "test_syl_faculty_1793426151834@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "Data Structures",
-      "subjects": [],
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
+      "subjects": [
+        "Data Structures"
+      ],
       "subjectDivisions": {}
     },
     {
@@ -354,9 +415,14 @@
       "name": "Demo Faculty 31",
       "username": "test_syl_faculty_1793628638292",
       "email": "test_syl_faculty_1793628638292@demo.campussphere.local",
+      "department": "Department of Computer Science & Applications",
       "division": "Both Divisions",
       "subject": "Data Structures",
-      "subjects": [],
+      "academicYear": "2026–27",
+      "facultyAllocations": [],
+      "subjects": [
+        "Data Structures"
+      ],
       "subjectDivisions": {}
     },
     {
@@ -369,6 +435,9 @@
       "courseYear": "2nd Year",
       "semester": "3rd Semester",
       "division": "Div A",
+      "academicYear": "2026–27",
+      "admissionYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada"
@@ -383,6 +452,9 @@
       "courseYear": "2nd Year",
       "semester": "3rd Semester",
       "division": "Div B",
+      "academicYear": "2026–27",
+      "admissionYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -398,6 +470,9 @@
       "courseYear": "2nd Year",
       "semester": "3rd Semester",
       "division": "Div A",
+      "academicYear": "2026–27",
+      "admissionYear": "2026–27",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -413,6 +488,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -428,6 +506,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -443,6 +524,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -458,6 +542,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -473,6 +560,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -488,6 +578,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -503,6 +596,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -518,6 +614,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -533,6 +632,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -548,6 +650,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -563,6 +668,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -578,6 +686,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -593,6 +704,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -608,6 +722,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -623,6 +740,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -638,6 +758,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -653,6 +776,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Hindi",
@@ -668,6 +794,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -681,6 +810,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -694,6 +826,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div B",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -707,6 +842,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div B",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -720,6 +858,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -735,6 +876,9 @@
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {},
       "languageChoice": "Kannada",
@@ -746,9 +890,13 @@
       "name": "Demo Student 58",
       "username": "test_syl_student_1790686346922",
       "email": "test_syl_student_1790686346922@demo.campussphere.local",
+      "course": "Bachelor of Computer Applications (BCA)",
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -758,9 +906,13 @@
       "name": "Demo Student 59",
       "username": "test_syl_student_1793205349143",
       "email": "test_syl_student_1793205349143@demo.campussphere.local",
+      "course": "Bachelor of Computer Applications (BCA)",
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -770,9 +922,13 @@
       "name": "Demo Student 60",
       "username": "test_syl_student_1793426151834",
       "email": "test_syl_student_1793426151834@demo.campussphere.local",
+      "course": "Bachelor of Computer Applications (BCA)",
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     },
@@ -782,9 +938,13 @@
       "name": "Demo Student 61",
       "username": "test_syl_student_1793628638292",
       "email": "test_syl_student_1793628638292@demo.campussphere.local",
+      "course": "Bachelor of Computer Applications (BCA)",
       "courseYear": "1st Year",
       "semester": "1st Semester",
       "division": "Div A",
+      "academicYear": "2025–26",
+      "admissionYear": "2025–26",
+      "facultyAllocations": [],
       "subjects": [],
       "subjectDivisions": {}
     }
@@ -803,7 +963,8 @@
       "3rd Year": [
         "Div A",
         "Div B",
-        "Div C"
+        "Div C",
+        "Div D"
       ]
     },
     "subjects": [
@@ -1068,6 +1229,8 @@
       }
     },
     "customBreakRows": {},
+    "activeAcademicYear": "2026–27",
+    "academicYears": [],
     "notices": [
       {
         "id": "xss_notice_1789755422494",
@@ -1441,7 +1604,8 @@
     "3rd Year": [
       "Div A",
       "Div B",
-      "Div C"
+      "Div C",
+      "Div D"
     ]
   },
   "timetables": [

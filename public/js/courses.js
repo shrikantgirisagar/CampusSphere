@@ -36,9 +36,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Navigation Menu Toggle on Mobile
+  const menuToggle = document.getElementById("coursesMenuToggle") || document.querySelector(".public-menu-toggle");
+  const nav = document.querySelector(".public-nav");
+  if (menuToggle && nav) {
+    menuToggle.addEventListener("click", () => {
+      const open = nav.classList.toggle("is-open");
+      menuToggle.setAttribute("aria-expanded", String(open));
+      menuToggle.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
+    });
+    nav.querySelectorAll(".public-nav-link").forEach(link => {
+      link.addEventListener("click", () => {
+        nav.classList.remove("is-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuToggle.setAttribute("aria-label", "Open navigation menu");
+      });
+    });
+  }
+
   // Toast Notification System
-  const toast = document.getElementById("coursesToast");
-  const toastMsg = document.getElementById("coursesToastMsg");
+  const toast = document.getElementById("coursesToast") || document.getElementById("syllabusToast");
+  const toastMsg = document.getElementById("coursesToastMsg") || document.getElementById("syllabusToastMsg");
   let toastTimer = null;
 
   function showCoursesToast(message, isHtml = false, duration = 3500) {
@@ -55,11 +73,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }, duration);
   }
 
-  // Query syllabus availability from server
-  if (token) {
-    fetch("/api/syllabus", {
-      headers: { "Authorization": "Bearer " + token }
-    })
+  // Query syllabus availability and dynamic academic year from server
+  const fetchHeaders = token ? { "Authorization": "Bearer " + token } : {};
+  fetch("/api/syllabus", { headers: fetchHeaders })
     .then(r => r.json())
     .then(data => {
       if (data.success && Array.isArray(data.syllabi)) {
@@ -67,6 +83,14 @@ document.addEventListener("DOMContentLoaded", () => {
           const yr = item.yearLevel;
           const statusEl = document.getElementById("coursesStatusYear" + yr);
           const btn = document.getElementById("coursesBtnYear" + yr);
+          const card = document.querySelector(`.syllabus-card[data-year-level="${yr}"]`);
+          if (card && item.academicYear) {
+            const semTag = card.querySelector(".semester-tag");
+            if (semTag) {
+              const semLabel = item.semesterLabel || (yr === 1 ? "Semester I & II" : (yr === 2 ? "Semester III & IV" : "Semester V & VI"));
+              semTag.textContent = `${semLabel} • Academic Year: ${item.academicYear}`;
+            }
+          }
           if (statusEl && btn) {
             if (item.isUploaded) {
               statusEl.textContent = "✓ Available (" + (item.formattedSize || "PDF") + ")";
@@ -83,7 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
     .catch(() => {});
-  }
 
   async function handleCoursesPageDownload(yearLevel, title) {
     const currentToken = sessionStorage.getItem("portalAuthToken") || "";
