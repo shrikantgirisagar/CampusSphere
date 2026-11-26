@@ -41,6 +41,12 @@ const assignmentSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100
     },
+    semester: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50
+    },
     student: {
       type: String,
       default: "",

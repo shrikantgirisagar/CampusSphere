@@ -3,7 +3,10 @@
 // Manages dynamic academic year creation, lifecycle transitions, one-active-year enforcement,
 // semester configuration, and backward-compatible record resolution.
 
+const { AsyncLocalStorage } = require("async_hooks");
+const mongoose = require("mongoose");
 const AcademicYear = require("../models/AcademicYear");
+const AcademicStore = require("../models/AcademicStore");
 
 const DEFAULT_SEMESTER_CONFIG = [
   { semester: "1st Semester", cycle: "odd", courseYear: "1st Year", isOperational: true, status: "active" },
@@ -16,8 +19,91 @@ const DEFAULT_SEMESTER_CONFIG = [
 
 class AcademicYearService {
   constructor() {
-    // In-memory serialized promise chain for single-process activation concurrency protection
-    this._activationQueue = Promise.resolve();
+    // Re-entrant context so nested lifecycle delegation (e.g. completeAcademicYear -> activateAcademicYear)
+    // does not deadlock on the exclusive lifecycle barrier
+    this._transitionAls = new AsyncLocalStorage();
+    // Writer-preference reader-writer coordinator serializing lifecycle transitions against
+    // same-process year-scoped mutations (attendance writes/deletes and academic sync)
+    this._lifecycleQueue = Promise.resolve();
+    this._pendingTransitions = 0;
+    this._activeTransition = false;
+    this._activeMutations = 0;
+    this._idleWaiters = [];
+    this._mutationGateWaiters = [];
+  }
+
+  /**
+   * Check whether the connected MongoDB topology supports multi-document ACID transactions.
+   * Standalone "Single" instances return false; replica sets and sharded clusters return true.
+   */
+  isTransactionSupported() {
+    if (!mongoose.connection || mongoose.connection.readyState !== 1 || !mongoose.connection.client) {
+      return false;
+    }
+    const topologyType = mongoose.connection.client.topology?.description?.type;
+    return Boolean(topologyType && topologyType !== "Single");
+  }
+
+  /**
+   * Acquire exclusive same-process lifecycle lock (writer-preference).
+   * New mutations queue behind pending transitions; execution waits for in-flight mutations to finish.
+   */
+  async runWithLifecycleTransition(fn) {
+    if (this._transitionAls.getStore()?.inLifecycleTransition) {
+      return fn();
+    }
+
+    this._pendingTransitions += 1;
+    let released = false;
+    const releasePending = () => {
+      if (released) return;
+      released = true;
+      this._pendingTransitions = Math.max(0, this._pendingTransitions - 1);
+      if (!this._activeTransition && this._pendingTransitions === 0 && this._mutationGateWaiters.length > 0) {
+        const waiters = this._mutationGateWaiters.splice(0);
+        for (const w of waiters) w();
+      }
+    };
+
+    const runExclusive = async () => {
+      this._activeTransition = true;
+      try {
+        if (this._activeMutations > 0) {
+          await new Promise(resolve => this._idleWaiters.push(resolve));
+        }
+        return await this._transitionAls.run({ inLifecycleTransition: true }, fn);
+      } finally {
+        this._activeTransition = false;
+        releasePending();
+      }
+    };
+
+    const nextPromise = this._lifecycleQueue.then(runExclusive, runExclusive);
+    this._lifecycleQueue = nextPromise.catch(() => {});
+    return nextPromise;
+  }
+
+  /**
+   * Acquire shared same-process mutation guard so attendance/sync validation and commit
+   * cannot interleave with concurrent activate/complete/archive operations.
+   */
+  async runWithYearMutationGuard(fn) {
+    if (this._transitionAls.getStore()?.inLifecycleTransition) {
+      return fn();
+    }
+    while (this._activeTransition || this._pendingTransitions > 0) {
+      await new Promise(resolve => this._mutationGateWaiters.push(resolve));
+    }
+    this._activeMutations += 1;
+    try {
+      return await fn();
+    } finally {
+      this._activeMutations = Math.max(0, this._activeMutations - 1);
+      if (this._activeMutations === 0 && this._idleWaiters.length > 0) {
+        const waiters = this._idleWaiters.splice(0);
+        for (const w of waiters) w();
+      }
+    }
   }
 
   /**
@@ -77,14 +163,18 @@ class AcademicYearService {
   /**
    * Retrieve academic year by Mongo ID or yearCode (e.g. "2026–27")
    */
-  async getAcademicYearByIdOrCode(identifier) {
+  async getAcademicYearByIdOrCode(identifier, session = null) {
     if (!identifier) return null;
     const trimmed = String(identifier).trim();
     if (trimmed.match(/^[0-9a-fA-F]{24}$/)) {
-      const byId = await AcademicYear.findById(trimmed).exec();
+      const byIdQuery = AcademicYear.findById(trimmed);
+      if (session) byIdQuery.session(session);
+      const byId = await byIdQuery.exec();
       if (byId) return byId;
     }
-    return AcademicYear.findOne({ yearCode: trimmed }).exec();
+    const byCodeQuery = AcademicYear.findOne({ yearCode: trimmed });
+    if (session) byCodeQuery.session(session);
+    return byCodeQuery.exec();
   }
 
   /**
@@ -247,12 +337,171 @@ class AcademicYearService {
    * Deactivates current active year and activates target year.
    * Guarantees that exactly one academic year is active.
    */
-  async activateAcademicYear(id, adminUser = "admin") {
-    // Chain onto in-process queue to serialize same-process activation calls
-    const executeActivation = async () => {
+  async activateAcademicYear(id, adminUser = "admin", options = {}) {
+    return this.runWithLifecycleTransition(async () => {
+      const supportsTransactions = this.isTransactionSupported();
+      const {
+        expectedActiveYearId = null,
+        expectedActiveYearCode = null,
+        requireSuccessorUpcoming = false,
+        requireNoActiveYear = false
+      } = options || {};
+
+      if (supportsTransactions) {
+        const session = await mongoose.startSession();
+        let txResult = null;
+        try {
+          await session.withTransaction(async () => {
+            txResult = null;
+            const targetYear = await this.getAcademicYearByIdOrCode(id, session);
+            if (!targetYear) {
+              throw new Error("Target academic year not found.");
+            }
+
+            if (targetYear.status === "archived") {
+              throw new Error(`Archived academic year "${targetYear.yearCode}" cannot be directly activated. Restore to completed or upcoming first.`);
+            }
+
+            if (requireSuccessorUpcoming && targetYear.status !== "upcoming") {
+              const conflictErr = new Error(`Successor academic year "${targetYear.yearCode}" is now '${targetYear.status}' and can no longer be activated as upcoming.`);
+              conflictErr.code = "LIFECYCLE_CONFLICT";
+              conflictErr.status = 409;
+              throw conflictErr;
+            }
+
+            const currentActive = await AcademicYear.findOne({ status: "active" }).session(session).exec();
+
+            if (requireNoActiveYear && currentActive) {
+              const conflictErr = new Error(`Concurrent lifecycle transition detected: expected no active academic year, found '${currentActive.yearCode}'.`);
+              conflictErr.code = "LIFECYCLE_CONFLICT";
+              conflictErr.status = 409;
+              throw conflictErr;
+            }
+
+            if (expectedActiveYearId) {
+              if (!currentActive || String(currentActive._id) !== String(expectedActiveYearId)) {
+                const conflictErr = new Error(
+                  `Concurrent lifecycle transition detected: expected active year '${expectedActiveYearCode || expectedActiveYearId}', found '${currentActive ? currentActive.yearCode : "none"}'.`
+                );
+                conflictErr.code = "LIFECYCLE_CONFLICT";
+                conflictErr.status = 409;
+                throw conflictErr;
+              }
+            }
+
+            if (expectedActiveYearCode) {
+              if (!currentActive || String(currentActive.yearCode) !== String(expectedActiveYearCode)) {
+                const conflictErr = new Error(
+                  `Concurrent lifecycle transition detected: expected active year '${expectedActiveYearCode}', found '${currentActive ? currentActive.yearCode : "none"}'.`
+                );
+                conflictErr.code = "LIFECYCLE_CONFLICT";
+                conflictErr.status = 409;
+                throw conflictErr;
+              }
+            }
+
+            if (targetYear.status === "active") {
+              txResult = {
+                alreadyActive: true,
+                academicYear: targetYear,
+                message: `Academic year "${targetYear.yearCode}" is already active.`
+              };
+              return;
+            }
+
+            if (currentActive && String(currentActive._id) !== String(targetYear._id)) {
+              currentActive.status = "completed";
+              currentActive.completedAt = new Date();
+              currentActive.updatedBy = adminUser;
+              currentActive.mutationEpoch = (Number(currentActive.mutationEpoch) || 0) + 1;
+              if (Array.isArray(currentActive.semesterConfiguration)) {
+                currentActive.semesterConfiguration.forEach(s => { s.status = "completed"; });
+              }
+              await currentActive.save({ session });
+            }
+
+            targetYear.status = "active";
+            targetYear.activatedAt = new Date();
+            targetYear.updatedBy = adminUser;
+            targetYear.mutationEpoch = (Number(targetYear.mutationEpoch) || 0) + 1;
+            // Activate configured operational semesters
+            if (Array.isArray(targetYear.semesterConfiguration)) {
+              targetYear.semesterConfiguration.forEach(s => {
+                if (s.isOperational) s.status = "active";
+              });
+            }
+            await targetYear.save({ session });
+
+            const storeRes = await AcademicStore.updateOne(
+              { storeKey: "default_academic_store" },
+              { $set: { activeAcademicYear: targetYear.yearCode } },
+              { upsert: true, session }
+            );
+            if (!storeRes?.acknowledged || (storeRes.matchedCount === 0 && storeRes.upsertedCount === 0)) {
+              throw new Error("Failed to synchronize AcademicStore.activeAcademicYear inside transaction.");
+            }
+
+            txResult = {
+              success: true,
+              previousActiveYear: currentActive ? currentActive.yearCode : null,
+              activeAcademicYear: targetYear,
+              message: `Academic year "${targetYear.yearCode}" is now active.`
+            };
+          });
+        } finally {
+          await session.endSession();
+        }
+        return txResult;
+      }
+
+      // Connected standalone ("Single") MongoDB path: DB-enforced conditional CAS with mutationEpoch
+      // and partial unique active-year index; cross-process multi-doc crash atomicity still requires replica sets.
+      const isConnectedStandalone = mongoose.connection && mongoose.connection.readyState === 1;
       const targetYear = await this.getAcademicYearByIdOrCode(id);
       if (!targetYear) {
         throw new Error("Target academic year not found.");
+      }
+
+      if (targetYear.status === "archived") {
+        throw new Error(`Archived academic year "${targetYear.yearCode}" cannot be directly activated. Restore to completed or upcoming first.`);
+      }
+
+      if (requireSuccessorUpcoming && targetYear.status !== "upcoming") {
+        const conflictErr = new Error(`Successor academic year "${targetYear.yearCode}" must have status 'upcoming' to be activated upon completion.`);
+        conflictErr.code = "LIFECYCLE_CONFLICT";
+        conflictErr.status = 409;
+        throw conflictErr;
+      }
+
+      const currentActive = await AcademicYear.findOne({ status: "active" }).exec();
+
+      if (requireNoActiveYear && currentActive) {
+        const conflictErr = new Error(`Concurrent lifecycle transition detected: expected no active academic year, found '${currentActive.yearCode}'.`);
+        conflictErr.code = "LIFECYCLE_CONFLICT";
+        conflictErr.status = 409;
+        throw conflictErr;
+      }
+
+      if (expectedActiveYearId) {
+        if (!currentActive || String(currentActive._id) !== String(expectedActiveYearId)) {
+          const conflictErr = new Error(
+            `Concurrent lifecycle transition detected: expected active year '${expectedActiveYearCode || expectedActiveYearId}', found '${currentActive ? currentActive.yearCode : "none"}'.`
+          );
+          conflictErr.code = "LIFECYCLE_CONFLICT";
+          conflictErr.status = 409;
+          throw conflictErr;
+        }
+      }
+
+      if (expectedActiveYearCode) {
+        if (!currentActive || String(currentActive.yearCode) !== String(expectedActiveYearCode)) {
+          const conflictErr = new Error(
+            `Concurrent lifecycle transition detected: expected active year '${expectedActiveYearCode}', found '${currentActive ? currentActive.yearCode : "none"}'.`
+          );
+          conflictErr.code = "LIFECYCLE_CONFLICT";
+          conflictErr.status = 409;
+          throw conflictErr;
+        }
       }
 
       if (targetYear.status === "active") {
@@ -263,98 +512,200 @@ class AcademicYearService {
         };
       }
 
-      if (targetYear.status === "archived") {
-        throw new Error(`Archived academic year "${targetYear.yearCode}" cannot be directly activated. Restore to completed or upcoming first.`);
+      if (!isConnectedStandalone) {
+        // Disconnected mock unit-test path preserving legacy .save() stub interfaces
+        if (currentActive && String(currentActive._id) !== String(targetYear._id)) {
+          currentActive.status = "completed";
+          currentActive.completedAt = new Date();
+          currentActive.updatedBy = adminUser;
+          currentActive.mutationEpoch = (Number(currentActive.mutationEpoch) || 0) + 1;
+          if (Array.isArray(currentActive.semesterConfiguration)) {
+            currentActive.semesterConfiguration.forEach(s => { s.status = "completed"; });
+          }
+          await currentActive.save();
+        }
+        targetYear.status = "active";
+        targetYear.activatedAt = new Date();
+        targetYear.updatedBy = adminUser;
+        targetYear.mutationEpoch = (Number(targetYear.mutationEpoch) || 0) + 1;
+        if (Array.isArray(targetYear.semesterConfiguration)) {
+          targetYear.semesterConfiguration.forEach(s => {
+            if (s.isOperational) s.status = "active";
+          });
+        }
+        await targetYear.save();
+
+        return {
+          success: true,
+          previousActiveYear: currentActive ? currentActive.yearCode : null,
+          activeAcademicYear: targetYear,
+          message: `Academic year "${targetYear.yearCode}" is now active.`
+        };
       }
 
-      // Identify current active year
-      const currentActive = await AcademicYear.findOne({ status: "active" }).exec();
+      const prevEpoch = Number(currentActive?.mutationEpoch) || 0;
+      const targetEpoch = Number(targetYear.mutationEpoch) || 0;
+      const prevSemSnapshot = Array.isArray(currentActive?.semesterConfiguration)
+        ? currentActive.semesterConfiguration.map(s => (typeof s.toObject === "function" ? s.toObject() : { ...s }))
+        : null;
+      const previousState = currentActive
+        ? {
+            id: currentActive._id,
+            yearCode: currentActive.yearCode,
+            status: currentActive.status,
+            completedAt: currentActive.completedAt,
+            updatedBy: currentActive.updatedBy,
+            semesterConfiguration: prevSemSnapshot
+          }
+        : null;
+      const existingStoreBefore = await AcademicStore.findOne({ storeKey: "default_academic_store" })
+        .select("activeAcademicYear")
+        .lean();
 
-      // Check if MongoDB session transactions are supported
-      const mongoose = require("mongoose");
-      let session = null;
-      let supportsTransactions = false;
+      let deactivatedCurrent = null;
+      let activatedTarget = null;
+      let storeUpsertedFresh = false;
 
       try {
-        if (mongoose.connection && mongoose.connection.client) {
-          session = await mongoose.startSession();
-          // Check replica set status
-          supportsTransactions = !!(mongoose.connection.client.topology && mongoose.connection.client.topology.description.type !== "Single");
+        if (currentActive && String(currentActive._id) !== String(targetYear._id)) {
+          const prevSetPayload = {
+            status: "completed",
+            completedAt: new Date(),
+            updatedBy: adminUser
+          };
+          if (Array.isArray(prevSemSnapshot)) {
+            prevSetPayload.semesterConfiguration = prevSemSnapshot.map(s => ({ ...s, status: "completed" }));
+          }
+          deactivatedCurrent = await AcademicYear.findOneAndUpdate(
+            { _id: currentActive._id, status: "active", mutationEpoch: prevEpoch },
+            {
+              $set: prevSetPayload,
+              $inc: { mutationEpoch: 1 }
+            },
+            { returnDocument: "after" }
+          );
+          if (!deactivatedCurrent) {
+            const conflictErr = new Error(`Concurrent modification prevented deactivating active academic year "${currentActive.yearCode}".`);
+            conflictErr.code = "LIFECYCLE_CONFLICT";
+            conflictErr.status = 409;
+            throw conflictErr;
+          }
         }
-      } catch (_) {
-        session = null;
-        supportsTransactions = false;
-      }
 
-      if (supportsTransactions && session) {
-        try {
-          await session.withTransaction(async () => {
-            if (currentActive && String(currentActive._id) !== String(targetYear._id)) {
-              currentActive.status = "completed";
-              currentActive.completedAt = new Date();
-              currentActive.updatedBy = adminUser;
-              await currentActive.save({ session });
-            }
+        const updatedSemConfig = Array.isArray(targetYear.semesterConfiguration)
+          ? targetYear.semesterConfiguration.map(s => {
+              const plain = typeof s.toObject === "function" ? s.toObject() : { ...s };
+              if (plain.isOperational) plain.status = "active";
+              return plain;
+            })
+          : [];
 
-            targetYear.status = "active";
-            targetYear.activatedAt = new Date();
-            targetYear.updatedBy = adminUser;
-            // Activate configured operational semesters
-            if (Array.isArray(targetYear.semesterConfiguration)) {
-              targetYear.semesterConfiguration.forEach(s => {
-                if (s.isOperational) s.status = "active";
-              });
-            }
-            await targetYear.save({ session });
-          });
-        } finally {
-          await session.endSession();
+        activatedTarget = await AcademicYear.findOneAndUpdate(
+          { _id: targetYear._id, status: targetYear.status, mutationEpoch: targetEpoch },
+          {
+            $set: {
+              status: "active",
+              activatedAt: new Date(),
+              updatedBy: adminUser,
+              semesterConfiguration: updatedSemConfig
+            },
+            $inc: { mutationEpoch: 1 }
+          },
+          { returnDocument: "after" }
+        );
+        if (!activatedTarget) {
+          const conflictErr = new Error(`Concurrent modification prevented activating academic year "${targetYear.yearCode}".`);
+          conflictErr.code = "LIFECYCLE_CONFLICT";
+          conflictErr.status = 409;
+          throw conflictErr;
         }
-      } else {
-        // Fallback safe sequential transition with rollback protection
-        const previousState = currentActive ? { id: currentActive._id, status: currentActive.status } : null;
 
-        try {
-          if (currentActive && String(currentActive._id) !== String(targetYear._id)) {
-            // Deactivate current active first so partial unique index permits target activation
-            await AcademicYear.updateOne(
-              { _id: currentActive._id, status: "active" },
-              { $set: { status: "completed", completedAt: new Date(), updatedBy: adminUser } }
+        const storeRes = await AcademicStore.updateOne(
+          { storeKey: "default_academic_store" },
+          { $set: { activeAcademicYear: activatedTarget.yearCode } },
+          { upsert: true }
+        );
+        if (!storeRes?.acknowledged || (storeRes.matchedCount === 0 && storeRes.upsertedCount === 0)) {
+          throw new Error("Failed to persist AcademicStore.activeAcademicYear during standalone activation.");
+        }
+        storeUpsertedFresh = Boolean(storeRes.upsertedCount > 0 && !existingStoreBefore);
+      } catch (activationErr) {
+        if (activationErr?.code === 11000) {
+          activationErr.code = "LIFECYCLE_CONFLICT";
+          activationErr.status = 409;
+        }
+        const rollbackErrors = [];
+        if (activatedTarget) {
+          try {
+            await AcademicYear.findOneAndUpdate(
+              { _id: activatedTarget._id, status: "active", mutationEpoch: activatedTarget.mutationEpoch },
+              {
+                $set: {
+                  status: targetYear.status,
+                  activatedAt: targetYear.activatedAt || null,
+                  semesterConfiguration: targetYear.semesterConfiguration
+                },
+                $inc: { mutationEpoch: 1 }
+              }
             );
+          } catch (rbTargetErr) {
+            rollbackErrors.push(`Target rollback failed: ${rbTargetErr.message}`);
           }
-
-          targetYear.status = "active";
-          targetYear.activatedAt = new Date();
-          targetYear.updatedBy = adminUser;
-          if (Array.isArray(targetYear.semesterConfiguration)) {
-            targetYear.semesterConfiguration.forEach(s => {
-              if (s.isOperational) s.status = "active";
-            });
-          }
-          await targetYear.save();
-        } catch (activationErr) {
-          // Rollback previous year state if activation fails
-          if (previousState) {
-            await AcademicYear.updateOne(
-              { _id: previousState.id },
-              { $set: { status: previousState.status } }
-            ).catch(() => {});
-          }
-          throw activationErr;
         }
+        if (deactivatedCurrent && previousState) {
+          try {
+            const restoreSet = {
+              status: previousState.status,
+              completedAt: previousState.completedAt || null,
+              updatedBy: previousState.updatedBy || "admin"
+            };
+            if (Array.isArray(previousState.semesterConfiguration)) {
+              restoreSet.semesterConfiguration = previousState.semesterConfiguration;
+            }
+            await AcademicYear.findOneAndUpdate(
+              { _id: previousState.id, mutationEpoch: deactivatedCurrent.mutationEpoch },
+              {
+                $set: restoreSet,
+                $inc: { mutationEpoch: 1 }
+              }
+            );
+          } catch (rbPrevErr) {
+            rollbackErrors.push(`Previous year rollback failed: ${rbPrevErr.message}`);
+          }
+        }
+        if (existingStoreBefore && activatedTarget) {
+          try {
+            await AcademicStore.updateOne(
+              { storeKey: "default_academic_store" },
+              { $set: { activeAcademicYear: existingStoreBefore.activeAcademicYear || "" } }
+            );
+          } catch (rbStoreErr) {
+            rollbackErrors.push(`AcademicStore rollback failed: ${rbStoreErr.message}`);
+          }
+        } else if (storeUpsertedFresh && activatedTarget) {
+          try {
+            await AcademicStore.updateOne(
+              { storeKey: "default_academic_store" },
+              { $set: { activeAcademicYear: "" } }
+            );
+          } catch (rbStoreErr) {
+            rollbackErrors.push(`AcademicStore rollback failed: ${rbStoreErr.message}`);
+          }
+        }
+        if (rollbackErrors.length > 0) {
+          console.error("[AcademicYear] Standalone activation rollback error(s):", rollbackErrors.join("; "));
+          activationErr.rollbackErrors = rollbackErrors;
+        }
+        throw activationErr;
       }
 
       return {
         success: true,
         previousActiveYear: currentActive ? currentActive.yearCode : null,
-        activeAcademicYear: targetYear,
-        message: `Academic year "${targetYear.yearCode}" is now active.`
+        activeAcademicYear: activatedTarget,
+        message: `Academic year "${activatedTarget.yearCode}" is now active.`
       };
-    };
-
-    const nextPromise = this._activationQueue.then(executeActivation, executeActivation);
-    this._activationQueue = nextPromise.catch(() => {});
-    return nextPromise;
+    });
   }
 
   /**
@@ -363,69 +714,222 @@ class AcademicYearService {
    * or explicit administrative confirmation of intentional institutional deactivation.
    */
   async completeAcademicYear(id, adminUser = "admin", options = {}) {
-    const year = await this.getAcademicYearByIdOrCode(id);
-    if (!year) throw new Error("Academic year not found.");
+    return this.runWithLifecycleTransition(async () => {
+      const year = await this.getAcademicYearByIdOrCode(id);
+      if (!year) throw new Error("Academic year not found.");
 
-    if (year.status === "upcoming") {
-      throw new Error(`Cannot complete upcoming academic year "${year.yearCode}". An academic year must be activated before it can be completed.`);
-    }
-    if (year.status === "completed") {
-      throw new Error(`Academic year "${year.yearCode}" is already marked as completed.`);
-    }
-    if (year.status === "archived") {
-      throw new Error(`Cannot complete archived academic year "${year.yearCode}".`);
-    }
-
-    // Guard against accidental zero-active-year state
-    if (year.status === "active") {
-      const successorId = options.successorId || options.transitionToYear;
-      if (successorId) {
-        const successor = await this.getAcademicYearByIdOrCode(successorId);
-        if (!successor) {
-          throw new Error("Specified successor academic year not found.");
-        }
-        if (successor.status !== "upcoming") {
-          throw new Error(`Successor academic year "${successor.yearCode}" must have status 'upcoming' to be activated upon completion.`);
-        }
-        // Safely and atomically activate the successor year (which automatically completes current active year)
-        return this.activateAcademicYear(successor._id, adminUser);
+      if (year.status === "upcoming") {
+        throw new Error(`Cannot complete upcoming academic year "${year.yearCode}". An academic year must be activated before it can be completed.`);
+      }
+      if (year.status === "completed") {
+        throw new Error(`Academic year "${year.yearCode}" is already marked as completed.`);
+      }
+      if (year.status === "archived") {
+        throw new Error(`Cannot complete archived academic year "${year.yearCode}".`);
       }
 
-      const isIntentional = Boolean(options.intentionalDeactivation || options.allowZeroActive);
-      if (!isIntentional) {
-        throw new Error(
-          `Cannot complete active academic year "${year.yearCode}" without an explicitly selected successor upcoming academic year to activate. To transition academic years, provide a successorId or activate the successor year directly.`
+      // Guard against accidental zero-active-year state
+      if (year.status === "active") {
+        const successorId = options.successorId || options.transitionToYear;
+        if (successorId) {
+          const successor = await this.getAcademicYearByIdOrCode(successorId);
+          if (!successor) {
+            throw new Error("Specified successor academic year not found.");
+          }
+          if (successor.status !== "upcoming") {
+            throw new Error(`Successor academic year "${successor.yearCode}" must have status 'upcoming' to be activated upon completion.`);
+          }
+          // Enforce inside activateAcademicYear's transaction/CAS that `year._id` is STILL active
+          // and `successor` is still upcoming when committed
+          return this.activateAcademicYear(successor._id, adminUser, {
+            expectedActiveYearId: year._id,
+            expectedActiveYearCode: year.yearCode,
+            requireSuccessorUpcoming: true
+          });
+        }
+
+        const isIntentional = Boolean(options.intentionalDeactivation || options.allowZeroActive);
+        if (!isIntentional) {
+          throw new Error(
+            `Cannot complete active academic year "${year.yearCode}" without an explicitly selected successor upcoming academic year to activate. To transition academic years, provide a successorId or activate the successor year directly.`
+          );
+        }
+      }
+
+      if (this.isTransactionSupported()) {
+        const session = await mongoose.startSession();
+        let completedYear = null;
+        try {
+          await session.withTransaction(async () => {
+            completedYear = null;
+            const txYear = await this.getAcademicYearByIdOrCode(id, session);
+            if (!txYear) throw new Error("Academic year not found.");
+            if (txYear.status !== "active") {
+              const conflictErr = new Error(`Academic year "${txYear.yearCode}" is already '${txYear.status}' and cannot be completed.`);
+              conflictErr.code = "LIFECYCLE_CONFLICT";
+              conflictErr.status = 409;
+              throw conflictErr;
+            }
+            txYear.status = "completed";
+            txYear.completedAt = new Date();
+            txYear.updatedBy = adminUser;
+            txYear.mutationEpoch = (Number(txYear.mutationEpoch) || 0) + 1;
+            if (Array.isArray(txYear.semesterConfiguration)) {
+              txYear.semesterConfiguration.forEach(s => { s.status = "completed"; });
+            }
+            completedYear = await txYear.save({ session });
+
+            const storeRes = await AcademicStore.updateOne(
+              { storeKey: "default_academic_store" },
+              { $set: { activeAcademicYear: "" } },
+              { upsert: true, session }
+            );
+            if (!storeRes?.acknowledged || (storeRes.matchedCount === 0 && storeRes.upsertedCount === 0)) {
+              throw new Error("Failed to clear AcademicStore.activeAcademicYear inside transaction.");
+            }
+          });
+        } finally {
+          await session.endSession();
+        }
+        return completedYear;
+      }
+
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        const expectedEpoch = Number(year.mutationEpoch) || 0;
+        const prevSemesters = Array.isArray(year.semesterConfiguration)
+          ? year.semesterConfiguration.map(s => (typeof s.toObject === "function" ? s.toObject() : { ...s }))
+          : [];
+        const completedSems = prevSemesters.map(s => ({ ...s, status: "completed" }));
+        const updatedYear = await AcademicYear.findOneAndUpdate(
+          { _id: year._id, status: "active", mutationEpoch: expectedEpoch },
+          {
+            $set: {
+              status: "completed",
+              completedAt: new Date(),
+              updatedBy: adminUser,
+              semesterConfiguration: completedSems
+            },
+            $inc: { mutationEpoch: 1 }
+          },
+          { returnDocument: "after" }
         );
+        if (!updatedYear) {
+          const conflictErr = new Error(`Concurrent lifecycle transition prevented completing "${year.yearCode}".`);
+          conflictErr.code = "LIFECYCLE_CONFLICT";
+          conflictErr.status = 409;
+          throw conflictErr;
+        }
+        try {
+          const storeRes = await AcademicStore.updateOne(
+            { storeKey: "default_academic_store" },
+            { $set: { activeAcademicYear: "" } },
+            { upsert: true }
+          );
+          if (!storeRes?.acknowledged || (storeRes.matchedCount === 0 && storeRes.upsertedCount === 0)) {
+            throw new Error("Failed to persist empty activeAcademicYear in AcademicStore during standalone completion.");
+          }
+        } catch (storeErr) {
+          try {
+            await AcademicYear.findOneAndUpdate(
+              { _id: updatedYear._id, status: "completed", mutationEpoch: updatedYear.mutationEpoch },
+              {
+                $set: {
+                  status: "active",
+                  completedAt: year.completedAt || null,
+                  updatedBy: year.updatedBy || "admin",
+                  semesterConfiguration: prevSemesters
+                },
+                $inc: { mutationEpoch: 1 }
+              }
+            );
+          } catch (rbErr) {
+            console.error("[AcademicYear] Standalone completion rollback failed:", rbErr.message);
+            storeErr.rollbackErrors = [rbErr.message];
+          }
+          throw storeErr;
+        }
+        return updatedYear;
       }
-    }
 
-    year.status = "completed";
-    year.completedAt = new Date();
-    year.updatedBy = adminUser;
-    if (Array.isArray(year.semesterConfiguration)) {
-      year.semesterConfiguration.forEach(s => { s.status = "completed"; });
-    }
-    return year.save();
+      year.status = "completed";
+      year.completedAt = new Date();
+      year.updatedBy = adminUser;
+      year.mutationEpoch = (Number(year.mutationEpoch) || 0) + 1;
+      if (Array.isArray(year.semesterConfiguration)) {
+        year.semesterConfiguration.forEach(s => { s.status = "completed"; });
+      }
+      return year.save();
+    });
   }
 
   /**
    * Archive an academic year
    */
   async archiveAcademicYear(id, adminUser = "admin") {
-    const year = await this.getAcademicYearByIdOrCode(id);
-    if (!year) throw new Error("Academic year not found.");
+    return this.runWithLifecycleTransition(async () => {
+      if (this.isTransactionSupported()) {
+        const session = await mongoose.startSession();
+        let archivedYear = null;
+        try {
+          await session.withTransaction(async () => {
+            archivedYear = null;
+            const txYear = await this.getAcademicYearByIdOrCode(id, session);
+            if (!txYear) throw new Error("Academic year not found.");
 
-    if (year.status === "active") {
-      throw new Error(`Cannot archive the currently active academic year "${year.yearCode}". Activate another year first.`);
-    }
-    if (year.status === "archived") {
-      throw new Error(`Academic year "${year.yearCode}" is already archived.`);
-    }
+            if (txYear.status === "active") {
+              throw new Error(`Cannot archive the currently active academic year "${txYear.yearCode}". Activate another year first.`);
+            }
+            if (txYear.status === "archived") {
+              throw new Error(`Academic year "${txYear.yearCode}" is already archived.`);
+            }
 
-    year.status = "archived";
-    year.archivedAt = new Date();
-    year.updatedBy = adminUser;
-    return year.save();
+            txYear.status = "archived";
+            txYear.archivedAt = new Date();
+            txYear.updatedBy = adminUser;
+            txYear.mutationEpoch = (Number(txYear.mutationEpoch) || 0) + 1;
+            archivedYear = await txYear.save({ session });
+          });
+        } finally {
+          await session.endSession();
+        }
+        return archivedYear;
+      }
+
+      const year = await this.getAcademicYearByIdOrCode(id);
+      if (!year) throw new Error("Academic year not found.");
+
+      if (year.status === "active") {
+        throw new Error(`Cannot archive the currently active academic year "${year.yearCode}". Activate another year first.`);
+      }
+      if (year.status === "archived") {
+        throw new Error(`Academic year "${year.yearCode}" is already archived.`);
+      }
+
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        const expectedEpoch = Number(year.mutationEpoch) || 0;
+        const archivedYear = await AcademicYear.findOneAndUpdate(
+          { _id: year._id, status: year.status, mutationEpoch: expectedEpoch },
+          {
+            $set: { status: "archived", archivedAt: new Date(), updatedBy: adminUser },
+            $inc: { mutationEpoch: 1 }
+          },
+          { returnDocument: "after" }
+        );
+        if (!archivedYear) {
+          const conflictErr = new Error(`Concurrent lifecycle transition prevented archiving "${year.yearCode}".`);
+          conflictErr.code = "LIFECYCLE_CONFLICT";
+          conflictErr.status = 409;
+          throw conflictErr;
+        }
+        return archivedYear;
+      }
+
+      year.status = "archived";
+      year.archivedAt = new Date();
+      year.updatedBy = adminUser;
+      year.mutationEpoch = (Number(year.mutationEpoch) || 0) + 1;
+      return year.save();
+    });
   }
 
   /**

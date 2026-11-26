@@ -659,6 +659,171 @@ async function runTests() {
     report("Core institutional invariants (55 NEP subjects, 3-state attendance, no results) intact", false, e);
   }
 
+  // Test 33: Fail-closed academic year write guards & atomic sync validation contract in server.js
+  try {
+    const serverSrc = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
+    assert(serverSrc.includes("async function validateAcademicYearOperationalForWrite"), "validateAcademicYearOperationalForWrite must exist");
+    assert(serverSrc.includes("ACADEMIC_YEAR_REQUIRED"), "Must emit explicit ACADEMIC_YEAR_REQUIRED code");
+    assert(serverSrc.includes("ACADEMIC_YEAR_NOT_FOUND"), "Must emit explicit ACADEMIC_YEAR_NOT_FOUND code");
+    assert(serverSrc.includes("ACADEMIC_YEAR_NOT_ACTIVE"), "Must emit explicit ACADEMIC_YEAR_NOT_ACTIVE code");
+    assert(serverSrc.includes("ACADEMIC_YEAR_ARCHIVED"), "Must emit explicit ACADEMIC_YEAR_ARCHIVED code");
+    assert(serverSrc.includes("IMMUTABLE_RECORD"), "Must emit explicit IMMUTABLE_RECORD code for ID reuse / unversioned writes");
+    assert(serverSrc.includes("prepareAndValidateAcademicSync"), "Sync route must validate full payload before writes");
+    assert(serverSrc.includes("throwOnError: true"), "Request sync must never swallow collection persistence errors");
+    report("Fail-closed academic-year write guards and atomic sync validation contract intact", true);
+  } catch (e) {
+    report("Fail-closed academic-year write guards and atomic sync validation contract intact", false, e);
+  }
+
+  // Test 34: Timetable explicit versioned semester precedence respects allocation metadata
+  try {
+    const facultyUser = {
+      username: "fac_explicit_sem",
+      role: "faculty",
+      facultyAllocations: [
+        { academicYear: "2026–27", subject: "dbms", semester: "1st Semester", division: "Div A", status: "active" }
+      ]
+    };
+    assert.strictEqual(isFacultyAuthorizedForTimetable(facultyUser, "1st Semester", "Div A", "2026–27"), true);
+    assert.strictEqual(isFacultyAuthorizedForTimetable(facultyUser, "3rd Semester", "Div A", "2026–27"), false);
+    assert.strictEqual(isFacultyAuthorizedForTimetable(facultyUser, "1st Semester", "Div B", "2026–27"), false);
+    report("Timetable authorization respects explicit versioned allocation semester and division", true);
+  } catch (e) {
+    report("Timetable authorization respects explicit versioned allocation semester and division", false, e);
+  }
+
+  // Test 35: Round 3 timetable transaction fencing & attendance PUT/DELETE hardening contracts
+  try {
+    const serverSrc = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
+    assert(serverSrc.includes("async function executeSaveTimetableWrite"), "executeSaveTimetableWrite helper must exist");
+    assert(serverSrc.includes("async function executeDeleteTimetableWrite"), "executeDeleteTimetableWrite helper must exist");
+    assert(serverSrc.includes("async function executeSyncTimetableSlotsWrite"), "executeSyncTimetableSlotsWrite helper must exist");
+    assert(serverSrc.includes("AMBIGUOUS_TIMETABLE_RECORD"), "Timetable writes/deletes must reject ambiguous matches");
+    assert(serverSrc.includes("ATTENDANCE_NOT_FOUND"), "PUT attendance must reject missing target with ATTENDANCE_NOT_FOUND");
+    assert(serverSrc.includes("ATTENDANCE_ID_MISMATCH"), "DELETE attendance must reject conflicting path/body/query identifiers");
+    assert(serverSrc.includes("ACADEMIC_YEAR_MISMATCH"), "DELETE handlers must reject conflicting body and query academicYear");
+
+    const ttSaveBlockMatch = serverSrc.match(/async function executeSaveTimetableWrite[\s\S]*?app\.delete\("\/api\/timetable"/);
+    assert(ttSaveBlockMatch && !ttSaveBlockMatch[0].includes("deleteMany"), "handleSaveTimetable and executeSaveTimetableWrite must never call deleteMany");
+    report("Round 3 timetable transaction fencing and attendance PUT/DELETE contracts enforced", true);
+  } catch (e) {
+    report("Round 3 timetable transaction fencing and attendance PUT/DELETE contracts enforced", false, e);
+  }
+
+  // Test 36: Round 3 sync session threading, standalone 503 fail-closed gate, notice & authorless protections
+  try {
+    const serverSrc = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
+    const syncFnMatch = serverSrc.match(/app\.post\("\/api\/academic\/sync"[\s\S]*?res\.status\(500\)/);
+    assert(syncFnMatch, "/api/academic/sync handler must exist");
+    const syncSrc = syncFnMatch[0];
+    assert(!syncSrc.includes("{ session: null }"), "prepareAndValidateAcademicSync inside tx must never drop session");
+    assert(syncSrc.includes("TRANSACTIONS_REQUIRED"), "Standalone /api/academic/sync must fail closed with TRANSACTIONS_REQUIRED");
+    assert(syncSrc.includes("atomicTransactionsSupported: false"), "Standalone rejection must report atomicTransactionsSupported: false");
+    assert(serverSrc.includes("NOTICE_NOT_FOUND"), "Notice deletion must reject unfound IDs with 404 NOTICE_NOT_FOUND");
+    assert(serverSrc.includes("deletedNoticesScoped"), "Notice deletions must use year-scoped deletedNoticesScoped filter");
+    assert(
+      serverSrc.includes("!owner || owner !== req.user.username.toLowerCase()"),
+      "Faculty modifications/deletions must fail closed on authorless records"
+    );
+    report("Round 3 sync session threading, standalone 503 gate, notice & authorless contracts enforced", true);
+  } catch (e) {
+    report("Round 3 sync session threading, standalone 503 gate, notice & authorless contracts enforced", false, e);
+  }
+
+  // Test 37: Round 3.2 division cascade, assignment status, student attachment auth, staged deltas & zero unscoped deletes
+  try {
+    const serverSrc = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
+    const cascadeMatch = serverSrc.match(/app\.post\("\/api\/academic\/divisions\/cascade"[\s\S]*?\n\}\);/);
+    const statusMatch = serverSrc.match(/app\.post\("\/api\/academic\/assignment-status"[\s\S]*?\n\}\);/);
+    const attachMatch = serverSrc.match(/app\.get\("\/api\/academic\/attachments\/:filename"[\s\S]*?\n\}\);/);
+    const syncColMatch = serverSrc.match(/async function syncCollectionsFromAcademicData[\s\S]*?\n\}/);
+    const postSyncMatch = serverSrc.match(/app\.post\("\/api\/academic\/sync"[\s\S]*?\n\}\);/);
+
+    assert(cascadeMatch && statusMatch && attachMatch && syncColMatch && postSyncMatch, "All Round 3.2 target handlers/helpers must exist");
+    assert(
+      cascadeMatch[0].includes("ACADEMIC_YEAR_REQUIRED") &&
+      cascadeMatch[0].includes("runWithYearMutationGuard") &&
+      cascadeMatch[0].includes("academicYear: cleanYear"),
+      "/api/academic/divisions/cascade must enforce operational academicYear, mutation guard, and strict year scoping"
+    );
+    assert(
+      statusMatch[0].includes("ACADEMIC_YEAR_REQUIRED") &&
+      statusMatch[0].includes("AMBIGUOUS_ASSIGNMENT_RECORD") &&
+      statusMatch[0].includes("ASSIGNMENT_NOT_FOUND") &&
+      statusMatch[0].includes("runWithYearMutationGuard"),
+      "/api/academic/assignment-status must enforce operational academicYear, ambiguity/missing checks, and faculty ownership"
+    );
+    assert(
+      attachMatch[0].includes("n.academicYear") &&
+      attachMatch[0].includes("targetDivision") &&
+      attachMatch[0].includes("targetRole"),
+      "/api/academic/attachments/:filename must enforce student notice year/role/division visibility"
+    );
+    assert(
+      !syncColMatch[0].includes("payload.deletedNotices") &&
+      !syncColMatch[0].includes("payload.deletedDailyAttendance") &&
+      !syncColMatch[0].includes("payload.deletedAssignments") &&
+      !syncColMatch[0].includes("payload.deletedNotes") &&
+      !syncColMatch[0].includes("resolveActiveYearCodeWithSession") &&
+      !syncColMatch[0].includes('n.authorRole === "admin" ? "admin" : "faculty"'),
+      "syncCollectionsFromAcademicData must reject unscoped deletions, remove mark active-year fallback, and never synthesize notice authors"
+    );
+    assert(
+      postSyncMatch[0].includes("validated.stagedStudents") &&
+      postSyncMatch[0].includes("validated.stagedNotices") &&
+      postSyncMatch[0].includes("validated.stagedDailyAttendance") &&
+      !postSyncMatch[0].includes("...payload"),
+      "/api/academic/sync tx collection sync must send validated staged deltas only"
+    );
+    report("Round 3.2 cascade, assignment-status, attachment visibility, staged delta sync & zero unscoped delete contracts enforced", true);
+  } catch (e) {
+    report("Round 3.2 cascade, assignment-status, attachment visibility, staged delta sync & zero unscoped delete contracts enforced", false, e);
+  }
+
+  // Test 38: Round 3.4 standalone fail-closed cascade/delete, Attendance.records identity, semester enforcement, and single hasMongoOperators
+  try {
+    const serverSrc = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
+    const fileSyncSrc = fs.readFileSync(path.join(__dirname, "../services/fileSyncService.js"), "utf8");
+    const hasMongoDecls = serverSrc.match(/function hasMongoOperators\(/g) || [];
+    assert.strictEqual(hasMongoDecls.length, 1, "hasMongoOperators must be declared exactly once in server.js");
+
+    const canSetMatch = serverSrc.match(/function canFacultySetSubject[\s\S]*?\n\}/);
+    assert(canSetMatch && canSetMatch[0].includes("normTargetSem") && canSetMatch[0].includes("allocSems"), "canFacultySetSubject must enforce semester");
+
+    const cascadeMatch = serverSrc.match(/app\.post\("\/api\/academic\/divisions\/cascade"[\s\S]*?\n\}\);/);
+    assert(
+      cascadeMatch &&
+      cascadeMatch[0].includes("isRecordInCourseYearScope") &&
+      cascadeMatch[0].includes("TRANSACTIONS_REQUIRED"),
+      "divisions/cascade must enforce course-year scoping and standalone 503 TRANSACTIONS_REQUIRED"
+    );
+
+    const statusMatch = serverSrc.match(/app\.post\("\/api\/academic\/assignment-status"[\s\S]*?\n\}\);/);
+    assert(
+      statusMatch &&
+      statusMatch[0].includes("idsOverlap") &&
+      statusMatch[0].includes("lacks required semester metadata"),
+      "assignment-status must reconcile DB/Store IDs and fail closed on missing faculty semester"
+    );
+
+    const deleteUserMatch = serverSrc.match(/app\.delete\("\/api\/users\/:role\/:username"[\s\S]*?\n\}\);/);
+    assert(
+      deleteUserMatch &&
+      deleteUserMatch[0].includes("TRANSACTIONS_REQUIRED") &&
+      deleteUserMatch[0].includes("recalculateOverallAttendance") &&
+      deleteUserMatch[0].includes("remainingRecords"),
+      "DELETE /api/users must wrap deletion inside transactions (503 standalone), clean records map keys, and recalculate attendance"
+    );
+
+    assert(
+      !fileSyncSrc.includes('n.authorRole === "admin" ? "admin" : "faculty"'),
+      "fileSyncService.js must not synthesize default faculty authorRole for notices"
+    );
+    report("Round 3.4 standalone fail-closed contracts, attendance.records identity, semester enforcement & ID reconciliation verified", true);
+  } catch (e) {
+    report("Round 3.4 standalone fail-closed contracts, attendance.records identity, semester enforcement & ID reconciliation verified", false, e);
+  }
+
   // ===========================================================================
   // Summary
   // ===========================================================================

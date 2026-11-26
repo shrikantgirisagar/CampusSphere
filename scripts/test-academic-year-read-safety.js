@@ -325,6 +325,126 @@ async function runTestSuite() {
     pass("17. getActiveAcademicYear AST contains zero write operations (save, create, update, insert)");
   } catch (e) { fail("17. getActiveAcademicYear zero write AST verification", e); }
 
+  try {
+    // 18. Verify AcademicYear defines ONLY the single partial unique { status: 1 } index (no duplicate field index)
+    const statusIndexes = AcademicYear.schema.indexes().filter(
+      ([fields]) => fields && fields.status === 1 && Object.keys(fields).length === 1
+    );
+    assert.strictEqual(statusIndexes.length, 1, `Expected exactly 1 { status: 1 } index definition, found ${statusIndexes.length}`);
+    assert.strictEqual(statusIndexes[0][1]?.unique, true, "Single { status: 1 } index must be unique");
+    assert.strictEqual(statusIndexes[0][1]?.partialFilterExpression?.status, "active", "Single { status: 1 } index must carry partialFilterExpression { status: 'active' }");
+    pass("18. AcademicYear schema eliminates duplicate { status: 1 } index while keeping partial unique active constraint");
+  } catch (e) { fail("18. AcademicYear non-duplicate status index verification", e); }
+
+  try {
+    // 19. Verify initDatabase() syncs critical model indexes, public status routes redact internals, and admin diagnostics exposes telemetry
+    const initDbMatch = serverCode.match(/async function initDatabase\(\)[\s\S]*?\n\}/);
+    assert(initDbMatch, "initDatabase function must exist");
+    const initSrc = initDbMatch[0];
+    assert(initSrc.includes("Attendance.syncIndexes()"), "initDatabase must sync Attendance indexes");
+    assert(initSrc.includes("AcademicYear.syncIndexes()"), "initDatabase must sync AcademicYear indexes");
+    assert(initSrc.includes("Timetable.syncIndexes()"), "initDatabase must sync Timetable indexes");
+    assert(initSrc.includes("Mark.syncIndexes()"), "initDatabase must sync Mark indexes");
+    assert(initSrc.includes('databaseInitStatus = "failed"'), "initDatabase must transition to failed state on errors");
+
+    const statusHandlerMatch = serverCode.match(/app\.get\("\/api\/status"[\s\S]*?\n\}\);/);
+    const healthHandlerMatch = serverCode.match(/app\.get\("\/api\/health"[\s\S]*?\n\}\);/);
+    const diagHandlerMatch = serverCode.match(/app\.get\("\/api\/admin\/diagnostics\/database"[\s\S]*?\n\}\);/);
+    assert(statusHandlerMatch && healthHandlerMatch && diagHandlerMatch, "Status, health, and admin diagnostics handlers must exist");
+
+    for (const [label, handlerSrc] of [["/api/status", statusHandlerMatch[0]], ["/api/health", healthHandlerMatch[0]]]) {
+      assert(handlerSrc.includes("status:") && handlerSrc.includes("ready:"), `${label} must return safe status and ready flags`);
+      assert(!handlerSrc.includes("initError"), `${label} must never expose initError publicly`);
+      assert(!handlerSrc.includes("indexErrors"), `${label} must never expose indexErrors publicly`);
+      assert(!handlerSrc.includes("databaseState"), `${label} must never expose databaseState publicly`);
+      assert(!handlerSrc.includes("connectionUri"), `${label} must never expose connectionUri publicly`);
+    }
+
+    assert(
+      diagHandlerMatch[0].includes('requireAuth(["admin"])') &&
+      diagHandlerMatch[0].includes("initStatus: databaseInitStatus") &&
+      diagHandlerMatch[0].includes("indexReady: databaseIndexReady") &&
+      diagHandlerMatch[0].includes("indexErrors: databaseIndexErrors") &&
+      diagHandlerMatch[0].includes("initError: databaseInitError"),
+      "/api/admin/diagnostics/database must be admin-only and expose full readiness diagnostics"
+    );
+    pass("19. initDatabase() syncs critical indexes while public status/health redact internals and admin diagnostics exposes telemetry");
+  } catch (e) { fail("19. Truthful initDatabase, public status redaction, and admin diagnostics verification", e); }
+
+  try {
+    // 20. Verify Notice schema preserves strict mode and supports academicYear + authorUsername scoping
+    const Notice = require("../models/Notice");
+    assert.strictEqual(Notice.schema.options.strict, true, "Notice schema must preserve strict: true");
+    assert(Notice.schema.path("noticeId"), "Notice schema must declare noticeId");
+    assert(Notice.schema.path("academicYear"), "Notice schema must declare academicYear");
+    assert(Notice.schema.path("academicYearId"), "Notice schema must declare academicYearId");
+    assert(Notice.schema.path("authorUsername"), "Notice schema must declare authorUsername");
+    assert(Notice.schema.path("postedBy"), "Notice schema must declare postedBy");
+    pass("20. Notice schema aligns with academicYear and canonical authorUsername fields under strict mode");
+  } catch (e) { fail("20. Notice schema alignment verification", e); }
+
+  try {
+    // 21. Verify Round 3.2 zero-GET store initialization, neutral AcademicStore/fileSync defaults, and year-scoped Timetable slot index
+    const AcademicStore = require("../models/AcademicStore");
+    const Timetable = require("../models/Timetable");
+    const fileSyncSrc = fs.readFileSync(path.join(__dirname, "../services/fileSyncService.js"), "utf8");
+    const getAcademicDataMatch = serverCode.match(/app\.get\("\/api\/academic\/data"[\s\S]*?\n\}\);/);
+    assert(getAcademicDataMatch, "GET /api/academic/data route handler must exist");
+    assert(
+      !getAcademicDataMatch[0].includes("AcademicStore.create(") && !getAcademicDataMatch[0].includes("new AcademicStore("),
+      "GET /api/academic/data must remain strictly read-only without AcademicStore.create/insert"
+    );
+    assert(
+      !getAcademicDataMatch[0].includes('"2026–27"') && !getAcademicDataMatch[0].includes('"2026-27"'),
+      "GET /api/academic/data must not return a hardcoded 2026–27 activeAcademicYear default"
+    );
+    assert.strictEqual(
+      AcademicStore.schema.path("activeAcademicYear").options.default,
+      "",
+      "AcademicStore.activeAcademicYear schema default must be empty string rather than hardcoded year"
+    );
+    assert(
+      !fileSyncSrc.includes('|| "2026–27"') && !fileSyncSrc.includes('|| "2026-27"'),
+      "fileSyncService must not hardcode a 2026–27 activeAcademicYear fallback"
+    );
+    const ttIndexes = Timetable.schema.indexes();
+    const slotUniqueIdx = ttIndexes.find(([fields]) =>
+      fields.academicYear === 1 &&
+      fields.division === 1 &&
+      fields.semester === 1 &&
+      fields.day === 1 &&
+      fields.time === 1
+    );
+    assert(slotUniqueIdx, "Timetable schema must declare year-scoped slot unique index including academicYear: 1");
+    assert.strictEqual(slotUniqueIdx[1]?.unique, true, "Timetable slot index must be unique");
+    assert.deepStrictEqual(
+      slotUniqueIdx[1]?.partialFilterExpression?.academicYear,
+      { $type: "string", $gt: "" },
+      "Timetable slot index partialFilterExpression must scope to non-empty academicYear strings"
+    );
+    assert(slotUniqueIdx[1]?.partialFilterExpression?.day, "Timetable slot index partialFilterExpression must guard legacy day slots");
+    pass("21. GET /api/academic/data is write-free, AcademicStore/fileSync defaults are neutral, and Timetable slot index is year-scoped");
+  } catch (e) { fail("21. Round 3.2 read-safety, neutral store defaults, and timetable slot index verification", e); }
+
+  try {
+    // 22. Verify Round 3.4 startup omits full-store syncCollectionsFromAcademicData and GET /api/academic/data filters notices consistently
+    const initDbMatch = serverCode.match(/async function initDatabase\(\)[\s\S]*?\n\}/);
+    assert(initDbMatch, "initDatabase function must exist");
+    assert(
+      !initDbMatch[0].includes("syncCollectionsFromAcademicData("),
+      "initDatabase() must NOT invoke full-store syncCollectionsFromAcademicData()"
+    );
+    const getAcademicDataMatch = serverCode.match(/app\.get\("\/api\/academic\/data"[\s\S]*?\n\}\);/);
+    assert(getAcademicDataMatch, "GET /api/academic/data route handler must exist");
+    assert(
+      getAcademicDataMatch[0].includes("targetStudentYear") &&
+      getAcademicDataMatch[0].includes("targetSemester") &&
+      getAcademicDataMatch[0].includes("activeAcademicYear: activeYearCode"),
+      "GET /api/academic/data must filter student notices by academicYear/role/division/semester and expose authoritative activeAcademicYear"
+    );
+    pass("22. Startup initDatabase omits historical full-store sync and GET /api/academic/data filters student notices cleanly");
+  } catch (e) { fail("22. Round 3.4 startup isolation and read notice-scoping verification", e); }
+
   console.log("\n======================================================================");
   console.log(`TEST RESULTS: ${passedTests} Passed, ${failedTests} Failed (Total: ${totalTests})`);
   console.log("======================================================================");

@@ -66,7 +66,7 @@ const academicStoreSchema = new mongoose.Schema(
     },
     activeAcademicYear: {
       type: String,
-      default: "2026–27"
+      default: ""
     },
     academicYears: {
       type: Array,

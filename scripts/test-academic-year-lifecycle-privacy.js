@@ -343,6 +343,98 @@ async function runTests() {
     pass("15. activateAcademicYear rejects archived academic years");
   } catch (e) { fail("15. Archived year activation rejection", e); }
 
+  // Test 16: Same-process reader-writer barrier serializes lifecycle transitions against year-scoped mutations with writer preference
+  try {
+    const events = [];
+    let releaseMutation1;
+    const mutation1Hold = new Promise(r => { releaseMutation1 = r; });
+
+    const m1 = academicYearService.runWithYearMutationGuard(async () => {
+      events.push("m1-start");
+      await mutation1Hold;
+      events.push("m1-end");
+    });
+
+    await new Promise(r => setTimeout(r, 10));
+
+    const t1 = academicYearService.runWithLifecycleTransition(async () => {
+      events.push("t1-start");
+      await new Promise(r => setTimeout(r, 10));
+      events.push("t1-end");
+    });
+
+    const m2 = academicYearService.runWithYearMutationGuard(async () => {
+      events.push("m2-start");
+      events.push("m2-end");
+    });
+
+    releaseMutation1();
+    await Promise.all([m1, t1, m2]);
+
+    assert.deepStrictEqual(
+      events,
+      ["m1-start", "m1-end", "t1-start", "t1-end", "m2-start", "m2-end"],
+      `Expected writer-preference serialization order, got: ${JSON.stringify(events)}`
+    );
+    pass("16. Same-process reader-writer lifecycle barrier enforces writer preference and zero interleaving");
+  } catch (e) { fail("16. Same-process reader-writer lifecycle barrier", e); }
+
+  // Test 17: Lifecycle service and AcademicYear schema enforce mutationEpoch transactional fencing
+  try {
+    const fsLocal = require("fs");
+    const pathLocal = require("path");
+    const modelSrc = fsLocal.readFileSync(pathLocal.join(__dirname, "../models/AcademicYear.js"), "utf8");
+    const svcSrc = fsLocal.readFileSync(pathLocal.join(__dirname, "../services/academicYearService.js"), "utf8");
+    assert(modelSrc.includes("mutationEpoch:"), "AcademicYear model must declare mutationEpoch field");
+    assert(svcSrc.includes("runWithLifecycleTransition"), "AcademicYearService must implement runWithLifecycleTransition");
+    assert(svcSrc.includes("isTransactionSupported"), "AcademicYearService must implement isTransactionSupported");
+    pass("17. AcademicYear schema and AcademicYearService wire transactional mutationEpoch and lifecycle barrier");
+  } catch (e) { fail("17. Transactional mutationEpoch and lifecycle barrier contract", e); }
+
+  // Test 18: WP-F cross-process CAS lifecycle guards and zero silent error swallowing
+  try {
+    const fsLocal = require("fs");
+    const pathLocal = require("path");
+    const svcSrc = fsLocal.readFileSync(pathLocal.join(__dirname, "../services/academicYearService.js"), "utf8");
+    const srvSrc = fsLocal.readFileSync(pathLocal.join(__dirname, "../server.js"), "utf8");
+    assert(svcSrc.includes("expectedActiveYearId"), "activateAcademicYear/completeAcademicYear must verify expectedActiveYearId");
+    assert(svcSrc.includes("requireSuccessorUpcoming"), "completeAcademicYear must enforce upcoming successor precondition inside tx/CAS");
+    const lifecyclePersistenceSlice = svcSrc.slice(svcSrc.indexOf("async activateAcademicYear"));
+    assert(
+      lifecyclePersistenceSlice.includes("AcademicStore.updateOne") && !lifecyclePersistenceSlice.includes(".catch(() => {})"),
+      "AcademicYearService lifecycle transitions must sync AcademicStore without swallowing persistence/rollback errors"
+    );
+    const activateRouteMatch = srvSrc.match(/app\.patch\("\/api\/academic-years\/:id\/activate"[\s\S]*?\n\}\);/);
+    assert(activateRouteMatch && !activateRouteMatch[0].includes(".catch(() => {})"), "/api/academic-years/:id/activate must not swallow store update errors");
+    pass("18. AcademicYearService enforces expectedActiveYearId CAS, AcademicStore sync, and zero silent catches");
+  } catch (e) { fail("18. Cross-process CAS lifecycle guards and error propagation", e); }
+
+  // Test 19: Round 3.2 standalone complete/activate rollback, semesterConfiguration completion & E11000 LIFECYCLE_CONFLICT mapping
+  try {
+    const fsLocal = require("fs");
+    const pathLocal = require("path");
+    const svcSrc = fsLocal.readFileSync(pathLocal.join(__dirname, "../services/academicYearService.js"), "utf8");
+    const srvSrc = fsLocal.readFileSync(pathLocal.join(__dirname, "../server.js"), "utf8");
+    const activateSrc = svcSrc.slice(svcSrc.indexOf("async activateAcademicYear"), svcSrc.indexOf("async completeAcademicYear"));
+    const completeSrc = svcSrc.slice(svcSrc.indexOf("async completeAcademicYear"));
+    assert(activateSrc.includes("expectedActiveYearCode") && activateSrc.includes("requireNoActiveYear"), "activateAcademicYear must support expectedActiveYearCode and requireNoActiveYear preconditions");
+    assert(activateSrc.includes("semesterConfiguration") && activateSrc.includes('status = "completed"'), "activateAcademicYear standalone deactivation must mark semesterConfiguration entries completed");
+    assert(activateSrc.includes("upsert: true") && activateSrc.includes("matchedCount === 0 && storeRes.upsertedCount === 0"), "activateAcademicYear must verify AcademicStore upsert result");
+    assert(completeSrc.includes("upsert: true") && completeSrc.includes("matchedCount === 0 && storeRes.upsertedCount === 0"), "completeAcademicYear must verify AcademicStore upsert result");
+    assert(completeSrc.includes('completedAt: year.completedAt || null') && completeSrc.includes('status: "active"'), "completeAcademicYear standalone failure must roll back completed year back to active");
+    const activateRouteMatch = srvSrc.match(/app\.patch\("\/api\/academic-years\/:id\/activate"[\s\S]*?\n\}\);/);
+    assert(activateRouteMatch, "/api/academic-years/:id/activate handler must exist");
+    assert(
+      activateRouteMatch[0].includes("hasMongoOperators(req.body)") &&
+      activateRouteMatch[0].includes("expectedActiveYearId") &&
+      activateRouteMatch[0].includes("expectedActiveYearCode") &&
+      activateRouteMatch[0].includes("requireNoActiveYear") &&
+      activateRouteMatch[0].includes("LIFECYCLE_CONFLICT"),
+      "/api/academic-years/:id/activate must forward concurrency preconditions and map duplicate active errors to 409 LIFECYCLE_CONFLICT"
+    );
+    pass("19. Standalone lifecycle rollback, semesterConfiguration completion, upsert verification, and 409 LIFECYCLE_CONFLICT contracts verified");
+  } catch (e) { fail("19. Round 3.2 lifecycle transition consistency & concurrency guards", e); }
+
   console.log("\n======================================================================");
   console.log(`TEST RESULTS: ${passed} Passed, ${failed} Failed (Total: ${passed + failed})`);
   console.log("======================================================================\n");

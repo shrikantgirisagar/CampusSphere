@@ -51,6 +51,25 @@ const noticeSchema = new mongoose.Schema(
       type: String,
       default: ""
     },
+    authorUsername: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50,
+      index: true
+    },
+    academicYear: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 50,
+      index: true
+    },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null
+    },
     targetRole: {
       type: String,
       default: "all"

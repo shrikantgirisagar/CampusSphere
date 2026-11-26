@@ -11514,6 +11514,19 @@ document.addEventListener("click", e => {
         String(a.title || "").trim().toLowerCase() === normTitle
       );
     }
+
+    const activeAssignmentYear = String(
+      (assign && assign.academicYear) ||
+      window.activeInstitutionalAcademicYear ||
+      (typeof activeAcademicYearCache !== "undefined" && activeAcademicYearCache && activeAcademicYearCache.yearCode) ||
+      (ACADEMIC && ACADEMIC.activeAcademicYear) ||
+      ""
+    ).trim();
+    if (!activeAssignmentYear) {
+      showToast("No active academic year configured. Assignment status update blocked.", "error");
+      return;
+    }
+
     if (assign) {
       assign.status = nextStatus;
       assign.submittedDate = nextStatus === "Submitted" ? todayISO : "";
@@ -11525,6 +11538,7 @@ document.addEventListener("click", e => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        academicYear: activeAssignmentYear,
         studentUsername,
         title,
         subject,
@@ -11535,7 +11549,7 @@ document.addEventListener("click", e => {
       if (res.ok) {
         showToast(nextStatus === "Submitted" ? "Assignment marked as Submitted!" : "Assignment set back to Pending.", "success");
       } else {
-        showToast("Assignment status saved locally.", "info");
+        showToast("Assignment status update failed on server.", "error");
       }
       render();
     }).catch(err => {
@@ -12148,6 +12162,17 @@ function refreshAllDivisionDropdowns() {
 }
 
 async function cascadeDivisionSync({ action, courseYear, oldDivision, newDivision, fallbackDivision }) {
+  const activeCascadeYear = String(
+    window.activeInstitutionalAcademicYear ||
+    (typeof activeAcademicYearCache !== "undefined" && activeAcademicYearCache && activeAcademicYearCache.yearCode) ||
+    (ACADEMIC && ACADEMIC.activeAcademicYear) ||
+    ""
+  ).trim();
+  if (!activeCascadeYear) {
+    showToast("No active academic year configured. Division change blocked.", "error");
+    return;
+  }
+
   const yr = courseYear || "1st Year";
   const targetYears = yr === "All Years" ? ["1st Year", "2nd Year", "3rd Year"] : [yr];
   const targetSemesters = targetYears.flatMap(y => getSemestersForCourseYear(y));
@@ -12349,6 +12374,7 @@ async function cascadeDivisionSync({ action, courseYear, oldDivision, newDivisio
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        academicYear: activeCascadeYear,
         action,
         courseYear: yr,
         oldDivision,

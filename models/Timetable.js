@@ -127,12 +127,15 @@ const timetableSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index for legacy slot documents
+// Compound unique index for versioned legacy slot documents (excludes unversioned historical records)
 timetableSchema.index(
-  { division: 1, semester: 1, day: 1, time: 1 },
+  { academicYear: 1, division: 1, semester: 1, day: 1, time: 1 },
   {
     unique: true,
-    partialFilterExpression: { day: { $exists: true, $type: "string" } }
+    partialFilterExpression: {
+      academicYear: { $type: "string", $gt: "" },
+      day: { $exists: true, $type: "string" }
+    }
   }
 );
 

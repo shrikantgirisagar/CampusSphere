@@ -86,8 +86,7 @@ const academicYearSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["upcoming", "active", "completed", "archived"],
-      default: "upcoming",
-      index: true
+      default: "upcoming"
     },
     activeCycle: {
       type: String,
@@ -132,6 +131,12 @@ const academicYearSchema = new mongoose.Schema(
     archivedAt: {
       type: Date,
       default: null
+    },
+    // Monotonic epoch incremented on lifecycle transitions and replica-set year-scoped mutations
+    // to force Snapshot Isolation write-conflict detection between concurrent processes
+    mutationEpoch: {
+      type: Number,
+      default: 0
     }
   },
   {

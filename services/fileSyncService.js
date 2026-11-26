@@ -182,7 +182,7 @@ function sanitizeDatabaseForExport(databaseDump, sanitizedUsers = []) {
     customBreakRows: rawAcademic.customBreakRows && typeof rawAcademic.customBreakRows === "object"
       ? JSON.parse(JSON.stringify(rawAcademic.customBreakRows))
       : {},
-    activeAcademicYear: rawAcademic.activeAcademicYear || databaseDump.activeAcademicYear || "2026–27",
+    activeAcademicYear: rawAcademic.activeAcademicYear || databaseDump.activeAcademicYear || "",
     academicYears: Array.isArray(rawAcademic.academicYears) ? rawAcademic.academicYears : (Array.isArray(databaseDump.academicYears) ? databaseDump.academicYears : []),
     notices: Array.isArray(rawAcademic.notices)
       ? rawAcademic.notices.map(n => ({
@@ -191,7 +191,7 @@ function sanitizeDatabaseForExport(databaseDump, sanitizedUsers = []) {
           text: n.text || n.content || "",
           content: n.content || n.text || "",
           date: n.date || "",
-          authorRole: n.authorRole === "admin" ? "admin" : "faculty"
+          authorRole: n.authorRole ? String(n.authorRole).trim() : ""
         }))
       : [],
     // Identifying individual student activity / personal records redacted in public export
@@ -298,9 +298,7 @@ async function syncFromMongoToFiles() {
     delete academicData._id;
 
     const activeYearDoc = (academicYears || []).find(y => y.status === "active");
-    if (activeYearDoc) {
-      academicData.activeAcademicYear = activeYearDoc.yearCode;
-    }
+    academicData.activeAcademicYear = activeYearDoc ? activeYearDoc.yearCode : "";
     academicData.academicYears = (academicYears || []).map(y => {
       const c = { ...y };
       delete c.__v;
